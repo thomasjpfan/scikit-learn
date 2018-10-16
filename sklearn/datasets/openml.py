@@ -133,7 +133,7 @@ def _get_json_content_from_openml_api(url, error_message, raise_if_error,
         # (e.g., data not found)
         if error.code != 412:
             raise error
-    # not in except for nicer traceback
+    # not in except for nicer traceback, error.code == 412
     if raise_if_error:
         raise ValueError(error_message)
     return None
