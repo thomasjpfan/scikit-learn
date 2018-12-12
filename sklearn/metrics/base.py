@@ -34,8 +34,7 @@ def _average_binary_score(binary_metric, y_true, y_score, average,
         Target scores, can either be probability estimates of the positive
         class, confidence values, or binary decisions.
 
-    average : string, {None, 'micro', 'macro', 'samples', 'weighted'},
-              default 'macro'
+    average : string, {None, 'micro', 'macro' (default), 'samples', 'weighted'},
         If ``None``, the scores for each class are returned. Otherwise,
         this determines the type of averaging performed on the data:
 
@@ -128,8 +127,8 @@ def _average_binary_score(binary_metric, y_true, y_score, average,
         return score
 
 
-def _average_multiclass_ovo_score(binary_metric, y_true, y_score, average):
-    """Uses the binary metric for one-vs-one multiclass classification,
+def _average_multiclass_ovo_auc_score(y_true, y_score, average):
+    """Uses the auc score for one-vs-one multiclass classification,
     where the score is computed according to the Hand & Till (2001) algorithm.
 
     Parameters
@@ -151,42 +150,44 @@ def _average_multiclass_ovo_score(binary_metric, y_true, y_score, average):
             Calculate metrics for each label, taking into account the
             prevalence of the classes.
 
-    binary_metric : callable, the binary metric function to use.
-        Accepts the following as input
-            y_true_target : array, shape = [n_samples_target]
-                Some sub-array of y_true for a pair of classes designated
-                positive and negative in the one-vs-one scheme.
-            y_score_target : array, shape = [n_samples_target]
-                Scores corresponding to the probability estimates
-                of a sample belonging to the designated positive class label
-
     Returns
     -------
     score : float
-        Average the sum of pairwise binary metric scores
+        Average the sum of pairwise auc scores
     """
+    if len(np.unique(y_true)) == 1:
+        raise ValueError("Only one class present in y_true. ROC AUC score "
+                         "is not defined in that case.")
+
+    # Uses the Hand & Till approximiation for auc
+    def auc_approx(y_true, y_score, i, j):
+        def _auc_approx(i, j):
+            y_score_i = y_score[y_true == i, i]
+            y_score_j = y_score[y_true == j, i]
+
+            n_i = len(y_score_i)
+            n_j = len(y_score_j)
+            all_preds = np.r_[y_score_i, y_score_j]
+
+            ranks = all_preds.argsort().argsort()[:n_i] + 1
+            return (np.sum(ranks) - n_i*(n_i+1)/2)/(n_i*n_j)
+
+        return (_auc_approx(i, j) + _auc_approx(j, i))/2
+
     n_classes = len(np.unique(y_true))
     n_pairs = n_classes * (n_classes - 1) // 2
-    prevalence = np.empty(n_pairs)
     pair_scores = np.empty(n_pairs)
 
-    for ix, (a, b) in enumerate(itertools.combinations(range(n_classes), 2)):
-        a_mask = y_true == a
-        ab_mask = np.logical_or(a_mask, y_true == b)
+    is_weighted = average == "weighted"
+    if is_weighted:
+        prevalence = np.empty(n_pairs)
 
-        prevalence[ix] = np.sum(ab_mask) / len(y_true)
+    for ix, (i, j) in enumerate(itertools.combinations(range(n_classes), 2)):
+        if is_weighted:
+            mask_ij = np.logical_or(y_true == i, y_true == j)
+            prevalence[ix] = np.sum(mask_ij)/len(y_true)
+        pair_scores[ix] = auc_approx(y_true, y_score, i, j)
 
-        y_score_filtered = y_score[ab_mask]
-
-        a_true = a_mask[ab_mask]
-        b_true = np.logical_not(a_true)
-
-        a_true_score = binary_metric(
-                a_true, y_score_filtered[:, a])
-        b_true_score = binary_metric(
-                b_true, y_score_filtered[:, b])
-        binary_avg_score = (a_true_score + b_true_score) / 2
-        pair_scores[ix] = binary_avg_score
-
-    return (np.average(pair_scores, weights=prevalence)
-            if average == "weighted" else np.average(pair_scores))
+    if is_weighted:
+        return np.average(pair_scores, weights=prevalence)
+    return np.average(pair_scores)

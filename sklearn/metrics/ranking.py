@@ -35,7 +35,7 @@ from ..utils.sparsefuncs import count_nonzero
 from ..exceptions import UndefinedMetricWarning
 from ..preprocessing import LabelBinarizer, label_binarize
 
-from .base import _average_binary_score, _average_multiclass_ovo_score
+from .base import _average_binary_score, _average_multiclass_ovo_auc_score
 
 
 def auc(x, y, reorder='deprecated'):
@@ -393,8 +393,7 @@ def roc_auc_score(y_true, y_score, multiclass="ovr", average="macro",
 
         if multiclass == "ovo":
             # Hand & Till (2001) implementation
-            return _average_multiclass_ovo_score(
-                _binary_roc_auc_score, y_true, y_score, average)
+            return _average_multiclass_ovo_auc_score(y_true, y_score, average)
         else:
             # ovr is same as multi-label
             y_true = y_true.reshape((-1, 1))

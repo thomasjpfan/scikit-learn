@@ -600,6 +600,12 @@ def test_auc_score_multi_error():
                          roc_auc_score, y_true, y_pred,
                          multiclass="ovo", max_fpr=0.5)
 
+    y_true = np.zeros(10)
+    single_error_msg = ("Only one class present in y_true. ROC AUC score "
+                        "is not defined in that case.")
+    assert_raise_message(ValueError, single_error_msg,
+                         roc_auc_score, y_true, y_pred, multiclass="ovo")
+
 
 def test_auc_score_non_binary_class():
     # Test that roc_auc_score function returns an error when trying
@@ -640,7 +646,6 @@ def test_binary_clf_curve():
     msg = "multiclass format is not supported"
     assert_raise_message(ValueError, msg, precision_recall_curve,
                          y_true, y_pred)
-
 
 def test_precision_recall_curve():
     y_true, _, probas_pred = make_prediction(binary=True)
@@ -823,6 +828,7 @@ def test_score_scale_invariance():
     # issue #3864 (and others), where overly aggressive rounding was causing
     # problems for users with very small y_score values
     y_true, _, probas_pred = make_prediction(binary=True)
+
     roc_auc = roc_auc_score(y_true, probas_pred)
     roc_auc_scaled_up = roc_auc_score(y_true, 100 * probas_pred)
     roc_auc_scaled_down = roc_auc_score(y_true, 1e-6 * probas_pred)
