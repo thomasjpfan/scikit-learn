@@ -441,8 +441,6 @@ NOT_SYMMETRIC_METRICS = {
 METRICS_WITHOUT_SAMPLE_WEIGHT = {
     "median_absolute_error",
     "max_error",
-    # these allow sample_weights in the multi-label case but not multi-class?
-    # that seems ... odd?
     "roc_auc_score",
     "weighted_roc_auc",
     "ovo_roc_auc",
