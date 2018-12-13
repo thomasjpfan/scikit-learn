@@ -13,7 +13,6 @@ Common code for all metrics
 # License: BSD 3 clause
 
 from __future__ import division
-import itertools
 
 import numpy as np
 
@@ -125,69 +124,3 @@ def _average_binary_score(binary_metric, y_true, y_score, average,
         return np.average(score, weights=average_weight)
     else:
         return score
-
-
-def _average_multiclass_ovo_auc_score(y_true, y_score, average):
-    """Uses the auc score for one-vs-one multiclass classification,
-    where the score is computed according to the Hand & Till (2001) algorithm.
-
-    Parameters
-    ----------
-    y_true : array, shape = [n_samples]
-        True multiclass labels.
-        Assumes labels have been recoded to 0 to n_classes.
-
-    y_score : array, shape = [n_samples, n_classes]
-        Target scores corresponding to probability estimates of a sample
-        belonging to a particular class
-
-    average : 'macro' or 'weighted', default='macro'
-        ``'macro'``:
-            Calculate metrics for each label, and find their unweighted
-            mean. This does not take label imbalance into account. Classes
-            are assumed to be uniformly distributed.
-        ``'weighted'``:
-            Calculate metrics for each label, taking into account the
-            prevalence of the classes.
-
-    Returns
-    -------
-    score : float
-        Average the sum of pairwise auc scores
-    """
-    if len(np.unique(y_true)) == 1:
-        raise ValueError("Only one class present in y_true. ROC AUC score "
-                         "is not defined in that case.")
-
-    # Uses the Hand & Till approximiation for auc
-    def auc_approx(y_true, y_score, i, j):
-        def _auc_approx(i, j):
-            y_score_i = y_score[y_true == i, i]
-            y_score_j = y_score[y_true == j, i]
-
-            n_i = len(y_score_i)
-            n_j = len(y_score_j)
-            all_preds = np.r_[y_score_i, y_score_j]
-
-            ranks = all_preds.argsort().argsort()[:n_i] + 1
-            return (np.sum(ranks) - n_i*(n_i+1)/2)/(n_i*n_j)
-
-        return (_auc_approx(i, j) + _auc_approx(j, i))/2
-
-    n_classes = len(np.unique(y_true))
-    n_pairs = n_classes * (n_classes - 1) // 2
-    pair_scores = np.empty(n_pairs)
-
-    is_weighted = average == "weighted"
-    if is_weighted:
-        prevalence = np.empty(n_pairs)
-
-    for ix, (i, j) in enumerate(itertools.combinations(range(n_classes), 2)):
-        if is_weighted:
-            mask_ij = np.logical_or(y_true == i, y_true == j)
-            prevalence[ix] = np.sum(mask_ij)/len(y_true)
-        pair_scores[ix] = auc_approx(y_true, y_score, i, j)
-
-    if is_weighted:
-        return np.average(pair_scores, weights=prevalence)
-    return np.average(pair_scores)
