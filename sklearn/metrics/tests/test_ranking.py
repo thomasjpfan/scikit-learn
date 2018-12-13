@@ -586,12 +586,6 @@ def test_auc_score_multi_error():
                             "must be one of ('ovo', 'ovr').")
     assert_raise_message(ValueError, multiclass_error_msg,
                          roc_auc_score, y_true, y_pred, multiclass="invalid")
-    sample_weight_error_msg = ("Parameter 'sample_weight' is not supported "
-                               "for multiclass one-vs-one ROC AUC. "
-                               "'sample_weight' must be None in this case.")
-    assert_raise_message(ValueError, sample_weight_error_msg,
-                         roc_auc_score, y_true, y_pred,
-                         multiclass="ovo", sample_weight=[])
     partial_comp_error_msg = ("Partial AUC computation not available in "
                               "multiclass setting. Parameter 'max_fpr' must "
                               "be set to `None`. Received `max_fpr=0.5` "
@@ -640,7 +634,6 @@ def test_binary_clf_curve():
     msg = "multiclass format is not supported"
     assert_raise_message(ValueError, msg, precision_recall_curve,
                          y_true, y_pred)
-
 
 def test_precision_recall_curve():
     y_true, _, probas_pred = make_prediction(binary=True)
@@ -829,6 +822,7 @@ def test_score_scale_invariance():
     # issue #3864 (and others), where overly aggressive rounding was causing
     # problems for users with very small y_score values
     y_true, _, probas_pred = make_prediction(binary=True)
+
     roc_auc = roc_auc_score(y_true, probas_pred)
     roc_auc_scaled_up = roc_auc_score(y_true, 100 * probas_pred)
     roc_auc_scaled_down = roc_auc_score(y_true, 1e-6 * probas_pred)

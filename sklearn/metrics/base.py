@@ -34,8 +34,7 @@ def _average_binary_score(binary_metric, y_true, y_score, average,
         Target scores, can either be probability estimates of the positive
         class, confidence values, or binary decisions.
 
-    average : string, {None, 'micro', 'macro', 'samples', 'weighted'},
-              default 'macro'
+    average : string, [None, 'micro', 'macro' (default), 'samples', 'weighted']
         If ``None``, the scores for each class are returned. Otherwise,
         this determines the type of averaging performed on the data:
 
@@ -128,7 +127,8 @@ def _average_binary_score(binary_metric, y_true, y_score, average,
         return score
 
 
-def _average_multiclass_ovo_score(binary_metric, y_true, y_score, average):
+def _average_multiclass_ovo_score(
+        binary_metric, y_true, y_score, average, sample_weight=None):
     """Uses the binary metric for one-vs-one multiclass classification,
     where the score is computed according to the Hand & Till (2001) algorithm.
 
@@ -165,26 +165,38 @@ def _average_multiclass_ovo_score(binary_metric, y_true, y_score, average):
     score : float
         Average the sum of pairwise binary metric scores
     """
+    check_consistent_length(y_true, y_score, sample_weight)
+
     n_classes = len(np.unique(y_true))
     n_pairs = n_classes * (n_classes - 1) // 2
-    prevalence = np.empty(n_pairs)
+
+    is_weighted = average == "weighted"
+    if is_weighted:
+        prevalence = np.empty(n_pairs)
     pair_scores = np.empty(n_pairs)
+    sample_weight_filtered = None
 
     for ix, (a, b) in enumerate(itertools.combinations(range(n_classes), 2)):
         a_mask = y_true == a
         ab_mask = np.logical_or(a_mask, y_true == b)
 
-        prevalence[ix] = np.sum(ab_mask) / len(y_true)
+        if is_weighted:
+            prevalence[ix] = np.sum(ab_mask) / len(y_true)
 
         y_score_filtered = y_score[ab_mask]
 
         a_true = a_mask[ab_mask]
         b_true = np.logical_not(a_true)
 
+        if sample_weight is not None:
+            sample_weight_filtered = sample_weight[ab_mask]
+
         a_true_score = binary_metric(
-                a_true, y_score_filtered[:, a])
+            a_true, y_score_filtered[:, a],
+            sample_weight=sample_weight_filtered)
         b_true_score = binary_metric(
-                b_true, y_score_filtered[:, b])
+            b_true, y_score_filtered[:, b],
+            sample_weight=sample_weight_filtered)
         binary_avg_score = (a_true_score + b_true_score) / 2
         pair_scores[ix] = binary_avg_score
 
