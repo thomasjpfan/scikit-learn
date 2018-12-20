@@ -1,6 +1,6 @@
 # Authors: Nicolas Tresegnie <nicolas.tresegnie@gmail.com>
 # License: BSD 3 clause
-from __future__ import division
+
 import warnings
 
 import numpy as np
@@ -14,6 +14,7 @@ from ..utils import deprecated
 from ..utils.sparsefuncs import _get_median
 from ..utils.validation import check_is_fitted
 from ..utils.validation import FLOAT_DTYPES
+
 from ..externals import six
 
 zip = six.moves.zip
