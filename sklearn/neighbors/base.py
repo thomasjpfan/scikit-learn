@@ -26,7 +26,6 @@ from ..metrics.pairwise import _NAN_METRICS
 from ..utils.multiclass import check_classification_targets
 from ..utils.validation import check_is_fitted
 from ..utils.validation import _num_samples
-from ..externals import six
 from ..exceptions import DataConversionWarning
 from ..utils._joblib import Parallel, delayed, effective_n_jobs
 from ..utils._joblib import __version__ as joblib_version
@@ -106,7 +105,7 @@ def _get_weights(dist, weights):
                          "'distance', or a callable function")
 
 
-class NeighborsBase(six.with_metaclass(ABCMeta, BaseEstimator)):
+class NeighborsBase(BaseEstimator, metaclass=ABCMeta):
     """Base class for nearest neighbors estimators."""
 
     @abstractmethod

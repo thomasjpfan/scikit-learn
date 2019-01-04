@@ -24,10 +24,6 @@ from .neighbors.base import _get_weights
 from .utils.fixes import _object_dtype_isnan
 from .utils import is_scalar_nan
 
-from .externals import six
-
-zip = six.moves.zip
-map = six.moves.map
 
 __all__ = [
     'MissingIndicator',
@@ -571,7 +567,7 @@ class MissingIndicator(BaseEstimator, TransformerMixin):
             raise ValueError("'features' has to be either 'missing-only' or "
                              "'all'. Got {} instead.".format(self.features))
 
-        if not ((isinstance(self.sparse, six.string_types) and
+        if not ((isinstance(self.sparse, str) and
                 self.sparse == "auto") or isinstance(self.sparse, bool)):
             raise ValueError("'sparse' has to be a boolean or 'auto'. "
                              "Got {!r} instead.".format(self.sparse))
