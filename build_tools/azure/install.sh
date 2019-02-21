@@ -30,6 +30,7 @@ make_conda() {
             -O miniconda.sh
         chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
         export PATH=$MINICONDA_PATH/bin:$PATH
+        export CPPFLAGS="$CCPFLAGS -m32"
     fi
     conda create -n $VIRTUALENV --yes $TO_INSTALL
     source activate $VIRTUALENV
