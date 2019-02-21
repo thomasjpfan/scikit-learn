@@ -14,6 +14,8 @@ jobs:
     OMP_NUM_THREADS: '4'
     OPENBLAS_NUM_THREADS: '4'
     SKLEARN_SKIP_NETWORK_TESTS: '1'
+    PYTHON_ARCH: '64'
+    MINICONDA_PATH: '$(Agent.WorkFolder)/miniconda'
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
@@ -21,10 +23,13 @@ jobs:
   steps:
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: Add conda to PATH
-      condition: eq(variables['DISTRIB'], 'conda')
+      condition: and(eq(variables['DISTRIB'], 'conda'), eq(variables['PYTHON_ARCH'], '64'))
     - script: |
         build_tools/azure/install.sh
       displayName: 'Install'
+    - bash: echo "##vso[task.prependpath]$MINICONDA_PATH/bin"
+      displayName: Add conda to PATH
+      condition: and(eq(variables['DISTRIB'], 'conda'), eq(variables['PYTHON_ARCH'], '64'))
     - script: |
         build_tools/azure/test_script.sh
       displayName: 'Test Library'

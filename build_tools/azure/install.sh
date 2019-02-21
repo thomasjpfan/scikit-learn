@@ -23,6 +23,14 @@ fi
 
 make_conda() {
     TO_INSTALL="$@"
+
+    # 32 bit only tested on linux
+    if [[ "$PYTHON_ARCH" == "32" ]]; then
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86.sh \
+            -O miniconda.sh
+        chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
+        export PATH=$MINICONDA_PATH/bin:$PATH
+    fi
     conda create -n $VIRTUALENV --yes $TO_INSTALL
     source activate $VIRTUALENV
 }
