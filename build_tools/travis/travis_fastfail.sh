@@ -4,6 +4,8 @@
 curlhdr="Accept: application/vnd.travis-ci.2+json"
 endpoint="https://api.travis-ci.org/repos/$TRAVIS_REPO_SLUG"
 
+echo "TRAVIS_PULL_REQUEST"
+echo "$TRAVIS_PULL_REQUEST"
 # Fail fast for superseded builds to PR's
 if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
   newestbuildforthisPR=$(curl -H "$curlhdr" $endpoint/builds?event_type=pull_request | \
