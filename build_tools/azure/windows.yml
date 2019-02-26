@@ -28,9 +28,8 @@ jobs:
       displayName: Downloading miniconda for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
     - bash: |
-        ls
         ls miniconda
-    - powershell: Write-Host "##vso[task.prependpath]$env:BUILD_REPOSITORY_LOCALPATH\Scripts"
+    - powershell: Write-Host "##vso[task.prependpath]$env:BUILD_REPOSITORY_LOCALPATH\miniconda\Scripts"
       displayName: Add conda to PATH for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
     - script: |
