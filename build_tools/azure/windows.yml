@@ -27,6 +27,9 @@ jobs:
         Start-Process miniconda.exe "/S /AddToPath=0 /D=$env:BUILD_REPOSITORY_LOCALPATH /qn" -Wait
       displayName: Downloading miniconda for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
+    - bash: |
+        ls
+        ls $BUILD_REPOSITORY_LOCALPATH/Scripts
     - powershell: Write-Host "##vso[task.prependpath]$env:BUILD_REPOSITORY_LOCALPATH\Scripts"
       displayName: Add conda to PATH for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
