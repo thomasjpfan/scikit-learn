@@ -24,7 +24,7 @@ jobs:
     - powershell: |
         $wc = New-Object net.webclient
         $wc.Downloadfile("https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86.exe", "miniconda.exe")
-        Start-Process miniconda.exe "/S /AddToPath=0 /D=miniconda /qn" -Wait
+        Start-Process miniconda.exe "/S /AddToPath=0 /qn" -Wait
       displayName: Downloading miniconda for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
     - bash: |
