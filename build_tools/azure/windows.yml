@@ -24,13 +24,13 @@ jobs:
     - powershell: |
         $wc = New-Object net.webclient
         $wc.Downloadfile("https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86.exe", "miniconda.exe")
-        Start-Process miniconda.exe "/S /AddToPath=0 /D=testenv" -Wait
+        Start-Process miniconda.exe "/S /AddToPath=0 /D=$PWD\testenv" -Wait
       displayName: Downloading miniconda for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
     - bash: |
         ls
-        ls testenv
-        ls testenv\Scripts
+        ls $AGENT_WORKFOLDER
+        ls $AGENT_WORKFOLDER\testenv\Scripts
     - powershell: Write-Host "##vso[task.prependpath]$env:BUILD_REPOSITORY_LOCALPATH\testenv\Scripts"
       displayName: Add conda to PATH for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
