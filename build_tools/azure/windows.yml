@@ -30,7 +30,7 @@ jobs:
     - bash: |
         ls
         ls $AGENT_WORKFOLDER
-        ls $AGENT_WORKFOLDER\testenv\Scripts
+        ls $AGENT_WORKFOLDER\\testenv\\Scripts
     - powershell: Write-Host "##vso[task.prependpath]$env:BUILD_REPOSITORY_LOCALPATH\testenv\Scripts"
       displayName: Add conda to PATH for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
