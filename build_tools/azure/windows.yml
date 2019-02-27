@@ -27,7 +27,7 @@ jobs:
         Start-Process miniconda.exe "/S /AddToPath=0 /D=$env:AGENT_WORKFOLDER\miniconda" -Wait
       displayName: Downloading miniconda for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
-    - powershell: Write-Host "##vso[task.prependpath]$env:AGENT_WORKFOLDER\testenv\Scripts"
+    - powershell: Write-Host "##vso[task.prependpath]$env:AGENT_WORKFOLDER\miniconda\Scripts"
       displayName: Add conda to PATH for 32 bit Python
       condition: eq(variables['PYTHON_ARCH'], '32')
     - script: |
