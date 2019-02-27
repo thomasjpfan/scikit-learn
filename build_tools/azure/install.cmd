@@ -10,6 +10,7 @@ set PIP_INSTALL=pip install -q
 call deactivate
 @rem Clean up any left-over from a previous build
 conda remove --all -q -y -n %VIRTUALENV%
+conda config --set ssl_verify false
 conda create -n %VIRTUALENV% -q -y python=%CONDA_PY% numpy scipy cython pytest wheel pillow
 
 call activate %VIRTUALENV%
