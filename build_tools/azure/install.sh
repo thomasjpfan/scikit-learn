@@ -54,9 +54,19 @@ if [[ "$DISTRIB" == "conda" ]]; then
 	make_conda $TO_INSTALL
 
 elif [[ "$DISTRIB" == "ubuntu" ]]; then
-    sudo apt-get install python3-scipy libatlas3-base libatlas-base-dev libatlas-dev python3-virtualenv
-    python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
-    source $VIRTUALENV/bin/activate
+
+    # PYTHON_ARCH is 64 or 32
+    if [[ "$PYTHON_ARCH" == "64" ]]; then
+        sudo apt-get install python3-scipy libatlas3-base libatlas-base-dev libatlas-dev python3-virtualenv
+        python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
+        source $VIRTUALENV/bin/activate
+    else
+        # PYTHON_ARCH == 32
+        which python3
+        python3 -m virtualenv --python=python3 $VIRTUALENV
+        source $VIRTUALENV/bin/activate
+        python -m pip install numpy scipy
+    fi
     python -m pip install pytest pytest-cov cython joblib==$JOBLIB_VERSION
 fi
 
