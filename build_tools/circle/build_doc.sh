@@ -101,7 +101,7 @@ apt-get -yq remove texlive-binaries --purge
 apt-get -yq --no-install-suggests --no-install-recommends --force-yes \
     install dvipng texlive-latex-base texlive-latex-extra \
     texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended\
-    latexmk
+    latexmk gcc
 
 # deactivate circleci virtualenv and setup a miniconda env instead
 if [[ `type -t deactivate` ]]; then
@@ -114,7 +114,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   numpy="${NUMPY_VERSION:-*}" scipy="${SCIPY_VERSION:-*}" cython \
   pytest coverage matplotlib="${MATPLOTLIB_VERSION:-*}" sphinx=1.6.2 pillow \
   scikit-image="${SCIKIT_IMAGE_VERSION:-*}" pandas="${PANDAS_VERSION:-*}" \
-  joblib gcc
+  joblib
 
 source activate testenv
 pip install sphinx-gallery
