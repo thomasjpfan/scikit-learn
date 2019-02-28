@@ -28,7 +28,7 @@ jobs:
         addToPath: true
         architecture: 'x86'
       displayName: Use 32 bit System Python
-      condition: eq(variables['DISTRIB'], 'ubuntu', variables['PYTHON_ARCH'], '32')
+      condition: and(eq(variables['DISTRIB'], 'ubuntu'), eq(variables['PYTHON_ARCH'], '32'))
     - script: |
         build_tools/azure/install.sh
       displayName: 'Install'
