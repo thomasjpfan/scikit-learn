@@ -3,9 +3,12 @@ import warnings
 import sys
 import traceback
 import pickle
+import re
 from copy import deepcopy
 from functools import partial
 from inspect import signature
+from inspect import getsource
+from inspect import getmro
 
 import numpy as np
 from scipy import sparse
@@ -34,6 +37,7 @@ from sklearn.utils.testing import create_memmap_backed_data
 from sklearn.utils import is_scalar_nan
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import Ridge
+from sklearn.base import BaseEstimator
 
 
 from sklearn.base import (clone, ClusterMixin, is_classifier, is_regressor,
@@ -665,19 +669,17 @@ def check_attribute_docstrings(name, estimator_orig):
         from numpydoc import docscrape
     except ImportError:
         raise SkipTest("numpydoc not installed, can't test docstrings")
-    # check that estimators treat dtype object as numeric if possible
-    rng = np.random.RandomState(0)
-    X = pairwise_estimator_convert_X(rng.rand(40, 10), estimator_orig)
-    X = X.astype(object)
-    y = (X[:, 0] * 4).astype(np.int)
-    est = clone(estimator_orig)
-    y = multioutput_estimator_convert_y_2d(est, y)
-    est.fit(X, y)
 
-    fitted_attrs = [(x, getattr(est, x, None))
-                    for x in dir(est) if x.endswith("_")
-                    and not x.startswith("_")]
-    doc = docscrape.ClassDoc(type(est))
+    att_match = re.compile(r'(self\.|def )(?!_)(\w+_)\W')
+    fitted_attrs_names = set()
+
+    for current_cls in getmro(type(estimator_orig)):
+        if current_cls == BaseEstimator:
+            break
+        found = att_match.findall(getsource(current_cls))
+        fitted_attrs_names |= set(f[1] for f in found)
+
+    doc = docscrape.ClassDoc(type(estimator_orig))
     doc_attributes = []
     incorrect = []
     for att_name, type_definition, param_doc in doc['Attributes']:
@@ -694,9 +696,8 @@ def check_attribute_docstrings(name, estimator_orig):
         if '*' not in att_name:
             doc_attributes.append(att_name.split(':')[0].strip('` '))
     assert incorrect == []
-    fitted_attrs_names = [x[0] for x in fitted_attrs]
 
-    bad = sorted(list(set(fitted_attrs_names) ^ set(doc_attributes)))
+    bad = sorted(list(fitted_attrs_names ^ set(doc_attributes)))
     if len(bad) > 0:
         msg = '{}\n'.format(name) + '\n'.join(bad)
         raise AssertionError("Docstring Error: Attribute mismatch in " + msg)
