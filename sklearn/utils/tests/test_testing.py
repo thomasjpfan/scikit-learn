@@ -8,6 +8,8 @@ import numpy as np
 
 from scipy import sparse
 
+import pytest
+
 from sklearn.utils.deprecation import deprecated
 from sklearn.utils.metaestimators import if_delegate_has_method
 from sklearn.utils.testing import (
@@ -210,6 +212,20 @@ def test_ignore_warning():
     assert_warns(UserWarning, context_manager_no_deprecation_multiple_warning)
     assert_warns(DeprecationWarning, context_manager_no_user_multiple_warning)
 
+    # Check that passing warning class as first positional argument
+    warning_class = UserWarning
+    match = "'obj' should be a callable.+you should use 'category=UserWarning'"
+
+    with pytest.raises(ValueError, match=match):
+        silence_warnings_func = ignore_warnings(warning_class)(
+            _warning_function)
+        silence_warnings_func()
+
+    with pytest.raises(ValueError, match=match):
+        @ignore_warnings(warning_class)
+        def test():
+            pass
+
 
 class TestWarns(unittest.TestCase):
     def test_warn(self):
@@ -343,7 +359,7 @@ def f_check_param_definition(a, b, c, d, e):
     return a + b + c + d
 
 
-class Klass(object):
+class Klass:
     def f_missing(self, X, y):
         pass
 
@@ -365,7 +381,7 @@ class Klass(object):
         pass
 
 
-class MockEst(object):
+class MockEst:
     def __init__(self):
         """MockEstimator"""
     def fit(self, X, y):
@@ -381,7 +397,7 @@ class MockEst(object):
         return 1.
 
 
-class MockMetaEstimator(object):
+class MockMetaEstimator:
     def __init__(self, delegate):
         """MetaEstimator to check if doctest on delegated methods work.
 
@@ -433,8 +449,7 @@ class MockMetaEstimator(object):
 def test_check_docstring_parameters():
     try:
         import numpydoc  # noqa
-        assert sys.version_info >= (3, 5)
-    except (ImportError, AssertionError):
+    except ImportError:
         raise SkipTest(
             "numpydoc is required to test the docstrings")
 
@@ -479,7 +494,7 @@ def test_check_docstring_parameters():
         assert mess in incorrect[0], '"%s" not in "%s"' % (mess, incorrect[0])
 
 
-class RegistrationCounter(object):
+class RegistrationCounter:
     def __init__(self):
         self.nb_calls = 0
 
