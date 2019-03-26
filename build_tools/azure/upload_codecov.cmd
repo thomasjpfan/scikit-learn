@@ -1,6 +1,6 @@
 @echo on
 
-call activate %VIRTUALENV%
+call activate %VIRTUALENV% || EXIT /B 1
 
 copy %TMP_FOLDER%\.coverage %BUILD_REPOSITORY_LOCALPATH%
 

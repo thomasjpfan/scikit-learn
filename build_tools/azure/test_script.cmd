@@ -1,6 +1,6 @@
 @echo on
 
-call activate %VIRTUALENV%
+call activate %VIRTUALENV% || EXIT /B 1
 
 mkdir %TMP_FOLDER%
 cd %TMP_FOLDER%
