@@ -2,6 +2,7 @@
 #cython: boundscheck=False
 #cython: wraparound=False
 #cython: cdivision=True
+# cython: language_level=3
 
 # By Jake Vanderplas (2013) <jakevdp@cs.washington.edu>
 # written for the scikit-learn project
@@ -48,8 +49,8 @@ cdef inline np.ndarray _buffer_to_ndarray(DTYPE_t* x, np.npy_intp n):
 from libc.math cimport fabs, sqrt, exp, pow, cos, sin, asin
 cdef DTYPE_t INF = np.inf
 
-from typedefs cimport DTYPE_t, ITYPE_t, DITYPE_t, DTYPECODE
-from typedefs import DTYPE, ITYPE
+from .typedefs cimport DTYPE_t, ITYPE_t, DITYPE_t, DTYPECODE
+from .typedefs import DTYPE, ITYPE
 
 
 ######################################################################
@@ -330,7 +331,7 @@ cdef class DistanceMetric:
                 D[i1, i2] = self.dist(&X[i1, 0], &Y[i2, 0], X.shape[1])
         return 0
 
-    cdef DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         """Convert the reduced distance to the distance"""
         return rdist
 
@@ -418,7 +419,7 @@ cdef class EuclideanDistance(DistanceMetric):
                               ITYPE_t size) nogil except -1:
         return euclidean_rdist(x1, x2, size)
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return sqrt(rdist)
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
@@ -462,7 +463,7 @@ cdef class SEuclideanDistance(DistanceMetric):
                              ITYPE_t size) nogil except -1:
         return sqrt(self.rdist(x1, x2, size))
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return sqrt(rdist)
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
@@ -551,7 +552,7 @@ cdef class MinkowskiDistance(DistanceMetric):
                              ITYPE_t size) nogil except -1:
         return pow(self.rdist(x1, x2, size), 1. / self.p)
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return pow(rdist, 1. / self.p)
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
@@ -610,7 +611,7 @@ cdef class WMinkowskiDistance(DistanceMetric):
                              ITYPE_t size) nogil except -1:
         return pow(self.rdist(x1, x2, size), 1. / self.p)
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return pow(rdist, 1. / self.p)
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
@@ -683,7 +684,7 @@ cdef class MahalanobisDistance(DistanceMetric):
                              ITYPE_t size) nogil except -1:
         return sqrt(self.rdist(x1, x2, size))
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return sqrt(rdist)
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
@@ -788,6 +789,11 @@ cdef class JaccardDistance(DistanceMetric):
             tf2 = x2[j] != 0
             nnz += (tf1 or tf2)
             n_eq += (tf1 and tf2)
+        # Based on https://github.com/scipy/scipy/pull/7373
+        # When comparing two all-zero vectors, scipy>=1.2.0 jaccard metric
+        # was changed to return 0, instead of nan.
+        if nnz == 0:
+            return 0
         return (nnz - n_eq) * 1.0 / nnz
 
 
@@ -998,7 +1004,7 @@ cdef class HaversineDistance(DistanceMetric):
         return 2 * asin(sqrt(sin_0 * sin_0
                              + cos(x1[0]) * cos(x2[0]) * sin_1 * sin_1))
 
-    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) except -1:
+    cdef inline DTYPE_t _rdist_to_dist(self, DTYPE_t rdist) nogil except -1:
         return 2 * asin(sqrt(rdist))
 
     cdef inline DTYPE_t _dist_to_rdist(self, DTYPE_t dist) nogil except -1:
