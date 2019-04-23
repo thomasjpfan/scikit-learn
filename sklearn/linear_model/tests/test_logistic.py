@@ -1389,9 +1389,9 @@ def test_dtype_match(solver, multi_class):
     assert_equal(lr_64.coef_.dtype, X_64.dtype)
 
     rtol = 1e-6
-    if os.name == 'nt' and _IS_32BIT:
-        # FIXME
-        rtol = 1e-2
+    # if os.name == 'nt' and _IS_32BIT:
+    #     # FIXME
+    #     rtol = 1e-2
 
     assert_allclose(lr_32.coef_, lr_64.coef_.astype(np.float32), rtol=rtol)
 
