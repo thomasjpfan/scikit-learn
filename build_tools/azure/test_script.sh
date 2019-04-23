@@ -24,6 +24,7 @@ pip list
 TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML --pyargs"
 
 if [[ "$COVERAGE" == "true" ]]; then
+    export COVERAGE_PROCESS_START=$PWD/.coveragerc
     TEST_CMD="$TEST_CMD --cov sklearn"
 fi
 
