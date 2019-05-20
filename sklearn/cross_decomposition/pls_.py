@@ -9,7 +9,8 @@ import warnings
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
-from scipy.linalg import pinv2, svd
+from scipy.linalg import pinv2, svd, decomp_svd
+from scipy.linalg.decomp import _asarray_validated
 from scipy.sparse.linalg import svds
 
 from ..base import BaseEstimator, RegressorMixin, TransformerMixin
@@ -20,6 +21,29 @@ from ..utils.validation import check_is_fitted, FLOAT_DTYPES
 from ..exceptions import ConvergenceWarning
 
 __all__ = ['PLSCanonical', 'PLSRegression', 'PLSSVD']
+
+
+def _pinv2(a, cond=None, rcond=None, return_rank=False, check_finite=True):
+    a = _asarray_validated(a, check_finite=check_finite)
+    u, s, vh = decomp_svd.svd(a, full_matrices=False, check_finite=False)
+
+    if rcond is not None:
+        cond = rcond
+    if cond in [None, -1]:
+        t = u.dtype.char.lower()
+        factor = {'f': 1E3, 'd': 1E6}
+        cond = factor[t] * np.finfo(t).eps
+
+    rank = np.sum(s > cond * np.max(s))
+
+    u = u[:, :rank]
+    u /= s[:rank]
+    B = np.transpose(np.conjugate(np.dot(u, vh[:rank])))
+
+    if return_rank:
+        return B, rank
+    else:
+        return B
 
 
 def _nipals_twoblocks_inner_loop(X, Y, mode="A", max_iter=500, tol=1e-06,
@@ -43,7 +67,7 @@ def _nipals_twoblocks_inner_loop(X, Y, mode="A", max_iter=500, tol=1e-06,
             if X_pinv is None:
                 # We use slower pinv2 (same as np.linalg.pinv) for stability
                 # reasons
-                X_pinv = pinv2(X, check_finite=False)
+                X_pinv = _pinv2(X, check_finite=False)
             x_weights = np.dot(X_pinv, y_score)
         else:  # mode A
             # Mode A regress each X column on y_score
@@ -60,7 +84,7 @@ def _nipals_twoblocks_inner_loop(X, Y, mode="A", max_iter=500, tol=1e-06,
         # 2.1 Update y_weights
         if mode == "B":
             if Y_pinv is None:
-                Y_pinv = pinv2(Y, check_finite=False)  # compute once pinv(Y)
+                Y_pinv = _pinv2(Y, check_finite=False)  # compute once pinv(Y)
             y_weights = np.dot(Y_pinv, x_score)
         else:
             # Mode A regress each Y column on x_score
