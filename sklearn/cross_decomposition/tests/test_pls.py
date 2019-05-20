@@ -343,7 +343,7 @@ def test_scale_and_stability():
                    [6.2, 5.9],
                    [11.9, 12.3]])
 
-    for (X, Y) in [(X1, Y1), (X2, Y2)]:
+    for (X, Y) in [(X2, Y2)]:
         X_std = X.std(axis=0, ddof=1)
         X_std[X_std == 0] = 1
         Y_std = Y.std(axis=0, ddof=1)
@@ -352,20 +352,23 @@ def test_scale_and_stability():
         X_s = (X - X.mean(axis=0)) / X_std
         Y_s = (Y - Y.mean(axis=0)) / Y_std
 
-        for clf in [CCA(), pls_.PLSCanonical(),
-                    pls_.PLSRegression(),
-                    pls_.PLSSVD()]:
-            clf.set_params(scale=True)
-            X_score, Y_score = clf.fit_transform(X, Y)
-            clf.set_params(scale=False)
-            X_s_score, Y_s_score = clf.fit_transform(X_s, Y_s)
-            assert_allclose(X_s_score, X_score, rtol=1e-3, atol=1e-3)
-            assert_allclose(Y_s_score, Y_score, rtol=1e-3, atol=1e-6)
-            # Scaling should be idempotent
-            clf.set_params(scale=True)
-            X_s_score_scaled, Y_s_score_scaled = clf.fit_transform(X_s, Y_s)
-            assert_allclose(X_s_score_scaled, X_score, rtol=1e-2, atol=1e-3)
-            assert_allclose(Y_s_score_scaled, Y_score, rtol=1e-3, atol=1e-6)
+        # for clf in [CCA(), pls_.PLSCanonical(),
+        #             pls_.PLSRegression(),
+        #             pls_.PLSSVD()]:
+        clf = CCA()
+        clf.set_params(scale=True)
+        X_score, Y_score = clf.fit_transform(X, Y)
+        # clf.set_params(scale=False)
+        # X_s_score, Y_s_score = clf.fit_transform(X_s, Y_s)
+        # assert_allclose(X_s_score, X_score, rtol=1e-3, atol=1e-3)
+        # assert_allclose(Y_s_score, Y_score, rtol=1e-3, atol=1e-6)
+        # Scaling should be idempotent
+        clf.set_params(scale=True)
+        X_s_score_scaled, Y_s_score_scaled = clf.fit_transform(X_s, Y_s)
+        assert_allclose(X_s_score_scaled, X_score, rtol=1e-2, atol=1e-3)
+        assert_allclose(Y_s_score_scaled, Y_score, rtol=1e-3, atol=1e-6)
+
+        assert False
 
 
 def test_pls_errors():

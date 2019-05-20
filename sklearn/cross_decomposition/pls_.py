@@ -31,8 +31,6 @@ def _nipals_twoblocks_inner_loop(X, Y, mode="A", max_iter=500, tol=1e-06,
     similar to the Power method for determining the eigenvectors and
     eigenvalues of a X'Y.
     """
-    print("_nipals_twoblocks_inner_loop X:", X)
-    print("_nipals_twoblocks_inner_loop Y:", Y)
     y_score = Y[:, [0]]
     x_weights_old = 0
     ite = 1
@@ -294,6 +292,8 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                 break
             # 1) weights estimation (inner loop)
             # -----------------------------------
+            print("_nipals_twoblocks_inner_loop k:", k, "Xk:", Xk)
+            print("_nipals_twoblocks_inner_loop k:", k, "Yk:", Yk)
             if self.algorithm == "nipals":
                 x_weights, y_weights, n_iter_ = \
                     _nipals_twoblocks_inner_loop(
