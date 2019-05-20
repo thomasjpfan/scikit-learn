@@ -299,8 +299,6 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                     _nipals_twoblocks_inner_loop(
                         X=Xk, Y=Yk, mode=self.mode, max_iter=self.max_iter,
                         tol=self.tol, norm_y_weights=self.norm_y_weights)
-                print("x_weights", x_weights)
-                print("y_weights", y_weights)
                 self.n_iter_.append(n_iter_)
             elif self.algorithm == "svd":
                 x_weights, y_weights = _svd_cross_product(X=Xk, Y=Yk)
@@ -311,6 +309,9 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
             y_weights = y_weights.T
             # compute scores
             x_scores = np.dot(Xk, x_weights)
+            print("x_weights", x_weights)
+            print("y_weights", y_weights)
+            print("x_scores", x_scores)
             if self.norm_y_weights:
                 y_ss = 1
             else:
