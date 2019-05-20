@@ -10,8 +10,6 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 from scipy.linalg import pinv2, svd, decomp_svd
-from scipy.linalg.decomp import _asarray_validated
-from scipy.sparse.linalg import svds
 
 from ..base import BaseEstimator, RegressorMixin, TransformerMixin
 from ..base import MultiOutputMixin
