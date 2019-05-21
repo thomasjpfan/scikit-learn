@@ -339,7 +339,7 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                 Yk -= np.dot(x_scores, y_loadings.T)
 
             # Replace small values with zero
-            Y_eps = np.finfo(Y.dtype).eps
+            Y_eps = np.finfo(Yk.dtype).eps
             Yk_mask = np.all(Yk < Y_eps, axis=0)
             Yk[:, Yk_mask] = 0.0
             # 3) Store weights, scores and loadings # Notation:
