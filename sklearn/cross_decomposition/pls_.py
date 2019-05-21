@@ -293,6 +293,11 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
             # 1) weights estimation (inner loop)
             # -----------------------------------
             if self.algorithm == "nipals":
+                # Replace small columns close with zero
+                Y_eps = np.finfo(Yk.dtype).eps
+                Yk_mask = np.all(np.abs(Yk) < 1e3 * Y_eps, axis=0)
+                Yk[:, Yk_mask] = 0.0
+
                 x_weights, y_weights, n_iter_ = \
                     _nipals_twoblocks_inner_loop(
                         X=Xk, Y=Yk, mode=self.mode, max_iter=self.max_iter,
@@ -337,11 +342,6 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                 y_loadings = (np.dot(Yk.T, x_scores)
                               / np.dot(x_scores.T, x_scores))
                 Yk -= np.dot(x_scores, y_loadings.T)
-
-            # Replace small values with zero
-            Y_eps = np.finfo(Yk.dtype).eps
-            Yk_mask = np.all(np.abs(Yk) < Y_eps, axis=0)
-            Yk[:, Yk_mask] = 0.0
             # 3) Store weights, scores and loadings # Notation:
             self.x_scores_[:, k] = x_scores.ravel()  # T
             self.y_scores_[:, k] = y_scores.ravel()  # U
