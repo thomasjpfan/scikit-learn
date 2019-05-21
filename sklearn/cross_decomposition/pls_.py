@@ -340,7 +340,7 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                 Yk -= np.dot(x_scores, y_loadings.T)
 
             # Replace small values with zero
-            Yk_mask = np.all(Yk < 1e3 * eps, axis=0)
+            Yk_mask = np.all(Yk < eps, axis=0)
             Yk[:, Yk_mask] = 0.0
             # 3) Store weights, scores and loadings # Notation:
             self.x_scores_[:, k] = x_scores.ravel()  # T
