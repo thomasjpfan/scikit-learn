@@ -293,7 +293,7 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
             # 1) weights estimation (inner loop)
             # -----------------------------------
             if self.algorithm == "nipals":
-                # Replace small columns close with zero
+                # Replace columns that are all close to zero with zeros
                 Y_eps = np.finfo(Yk.dtype).eps
                 Yk_mask = np.all(np.abs(Yk) < 1e3 * Y_eps, axis=0)
                 Yk[:, Yk_mask] = 0.0
