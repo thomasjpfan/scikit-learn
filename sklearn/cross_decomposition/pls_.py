@@ -285,21 +285,19 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
         self.n_iter_ = []
 
         # NIPALS algo: outer loop, over components
+        eps = np.finfo(np.double).eps
         for k in range(self.n_components):
-            if np.all(np.dot(Yk.T, Yk) < np.finfo(np.double).eps):
+            if np.all(np.dot(Yk.T, Yk) < eps):
                 # Yk constant
                 warnings.warn('Y residual constant at iteration %s' % k)
                 break
             # 1) weights estimation (inner loop)
             # -----------------------------------
-            print("_nipals_twoblocks_inner_loop k:", k, "Xk:", Xk)
-            print("_nipals_twoblocks_inner_loop k:", k, "Yk:", Yk)
             if self.algorithm == "nipals":
                 x_weights, y_weights, n_iter_ = \
                     _nipals_twoblocks_inner_loop(
                         X=Xk, Y=Yk, mode=self.mode, max_iter=self.max_iter,
                         tol=self.tol, norm_y_weights=self.norm_y_weights)
-                print("y_weights_before", y_weights)
                 self.n_iter_.append(n_iter_)
             elif self.algorithm == "svd":
                 x_weights, y_weights = _svd_cross_product(X=Xk, Y=Yk)
@@ -310,9 +308,6 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
             y_weights = y_weights.T
             # compute scores
             x_scores = np.dot(Xk, x_weights)
-            print("x_weights", x_weights)
-            print("y_weights", y_weights)
-            print("x_scores", x_scores)
             if self.norm_y_weights:
                 y_ss = 1
             else:
@@ -343,6 +338,10 @@ class _PLS(BaseEstimator, TransformerMixin, RegressorMixin, MultiOutputMixin,
                 y_loadings = (np.dot(Yk.T, x_scores)
                               / np.dot(x_scores.T, x_scores))
                 Yk -= np.dot(x_scores, y_loadings.T)
+
+            # Replace small values with zero
+            Yk_mask = np.all(Yk < 1e3 * eps, axis=0)
+            Yk[:, Yk_mask] = 0.0
             # 3) Store weights, scores and loadings # Notation:
             self.x_scores_[:, k] = x_scores.ravel()  # T
             self.y_scores_[:, k] = y_scores.ravel()  # U
