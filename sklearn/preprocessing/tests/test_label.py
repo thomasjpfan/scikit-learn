@@ -255,8 +255,8 @@ def test_sparse_output_multilabel_binarizer():
     # test input as iterable of iterables
     inputs = [
         lambda: [(2, 3), (1,), (1, 2)],
-        lambda: (set([2, 3]), set([1]), set([1, 2])),
-        lambda: iter([iter((2, 3)), iter((1,)), set([1, 2])]),
+        lambda: ({2, 3}, {1}, {1, 2}),
+        lambda: iter([iter((2, 3)), iter((1,)), {1, 2}]),
     ]
     indicator_mat = np.array([[0, 1, 1],
                               [1, 0, 0],
@@ -299,8 +299,8 @@ def test_multilabel_binarizer():
     # test input as iterable of iterables
     inputs = [
         lambda: [(2, 3), (1,), (1, 2)],
-        lambda: (set([2, 3]), set([1]), set([1, 2])),
-        lambda: iter([iter((2, 3)), iter((1,)), set([1, 2])]),
+        lambda: ({2, 3}, {1}, {1, 2}),
+        lambda: iter([iter((2, 3)), iter((1,)), {1, 2}]),
     ]
     indicator_mat = np.array([[0, 1, 1],
                               [1, 0, 0],
@@ -605,3 +605,24 @@ def test_encode_util(values, expected):
     assert_array_equal(encoded, np.array([1, 0, 2, 0, 2]))
     _, encoded = _encode(values, uniques, encode=True)
     assert_array_equal(encoded, np.array([1, 0, 2, 0, 2]))
+
+
+def test_encode_check_unknown():
+    # test for the check_unknown parameter of _encode()
+    uniques = np.array([1, 2, 3])
+    values = np.array([1, 2, 3, 4])
+
+    # Default is True, raise error
+    with pytest.raises(ValueError,
+                       match='y contains previously unseen labels'):
+        _encode(values, uniques, encode=True, check_unknown=True)
+
+    # dont raise error if False
+    _encode(values, uniques, encode=True, check_unknown=False)
+
+    # parameter is ignored for object dtype
+    uniques = np.array(['a', 'b', 'c'], dtype=object)
+    values = np.array(['a', 'b', 'c', 'd'], dtype=object)
+    with pytest.raises(ValueError,
+                       match='y contains previously unseen labels'):
+        _encode(values, uniques, encode=True, check_unknown=False)

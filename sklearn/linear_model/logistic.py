@@ -29,9 +29,9 @@ from ..utils.extmath import row_norms
 from ..utils.fixes import logsumexp
 from ..utils.optimize import newton_cg
 from ..utils.validation import check_X_y
+from ..utils.validation import check_is_fitted
 from ..utils import deprecated
-from ..exceptions import (NotFittedError, ConvergenceWarning,
-                          ChangedBehaviorWarning)
+from ..exceptions import (ConvergenceWarning, ChangedBehaviorWarning)
 from ..utils.multiclass import check_classification_targets
 from ..utils._joblib import Parallel, delayed, effective_n_jobs
 from ..utils.fixes import _joblib_parallel_args
@@ -260,9 +260,8 @@ def _multinomial_loss(w, X, Y, alpha, sample_weight):
     alpha : float
         Regularization parameter. alpha is equal to 1 / C.
 
-    sample_weight : array-like, shape (n_samples,) optional
+    sample_weight : array-like, shape (n_samples,)
         Array of weights that are assigned to individual samples.
-        If not provided, then each sample is given unit weight.
 
     Returns
     -------
@@ -317,7 +316,7 @@ def _multinomial_loss_grad(w, X, Y, alpha, sample_weight):
     alpha : float
         Regularization parameter. alpha is equal to 1 / C.
 
-    sample_weight : array-like, shape (n_samples,) optional
+    sample_weight : array-like, shape (n_samples,)
         Array of weights that are assigned to individual samples.
 
     Returns
@@ -371,7 +370,7 @@ def _multinomial_grad_hess(w, X, Y, alpha, sample_weight):
     alpha : float
         Regularization parameter. alpha is equal to 1 / C.
 
-    sample_weight : array-like, shape (n_samples,) optional
+    sample_weight : array-like, shape (n_samples,)
         Array of weights that are assigned to individual samples.
 
     Returns
@@ -426,24 +425,18 @@ def _multinomial_grad_hess(w, X, Y, alpha, sample_weight):
 
 
 def _check_solver(solver, penalty, dual):
-    if solver == 'warn':
-        solver = 'liblinear'
-        warnings.warn("Default solver will be changed to 'lbfgs' in 0.22. "
-                      "Specify a solver to silence this warning.",
-                      FutureWarning)
-
     all_solvers = ['liblinear', 'newton-cg', 'lbfgs', 'sag', 'saga']
     if solver not in all_solvers:
         raise ValueError("Logistic Regression supports only solvers in %s, got"
                          " %s." % (all_solvers, solver))
 
-    all_penalties = ['l1', 'l2', 'elasticnet']
+    all_penalties = ['l1', 'l2', 'elasticnet', 'none']
     if penalty not in all_penalties:
         raise ValueError("Logistic Regression supports only penalties in %s,"
                          " got %s." % (all_penalties, penalty))
 
-    if solver not in ['liblinear', 'saga'] and penalty != 'l2':
-        raise ValueError("Solver %s supports only l2 penalties, "
+    if solver not in ['liblinear', 'saga'] and penalty not in ('l2', 'none'):
+        raise ValueError("Solver %s supports only 'l2' or 'none' penalties, "
                          "got %s penalty." % (solver, penalty))
     if solver != 'liblinear' and dual:
         raise ValueError("Solver %s supports only "
@@ -452,16 +445,16 @@ def _check_solver(solver, penalty, dual):
     if penalty == 'elasticnet' and solver != 'saga':
         raise ValueError("Only 'saga' solver supports elasticnet penalty,"
                          " got solver={}.".format(solver))
+
+    if solver == 'liblinear' and penalty == 'none':
+        raise ValueError(
+            "penalty='none' is not supported for the liblinear solver"
+        )
+
     return solver
 
 
 def _check_multi_class(multi_class, solver, n_classes):
-    if multi_class == 'warn':
-        multi_class = 'ovr'
-        if n_classes > 2:
-            warnings.warn("Default multi_class will be changed to 'auto' in"
-                          " 0.22. Specify the multi_class option to silence "
-                          "this warning.", FutureWarning)
     if multi_class == 'auto':
         if solver == 'liblinear':
             multi_class = 'ovr'
@@ -484,7 +477,7 @@ def logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
                              max_iter=100, tol=1e-4, verbose=0,
                              solver='lbfgs', coef=None,
                              class_weight=None, dual=False, penalty='l2',
-                             intercept_scaling=1., multi_class='warn',
+                             intercept_scaling=1., multi_class='auto',
                              random_state=None, check_input=True,
                              max_squared_sum=None, sample_weight=None,
                              l1_ratio=None):
@@ -578,7 +571,7 @@ def logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
         To lessen the effect of regularization on synthetic feature weight
         (and therefore on the intercept) intercept_scaling has to be increased.
 
-    multi_class : str, {'ovr', 'multinomial', 'auto'}, default: 'ovr'
+    multi_class : {'ovr', 'multinomial', 'auto'}, default='auto'
         If the option chosen is 'ovr', then a binary problem is fit for each
         label. For 'multinomial' the loss minimised is the multinomial loss fit
         across the entire probability distribution, *even when the data is
@@ -588,8 +581,8 @@ def logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
 
         .. versionadded:: 0.18
            Stochastic Average Gradient descent solver for 'multinomial' case.
-        .. versionchanged:: 0.20
-            Default will change from 'ovr' to 'auto' in 0.22.
+        .. versionchanged:: 0.22
+            Default changed from 'ovr' to 'auto' in 0.22.
 
     random_state : int, RandomState instance or None, optional, default None
         The seed of the pseudo random number generator to use when shuffling
@@ -645,7 +638,7 @@ def logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
     return _logistic_regression_path(
         X, y, pos_class=None, Cs=10, fit_intercept=True, max_iter=100,
         tol=1e-4, verbose=0, solver='lbfgs', coef=None, class_weight=None,
-        dual=False, penalty='l2', intercept_scaling=1., multi_class='warn',
+        dual=False, penalty='l2', intercept_scaling=1., multi_class='auto',
         random_state=None, check_input=True, max_squared_sum=None,
         sample_weight=None, l1_ratio=None)
 
@@ -654,7 +647,7 @@ def _logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
                               max_iter=100, tol=1e-4, verbose=0,
                               solver='lbfgs', coef=None,
                               class_weight=None, dual=False, penalty='l2',
-                              intercept_scaling=1., multi_class='warn',
+                              intercept_scaling=1., multi_class='auto',
                               random_state=None, check_input=True,
                               max_squared_sum=None, sample_weight=None,
                               l1_ratio=None):
@@ -744,7 +737,7 @@ def _logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
         To lessen the effect of regularization on synthetic feature weight
         (and therefore on the intercept) intercept_scaling has to be increased.
 
-    multi_class : str, {'ovr', 'multinomial', 'auto'}, default: 'ovr'
+    multi_class : {'ovr', 'multinomial', 'auto'}, default='auto'
         If the option chosen is 'ovr', then a binary problem is fit for each
         label. For 'multinomial' the loss minimised is the multinomial loss fit
         across the entire probability distribution, *even when the data is
@@ -754,8 +747,8 @@ def _logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
 
         .. versionadded:: 0.18
            Stochastic Average Gradient descent solver for 'multinomial' case.
-        .. versionchanged:: 0.20
-            Default will change from 'ovr' to 'auto' in 0.22.
+        .. versionchanged:: 0.22
+            Default changed from 'ovr' to 'auto' in 0.22.
 
     random_state : int, RandomState instance or None, optional, default None
         The seed of the pseudo random number generator to use when shuffling
@@ -959,7 +952,7 @@ def _logistic_regression_path(X, y, pos_class=None, Cs=10, fit_intercept=True,
 
         elif solver in ['sag', 'saga']:
             if multi_class == 'multinomial':
-                target = target.astype(np.float64)
+                target = target.astype(X.dtype, copy=False)
                 loss = 'multinomial'
             else:
                 loss = 'log'
@@ -1004,7 +997,7 @@ def _log_reg_scoring_path(X, y, train, test, pos_class=None, Cs=10,
                           max_iter=100, tol=1e-4, class_weight=None,
                           verbose=0, solver='lbfgs', penalty='l2',
                           dual=False, intercept_scaling=1.,
-                          multi_class='warn', random_state=None,
+                          multi_class='auto', random_state=None,
                           max_squared_sum=None, sample_weight=None,
                           l1_ratio=None):
     """Computes scores across logistic_regression_path
@@ -1090,7 +1083,7 @@ def _log_reg_scoring_path(X, y, train, test, pos_class=None, Cs=10,
         To lessen the effect of regularization on synthetic feature weight
         (and therefore on the intercept) intercept_scaling has to be increased.
 
-    multi_class : str, {'ovr', 'multinomial'}
+    multi_class : {'ovr', 'multinomial'}
         If the option chosen is 'ovr', then a binary problem is fit for each
         label. For 'multinomial' the loss minimised is the multinomial loss fit
         across the entire probability distribution, *even when the data is
@@ -1199,30 +1192,33 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
     """Logistic Regression (aka logit, MaxEnt) classifier.
 
     In the multiclass case, the training algorithm uses the one-vs-rest (OvR)
-    scheme if the 'multi_class' option is set to 'ovr', and uses the cross-
-    entropy loss if the 'multi_class' option is set to 'multinomial'.
+    scheme if the 'multi_class' option is set to 'ovr', and uses the
+    cross-entropy loss if the 'multi_class' option is set to 'multinomial'.
     (Currently the 'multinomial' option is supported only by the 'lbfgs',
     'sag', 'saga' and 'newton-cg' solvers.)
 
     This class implements regularized logistic regression using the
-    'liblinear' library, 'newton-cg', 'sag', 'saga' and 'lbfgs' solvers. It can
-    handle both dense and sparse input. Use C-ordered arrays or CSR matrices
-    containing 64-bit floats for optimal performance; any other input format
-    will be converted (and copied).
+    'liblinear' library, 'newton-cg', 'sag', 'saga' and 'lbfgs' solvers. **Note
+    that regularization is applied by default**. It can handle both dense
+    and sparse input. Use C-ordered arrays or CSR matrices containing 64-bit
+    floats for optimal performance; any other input format will be converted
+    (and copied).
 
     The 'newton-cg', 'sag', and 'lbfgs' solvers support only L2 regularization
-    with primal formulation. The 'liblinear' solver supports both L1 and L2
-    regularization, with a dual formulation only for the L2 penalty. The
-    Elastic-Net regularization is only supported by the 'saga' solver.
+    with primal formulation, or no regularization. The 'liblinear' solver
+    supports both L1 and L2 regularization, with a dual formulation only for
+    the L2 penalty. The Elastic-Net regularization is only supported by the
+    'saga' solver.
 
     Read more in the :ref:`User Guide <logistic_regression>`.
 
     Parameters
     ----------
-    penalty : str, 'l1', 'l2', or 'elasticnet', optional (default='l2')
+    penalty : str, 'l1', 'l2', 'elasticnet' or 'none', optional (default='l2')
         Used to specify the norm used in the penalization. The 'newton-cg',
         'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
-        only supported by the 'saga' solver.
+        only supported by the 'saga' solver. If 'none' (not supported by the
+        liblinear solver), no regularization is applied.
 
         .. versionadded:: 0.19
            l1 penalty with SAGA solver (allowing 'multinomial' + L1)
@@ -1280,7 +1276,7 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         'liblinear'.
 
     solver : str, {'newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'}, \
-             optional (default='liblinear').
+             optional (default='lbfgs').
 
         Algorithm to use in the optimization problem.
 
@@ -1289,8 +1285,10 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         - For multiclass problems, only 'newton-cg', 'sag', 'saga' and 'lbfgs'
           handle multinomial loss; 'liblinear' is limited to one-versus-rest
           schemes.
-        - 'newton-cg', 'lbfgs' and 'sag' only handle L2 penalty, whereas
-          'liblinear' and 'saga' handle L1 penalty.
+        - 'newton-cg', 'lbfgs', 'sag' and 'saga' handle L2 or no penalty
+        - 'liblinear' and 'saga' also handle L1 penalty
+        - 'saga' also supports 'elasticnet' penalty
+        - 'liblinear' does not handle no penalty
 
         Note that 'sag' and 'saga' fast convergence is only guaranteed on
         features with approximately the same scale. You can
@@ -1300,14 +1298,13 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
            Stochastic Average Gradient descent solver.
         .. versionadded:: 0.19
            SAGA solver.
-        .. versionchanged:: 0.20
-            Default will change from 'liblinear' to 'lbfgs' in 0.22.
+        .. versionchanged:: 0.22
+            The default solver changed from 'liblinear' to 'lbfgs' in 0.22.
 
     max_iter : int, optional (default=100)
-        Useful only for the newton-cg, sag and lbfgs solvers.
         Maximum number of iterations taken for the solvers to converge.
 
-    multi_class : str, {'ovr', 'multinomial', 'auto'}, optional (default='ovr')
+    multi_class : {'ovr', 'multinomial', 'auto'}, default='auto'
         If the option chosen is 'ovr', then a binary problem is fit for each
         label. For 'multinomial' the loss minimised is the multinomial loss fit
         across the entire probability distribution, *even when the data is
@@ -1317,8 +1314,8 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
         .. versionadded:: 0.18
            Stochastic Average Gradient descent solver for 'multinomial' case.
-        .. versionchanged:: 0.20
-            Default will change from 'ovr' to 'auto' in 0.22.
+        .. versionchanged:: 0.22
+            Default changed from 'ovr' to 'auto' in 0.22.
 
     verbose : int, optional (default=0)
         For the liblinear and lbfgs solvers set verbose to any positive
@@ -1384,8 +1381,7 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
     >>> from sklearn.datasets import load_iris
     >>> from sklearn.linear_model import LogisticRegression
     >>> X, y = load_iris(return_X_y=True)
-    >>> clf = LogisticRegression(random_state=0, solver='lbfgs',
-    ...                          multi_class='multinomial').fit(X, y)
+    >>> clf = LogisticRegression(random_state=0).fit(X, y)
     >>> clf.predict(X[:2, :])
     array([0, 0])
     >>> clf.predict_proba(X[:2, :]) # doctest: +ELLIPSIS
@@ -1434,8 +1430,8 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
     def __init__(self, penalty='l2', dual=False, tol=1e-4, C=1.0,
                  fit_intercept=True, intercept_scaling=1, class_weight=None,
-                 random_state=None, solver='warn', max_iter=100,
-                 multi_class='warn', verbose=0, warm_start=False, n_jobs=None,
+                 random_state=None, solver='lbfgs', max_iter=100,
+                 multi_class='auto', verbose=0, warm_start=False, n_jobs=None,
                  l1_ratio=None):
 
         self.penalty = penalty
@@ -1476,6 +1472,10 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         Returns
         -------
         self : object
+
+        Notes
+        -----
+        The SAGA solver supports both float64 and float32 bit arrays.
         """
         solver = _check_solver(self.solver, self.penalty, self.dual)
 
@@ -1491,6 +1491,18 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
             warnings.warn("l1_ratio parameter is only used when penalty is "
                           "'elasticnet'. Got "
                           "(penalty={})".format(self.penalty))
+        if self.penalty == 'none':
+            if self.C != 1.0:  # default values
+                warnings.warn(
+                    "Setting penalty='none' will ignore the C and l1_ratio "
+                    "parameters"
+                )
+                # Note that check for l1_ratio is done right above
+            C_ = np.inf
+            penalty = 'l2'
+        else:
+            C_ = self.C
+            penalty = self.penalty
         if not isinstance(self.max_iter, numbers.Number) or self.max_iter < 0:
             raise ValueError("Maximum number of iteration must be positive;"
                              " got (max_iter=%r)" % self.max_iter)
@@ -1498,10 +1510,10 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
             raise ValueError("Tolerance for stopping criteria must be "
                              "positive; got (tol=%r)" % self.tol)
 
-        if solver in ['newton-cg']:
-            _dtype = [np.float64, np.float32]
-        else:
+        if solver in ['lbfgs', 'liblinear']:
             _dtype = np.float64
+        else:
+            _dtype = [np.float64, np.float32]
 
         X, y = check_X_y(X, y, accept_sparse='csr', dtype=_dtype, order="C",
                          accept_large_sparse=solver != 'liblinear')
@@ -1570,13 +1582,13 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
             prefer = 'processes'
         fold_coefs_ = Parallel(n_jobs=self.n_jobs, verbose=self.verbose,
                                **_joblib_parallel_args(prefer=prefer))(
-            path_func(X, y, pos_class=class_, Cs=[self.C],
+            path_func(X, y, pos_class=class_, Cs=[C_],
                       l1_ratio=self.l1_ratio, fit_intercept=self.fit_intercept,
                       tol=self.tol, verbose=self.verbose, solver=solver,
                       multi_class=multi_class, max_iter=self.max_iter,
                       class_weight=self.class_weight, check_input=False,
                       random_state=self.random_state, coef=warm_start_coef_,
-                      penalty=self.penalty, max_squared_sum=max_squared_sum,
+                      penalty=penalty, max_squared_sum=max_squared_sum,
                       sample_weight=sample_weight)
             for class_, warm_start_coef_ in zip(classes_, warm_start_coef))
 
@@ -1619,14 +1631,13 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
             Returns the probability of the sample for each class in the model,
             where classes are ordered as they are in ``self.classes_``.
         """
-        if not hasattr(self, "coef_"):
-            raise NotFittedError("Call fit before prediction")
+        check_is_fitted(self, 'coef_')
 
         ovr = (self.multi_class in ["ovr", "warn"] or
                (self.multi_class == 'auto' and (self.classes_.size <= 2 or
                                                 self.solver == 'liblinear')))
         if ovr:
-            return super(LogisticRegression, self)._predict_proba_lr(X)
+            return super()._predict_proba_lr(X)
         else:
             decision = self.decision_function(X)
             if decision.ndim == 1:
@@ -1790,7 +1801,7 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
         To lessen the effect of regularization on synthetic feature weight
         (and therefore on the intercept) intercept_scaling has to be increased.
 
-    multi_class : str, {'ovr', 'multinomial', 'auto'}, optional (default='ovr')
+    multi_class : {'ovr', 'multinomial', 'auto'}, default='auto'
         If the option chosen is 'ovr', then a binary problem is fit for each
         label. For 'multinomial' the loss minimised is the multinomial loss fit
         across the entire probability distribution, *even when the data is
@@ -1800,8 +1811,8 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
 
         .. versionadded:: 0.18
            Stochastic Average Gradient descent solver for 'multinomial' case.
-        .. versionchanged:: 0.20
-            Default will change from 'ovr' to 'auto' in 0.22.
+        .. versionchanged:: 0.22
+            Default changed from 'ovr' to 'auto' in 0.22.
 
     random_state : int, RandomState instance or None, optional (default=None)
         If int, random_state is the seed used by the random number generator;
@@ -1887,8 +1898,7 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
     >>> from sklearn.datasets import load_iris
     >>> from sklearn.linear_model import LogisticRegressionCV
     >>> X, y = load_iris(return_X_y=True)
-    >>> clf = LogisticRegressionCV(cv=5, random_state=0,
-    ...                            multi_class='multinomial').fit(X, y)
+    >>> clf = LogisticRegressionCV(cv=5, random_state=0).fit(X, y)
     >>> clf.predict(X[:2, :])
     array([0, 0])
     >>> clf.predict_proba(X[:2, :]).shape
@@ -1904,7 +1914,7 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
     def __init__(self, Cs=10, fit_intercept=True, cv='warn', dual=False,
                  penalty='l2', scoring=None, solver='lbfgs', tol=1e-4,
                  max_iter=100, class_weight=None, n_jobs=None, verbose=0,
-                 refit=True, intercept_scaling=1., multi_class='warn',
+                 refit=True, intercept_scaling=1., multi_class='auto',
                  random_state=None, l1_ratios=None):
         self.Cs = Cs
         self.fit_intercept = fit_intercept
@@ -1968,6 +1978,12 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
 
             l1_ratios_ = [None]
 
+        if self.penalty == 'none':
+            raise ValueError(
+                "penalty='none' is not useful and not supported by "
+                "LogisticRegressionCV."
+            )
+
         X, y = check_X_y(X, y, accept_sparse='csr', dtype=np.float64,
                          order="C",
                          accept_large_sparse=solver != 'liblinear')
@@ -1979,8 +1995,8 @@ class LogisticRegressionCV(LogisticRegression, BaseEstimator,
         label_encoder = LabelEncoder().fit(y)
         y = label_encoder.transform(y)
         if isinstance(class_weight, dict):
-            class_weight = dict((label_encoder.transform([cls])[0], v)
-                                for cls, v in class_weight.items())
+            class_weight = {label_encoder.transform([cls])[0]: v
+                            for cls, v in class_weight.items()}
 
         # The original class labels
         classes = self.classes_ = label_encoder.classes_
