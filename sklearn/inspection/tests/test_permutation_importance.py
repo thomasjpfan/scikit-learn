@@ -14,11 +14,11 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 
 
-@pytest.mark.parametrize("n_rounds", [3, 5])
-def test_permutation_importance_correlated_feature_regression(n_rounds):
+def test_permutation_importance_correlated_feature_regression():
     # Make sure that feature highly correlated to the target have a higher
     # importance
     rng = np.random.RandomState(42)
+    n_rounds = 5
 
     dataset = load_boston()
     X, y = dataset.data, dataset.target
@@ -41,13 +41,13 @@ def test_permutation_importance_correlated_feature_regression(n_rounds):
     assert np.all(permute_score_means[-1] > permute_score_means[:-1])
 
 
-@pytest.mark.parametrize("n_rounds", [3, 5])
-def test_permutation_importance_correlated_feature_regression_pandas(n_rounds):
+def test_permutation_importance_correlated_feature_regression_pandas():
     pd = pytest.importorskip("pandas")
 
     # Make sure that feature highly correlated to the target have a higher
     # importance
     rng = np.random.RandomState(42)
+    n_rounds = 5
 
     dataset = load_iris()
     X, y = dataset.data, dataset.target
@@ -72,9 +72,9 @@ def test_permutation_importance_correlated_feature_regression_pandas(n_rounds):
     assert np.all(permute_score_means[-1] > permute_score_means[:-1])
 
 
-@pytest.mark.parametrize("n_rounds", [3, 5])
-def test_permutation_importance_mixed_types(n_rounds):
+def test_permutation_importance_mixed_types():
     rng = np.random.RandomState(42)
+    n_rounds = 3
 
     # Last column is correlated with y
     X = np.array([[1.0, 2.0, 3.0, np.nan], ['a', 'b', 'a', 'b']]).T
@@ -94,10 +94,10 @@ def test_permutation_importance_mixed_types(n_rounds):
     assert np.all(permute_score_means[-1] > permute_score_means[:-1])
 
 
-@pytest.mark.parametrize("n_rounds", [3, 5])
-def test_permutation_importance_mixed_types_pandas(n_rounds):
+def test_permutation_importance_mixed_types_pandas():
     pd = pytest.importorskip("pandas")
     rng = np.random.RandomState(42)
+    n_rounds = 5
 
     # Last column is correlated with y
     X = np.array([[1.0, 2.0, 3.0, np.nan], ['a', 'b', 'a', 'b']]).T
