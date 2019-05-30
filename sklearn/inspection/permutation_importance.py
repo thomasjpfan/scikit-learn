@@ -11,6 +11,7 @@ from ..metrics import check_scoring
 def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
                                   n_rounds, scorer):
     """Calcuate permutation scores for a column."""
+    X = X.copy()
     if hasattr(X, 'iloc'):  # pandas dataframe
         X_iloc = X.iloc
     else:
