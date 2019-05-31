@@ -9,6 +9,7 @@ from ..metrics import check_scoring
 
 
 def _safe_column_setting(X, indicies, values):
+    """Set columns on X using indicies"""
     if hasattr(X, "iloc"):
         X.iloc[:, indicies] = values
     else:
@@ -16,6 +17,7 @@ def _safe_column_setting(X, indicies, values):
 
 
 def _safe_column_indexing(X, indicies):
+    """Return columns from X using indicies"""
     if hasattr(X, "iloc"):
         return X.iloc[:, indicies].values
     else:
@@ -24,6 +26,7 @@ def _safe_column_indexing(X, indicies):
 
 def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
                                   n_rounds, scorer):
+    """Calculate score when ``col_idx`` is permuted."""
     if hasattr(X, "iloc"):
         X = X.copy()  # Dataframe
     else:
