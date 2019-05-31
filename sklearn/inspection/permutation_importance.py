@@ -30,7 +30,8 @@ def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
     if hasattr(X, "iloc"):
         X = X.copy()  # Dataframe
     else:
-        X = check_array(X, force_all_finite='allow-nan', dtype=None, copy=True)
+        X = check_array(X, force_all_finite='allow-nan', dtype=np.object,
+                        copy=True)
 
     original_feature = _safe_column_indexing(X, col_idx).copy()
     scores = np.zeros(n_rounds)
