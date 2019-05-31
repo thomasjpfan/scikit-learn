@@ -72,26 +72,26 @@ def test_permutation_importance_correlated_feature_regression():
 #     assert np.all(permute_score_means[-1] > permute_score_means[:-1])
 
 
-def test_permutation_importance_mixed_types():
-    rng = np.random.RandomState(42)
-    n_rounds = 3
+# def test_permutation_importance_mixed_types():
+#     rng = np.random.RandomState(42)
+#     n_rounds = 3
 
-    # Last column is correlated with y
-    X = np.array([[1.0, 2.0, 3.0, np.nan], ['a', 'b', 'a', 'b']]).T
-    y = np.array([0, 1, 0, 1])
+#     # Last column is correlated with y
+#     X = np.array([[1.0, 2.0, 3.0, np.nan], ['a', 'b', 'a', 'b']]).T
+#     y = np.array([0, 1, 0, 1])
 
-    clf = make_pipeline(OneHotEncoder(),
-                        LogisticRegression(solver='lbfgs'))
-    clf.fit(X, y)
-    permute_imp = permutation_importance(clf, X, y, n_rounds=n_rounds,
-                                         random_state=rng)
+#     clf = make_pipeline(OneHotEncoder(),
+#                         LogisticRegression(solver='lbfgs'))
+#     clf.fit(X, y)
+#     permute_imp = permutation_importance(clf, X, y, n_rounds=n_rounds,
+#                                          random_state=rng)
 
-    assert permute_imp.shape == (X.shape[1], n_rounds)
-    permute_score_means = np.mean(permute_imp, axis=-1)
+#     assert permute_imp.shape == (X.shape[1], n_rounds)
+#     permute_score_means = np.mean(permute_imp, axis=-1)
 
-    # the correlated feature with y is the last column and should
-    # have the highest importance
-    assert np.all(permute_score_means[-1] > permute_score_means[:-1])
+#     # the correlated feature with y is the last column and should
+#     # have the highest importance
+#     assert np.all(permute_score_means[-1] > permute_score_means[:-1])
 
 
 # def test_permutation_importance_mixed_types_pandas():

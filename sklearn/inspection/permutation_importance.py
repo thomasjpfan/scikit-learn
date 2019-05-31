@@ -85,10 +85,10 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
 
     """
     X = X.copy()
-    if hasattr(X, 'iloc'):
-        X_iloc = X.iloc
-    else:
-        X_iloc = X
+    # if hasattr(X, 'iloc'):
+    #     X_iloc = X.iloc
+    # else:
+    #     X_iloc = X
 
     random_state = check_random_state(random_state)
     scorer = check_scoring(estimator, scoring=scoring)
@@ -97,13 +97,13 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
 
     scores = np.zeros((X.shape[1], n_rounds))
 
-    for col_idx in range(X.shape[1]):
-        original_feature = X_iloc[:, col_idx].copy()
-        for n_round in range(n_rounds):
-            X_iloc[:, col_idx] = random_state.permutation(original_feature)
-            feature_score = scorer(estimator, X, y)
-            scores[col_idx, n_round] = feature_score
+    # for col_idx in range(X.shape[1]):
+    #     original_feature = X_iloc[:, col_idx].copy()
+    #     for n_round in range(n_rounds):
+    #         X_iloc[:, col_idx] = random_state.permutation(original_feature)
+    #         feature_score = scorer(estimator, X, y)
+    #         scores[col_idx, n_round] = feature_score
 
-        X_iloc[:, col_idx] = original_feature
+    #     X_iloc[:, col_idx] = original_feature
 
     return baseline_score - np.array(scores)
