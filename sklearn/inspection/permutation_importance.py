@@ -8,10 +8,23 @@ from ..utils.validation import check_array
 from ..metrics import check_scoring
 
 
+def _safe_column_setting(X, indicies, values):
+    if hasattr(X, "iloc"):
+        X.iloc[:, indicies] = values
+    else:
+        X[:, indicies] = values
+
+
+def _safe_column_indexing(X, indicies):
+    if hasattr(X, "iloc"):
+        return X.iloc[:, indicies]
+    else:
+        return X[:, indicies]
+
+
 def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
                                   n_rounds, scorer):
     """Calcuate permutation scores for a column."""
-    X = X.copy()
     if hasattr(X, 'iloc'):  # pandas dataframe
         X_iloc = X.iloc
     else:
@@ -26,6 +39,21 @@ def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
         scores[n_round] = feature_score
 
     X_iloc[:, col_idx] = original_feature
+    return scores
+
+
+def _calculate_permutation_scores2(estimator, X, y, col_idx, random_state,
+                                   n_rounds, scorer):
+    original_feature = _safe_column_indexing(X, col_idx).copy()
+    scores = np.zeros(n_rounds)
+
+    for n_round in range(n_rounds):
+        _safe_column_setting(X, col_idx,
+                             random_state.permutation(original_feature))
+        feature_score = scorer(estimator, X, y)
+        scores[n_round] = feature_score
+
+    _safe_column_setting(X, col_idx, original_feature)
     return scores
 
 
@@ -85,26 +113,26 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
 
     """
     X = X.copy()
-    if hasattr(X, 'iloc'):
-        X_iloc = X.iloc
-    else:
-        X_iloc = X
 
     random_state = check_random_state(random_state)
     scorer = check_scoring(estimator, scoring=scoring)
 
     baseline_score = scorer(estimator, X, y)
-
     scores = np.zeros((X.shape[1], n_rounds))
 
-    for col_idx in range(X.shape[1]):
-        original_feature = X_iloc[:, col_idx].copy()
 
-        for n_round in range(n_rounds):
-            X_iloc[:, col_idx] = random_state.permutation(original_feature)
-            feature_score = scorer(estimator, X, y)
-            scores[col_idx, n_round] = feature_score
+    # for col_idx in range(X.shape[1]):
+    #     original_feature = _safe_column_indexing(X, col_idx).copy()
 
-        X_iloc[:, col_idx] = original_feature
+    #     for n_round in range(n_rounds):
+    #         _safe_column_setting(X, col_idx,
+    #                              random_state.permutation(original_feature))
+    #         feature_score = scorer(estimator, X, y)
+    #         scores[col_idx, n_round] = feature_score
+
+    #     _safe_column_setting(X, col_idx, original_feature)
+    scores = Parallel(n_jobs=n_jobs)(delayed(_calculate_permutation_scores2)(
+        estimator, X, y, col_idx, random_state, n_rounds, scorer
+    ) for col_idx in range(X.shape[1]))
 
     return baseline_score - np.array(scores)
