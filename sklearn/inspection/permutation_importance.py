@@ -4,7 +4,7 @@ import numpy as np
 from ..utils import check_random_state
 from ..utils._joblib import Parallel
 from ..utils._joblib import delayed
-from ..utils.validation import check_array
+from ..utils import check_array
 from ..metrics import check_scoring
 
 
@@ -17,42 +17,26 @@ def _safe_column_setting(X, indicies, values):
 
 def _safe_column_indexing(X, indicies):
     if hasattr(X, "iloc"):
-        return X.iloc[:, indicies]
+        return X.iloc[:, indicies].values
     else:
         return X[:, indicies]
 
 
 def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
                                   n_rounds, scorer):
-    """Calcuate permutation scores for a column."""
-    if hasattr(X, 'iloc'):  # pandas dataframe
-        X_iloc = X.iloc
+    if hasattr(X, "iloc"):
+        X = X.copy()  # Dataframe
     else:
-        X_iloc = X
+        X = check_array(X, force_all_finite='allow-nan', dtype=None, copy=True)
 
-    original_feature = X_iloc[:, col_idx].copy()
-    scores = np.zeros(n_rounds)
-
-    for n_round in range(n_rounds):
-        X_iloc[:, col_idx] = random_state.permutation(original_feature)
-        feature_score = scorer(estimator, X, y)
-        scores[n_round] = feature_score
-
-    X_iloc[:, col_idx] = original_feature
-    return scores
-
-
-def _calculate_permutation_scores2(estimator, X, y, col_idx, random_state,
-                                   n_rounds, scorer):
-    X = X.copy()
     original_feature = _safe_column_indexing(X, col_idx).copy()
     scores = np.zeros(n_rounds)
+
     for n_round in range(n_rounds):
-        _safe_column_setting(X, col_idx,
-                             random_state.permutation(original_feature))
+        random_state.shuffle(original_feature)
+        _safe_column_setting(X, col_idx, original_feature)
         feature_score = scorer(estimator, X, y)
         scores[n_round] = feature_score
-
     return scores
 
 
@@ -117,18 +101,7 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
     baseline_score = scorer(estimator, X, y)
     scores = np.zeros((X.shape[1], n_rounds))
 
-
-    # for col_idx in range(X.shape[1]):
-    #     original_feature = _safe_column_indexing(X, col_idx).copy()
-
-    #     for n_round in range(n_rounds):
-    #         _safe_column_setting(X, col_idx,
-    #                              random_state.permutation(original_feature))
-    #         feature_score = scorer(estimator, X, y)
-    #         scores[col_idx, n_round] = feature_score
-
-    #     _safe_column_setting(X, col_idx, original_feature)
-    scores = Parallel(n_jobs=n_jobs)(delayed(_calculate_permutation_scores2)(
+    scores = Parallel(n_jobs=n_jobs)(delayed(_calculate_permutation_scores)(
         estimator, X, y, col_idx, random_state, n_rounds, scorer
     ) for col_idx in range(X.shape[1]))
 
