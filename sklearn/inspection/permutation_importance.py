@@ -8,39 +8,36 @@ from ..utils import check_array
 from ..metrics import check_scoring
 
 
-def _safe_column_setting(X, indicies, values):
-    """Set columns on X using indicies"""
+def _safe_column_setting(X, col_idx, values):
+    """Set column on X using col_idx"""
     if hasattr(X, "iloc"):
-        X.iloc[:, indicies] = values
+        X.iloc[:, col_idx] = values
     else:
-        X[:, indicies] = values
+        X[:, col_idx] = values
 
 
-def _safe_column_indexing(X, indicies):
-    """Return columns from X using indicies"""
+def _safe_column_indexing(X, col_idx):
+    """Return column from X using col_idx"""
     if hasattr(X, "iloc"):
-        return X.iloc[:, indicies].values
+        return X.iloc[:, col_idx].values
     else:
-        return X[:, indicies]
+        return X[:, col_idx]
 
 
 def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
                                   n_rounds, scorer):
     """Calculate score when ``col_idx`` is permuted."""
-    if hasattr(X, "iloc"):
-        X = X.copy()  # Dataframe
-    else:
-        X = check_array(X, force_all_finite='allow-nan', dtype=np.object,
-                        copy=True)
-
     original_feature = _safe_column_indexing(X, col_idx).copy()
-    scores = np.zeros(n_rounds)
+    temp = original_feature.copy()
 
+    scores = np.zeros(n_rounds)
     for n_round in range(n_rounds):
-        random_state.shuffle(original_feature)
-        _safe_column_setting(X, col_idx, original_feature)
+        random_state.shuffle(temp)
+        _safe_column_setting(X, col_idx, temp)
         feature_score = scorer(estimator, X, y)
         scores[n_round] = feature_score
+
+    _safe_column_setting(X, col_idx, original_feature)
     return scores
 
 
@@ -99,6 +96,12 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
         2001.https://doi.org/10.1023/A:1010933404324
 
     """
+    if hasattr(X, "iloc"):
+        X = X.copy()  # Dataframe
+    else:
+        X = check_array(X, force_all_finite='allow-nan', dtype=np.object,
+                        copy=True)
+
     random_state = check_random_state(random_state)
     scorer = check_scoring(estimator, scoring=scoring)
 
