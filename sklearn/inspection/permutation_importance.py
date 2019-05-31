@@ -44,16 +44,15 @@ def _calculate_permutation_scores(estimator, X, y, col_idx, random_state,
 
 def _calculate_permutation_scores2(estimator, X, y, col_idx, random_state,
                                    n_rounds, scorer):
+    X = X.copy()
     original_feature = _safe_column_indexing(X, col_idx).copy()
     scores = np.zeros(n_rounds)
-
     for n_round in range(n_rounds):
         _safe_column_setting(X, col_idx,
                              random_state.permutation(original_feature))
         feature_score = scorer(estimator, X, y)
         scores[n_round] = feature_score
 
-    _safe_column_setting(X, col_idx, original_feature)
     return scores
 
 
@@ -112,8 +111,6 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
         2001.https://doi.org/10.1023/A:1010933404324
 
     """
-    X = X.copy()
-
     random_state = check_random_state(random_state)
     scorer = check_scoring(estimator, scoring=scoring)
 
