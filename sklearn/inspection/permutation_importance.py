@@ -49,7 +49,7 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
         An estimator that has already been `fit` and is compatible with
         ``scorer``.
 
-    X : array-like or DataFrame, shape = (n_samples, n_features)
+    X : numpy array or DataFrame, shape = (n_samples, n_features)
         Data on which permutation importance will be computed.
 
     y : array-like, shape = (n_samples, ...)
@@ -84,12 +84,10 @@ def permutation_importance(estimator, X, y, scoring=None, n_rounds=1,
         2001.https://doi.org/10.1023/A:1010933404324
 
     """
+    X = X.copy()
     if hasattr(X, 'iloc'):
-        X = X.copy()
         X_iloc = X.iloc
     else:
-        # Not a dataframe
-        X = check_array(X, force_all_finite='allow-nan', dtype=None, copy=True)
         X_iloc = X
 
     random_state = check_random_state(random_state)
