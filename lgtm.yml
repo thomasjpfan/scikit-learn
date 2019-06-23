@@ -1,3 +1,6 @@
+queries:
+  - exclude: py/import-and-import-from
+
 extraction:
   cpp:
     before_index:
