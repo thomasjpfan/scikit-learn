@@ -22,4 +22,4 @@ coverage:
 
 ignore:
 - "sklearn/externals"
-- "**/*setup.py"
+- "**/*/setup.py"
