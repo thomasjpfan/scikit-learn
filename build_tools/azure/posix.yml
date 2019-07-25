@@ -28,14 +28,15 @@ jobs:
       condition: eq(variables['Agent.OS'], 'Linux')
     - bash: |
         mkdir $CCACHE_DIR
-      displayName: Install ccache
+      displayName: Setup cache directory in Darwin
       condition: eq(variables['Agent.OS'], 'Darwin')
     - task: CacheBeta@0
       inputs:
-        key: $(AgentOS)
+        key: |
+          $(AgentOS)
+          $(AgentJobName)
         path: $(CCACHE_DIR)
       displayName: ccache
-      condition: eq(variables['Agent.OS'], 'Linux')
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: Add conda to PATH
       condition: eq(variables['DISTRIB'], 'conda')
