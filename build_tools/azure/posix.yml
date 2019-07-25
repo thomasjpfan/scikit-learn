@@ -33,7 +33,7 @@ jobs:
     - task: CacheBeta@0
       inputs:
         key: |
-          $(AgentOS)
+          $(AGENT_OS)
           $(PYTHON_VERSION)
           $(DISTRIB)
         path: $(CCACHE_DIR)
