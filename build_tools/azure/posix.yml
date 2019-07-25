@@ -26,6 +26,10 @@ jobs:
         echo "##vso[task.prependpath]/usr/lib/ccache"
       displayName: Install ccache
       condition: eq(variables['Agent.OS'], 'Linux')
+    - bash: |
+        mkdir $CCACHE_DIR
+      displayName: Install ccache
+      condition: eq(variables['Agent.OS'], 'Darwin')
     - task: CacheBeta@0
       inputs:
         key: $(AgentOS)
