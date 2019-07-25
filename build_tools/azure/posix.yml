@@ -28,7 +28,7 @@ jobs:
         sudo apt-get install ccache -y
         echo "##vso[task.prependpath]/usr/lib/ccache"
       displayName: Install ccache
-      condition: eq(variables['Agent.OS'], "Linux")
+      condition: eq(variables['Agent.OS'], 'Linux')
     - script: |
         build_tools/azure/install.sh
       displayName: 'Install'
