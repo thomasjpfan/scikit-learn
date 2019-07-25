@@ -21,26 +21,26 @@ jobs:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - bash: echo "##vso[task.prependpath]$CONDA/bin"
-      displayName: Add conda to PATH
-      condition: eq(variables['DISTRIB'], 'conda')
     - bash: |
         sudo apt-get install ccache -y
         echo "##vso[task.prependpath]/usr/lib/ccache"
       displayName: Install ccache
       condition: eq(variables['Agent.OS'], 'Linux')
-    - script: |
-        build_tools/azure/install.sh
-      displayName: 'Install'
-    - script: |
-        build_tools/azure/test_script.sh
-      displayName: 'Test Library'
     - task: CacheBeta@0
       inputs:
         key: $(AgentOS)
         path: $(CCACHE_DIR)
       displayName: ccache
       condition: eq(variables['Agent.OS'], 'Linux')
+    - bash: echo "##vso[task.prependpath]$CONDA/bin"
+      displayName: Add conda to PATH
+      condition: eq(variables['DISTRIB'], 'conda')
+    - script: |
+        build_tools/azure/install.sh
+      displayName: 'Install'
+    - script: |
+        build_tools/azure/test_script.sh
+      displayName: 'Test Library'
     - script: |
         build_tools/azure/test_docs.sh
       displayName: 'Test Docs'
