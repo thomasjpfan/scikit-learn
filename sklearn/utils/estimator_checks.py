@@ -300,12 +300,34 @@ def set_check_estimator_ids(val):
         with config_context(print_changed_only=True):
             return re.sub(r"\s", "", str(val))
 
+def _construct_instance(Estimator):
+    required_parameters = getattr(Estimator, "_required_parameters", [])
+    if len(required_parameters):
+        if required_parameters in (["estimator"], ["base_estimator"]):
+            if issubclass(Estimator, RegressorMixin):
+                estimator = Estimator(Ridge())
+            else:
+                estimator = Estimator(LinearDiscriminantAnalysis())
+        else:
+            raise SkipTest("Can't instantiate estimator {} which requires "
+                            "parameters {}".format(Estimator.__name__,
+                                                   required_parameters))
+    else:
+        estimator = Estimator()
+    return estimator
+
 
 def _check_class(Estimator):
-    warnings.warn("check_estimator with generate_only=True only"
-                  "supports estimator instances, "
-                  "got: {}".format(Estimator.__name__),
-                  SkipTestWarning)
+    name = Estimator.__class__.__name__
+    yield (Estimator, partial(check_parameters_default_constructible, name))
+
+    try:
+        estimator = _construct_instance(Estimator)
+    except (SkipTest, TypeError):
+        # if we can't construct the instance, the first test will fail
+        return
+    yield from ((estimator, partial(check, name))
+                for check in _yield_all_checks(name, estimator))
 
 
 def check_estimator(Estimator, generate_only=False):
@@ -355,8 +377,7 @@ def check_estimator(Estimator, generate_only=False):
     """
     if isinstance(Estimator, type):
         if generate_only:
-            return [(Estimator, _check_class)]
-
+            return _check_class(Estimator)
         # got a class
         name = Estimator.__name__
         estimator = Estimator()
@@ -2234,19 +2255,7 @@ def check_parameters_default_constructible(name, Estimator):
     # test default-constructibility
     # get rid of deprecation warnings
     with ignore_warnings(category=(DeprecationWarning, FutureWarning)):
-        required_parameters = getattr(Estimator, "_required_parameters", [])
-        if required_parameters:
-            if required_parameters in (["base_estimator"], ["estimator"]):
-                if issubclass(Estimator, RegressorMixin):
-                    estimator = Estimator(Ridge())
-                else:
-                    estimator = Estimator(LinearDiscriminantAnalysis())
-            else:
-                raise SkipTest("Can't instantiate estimator {} which"
-                               " requires parameters {}".format(
-                                   name, required_parameters))
-        else:
-            estimator = Estimator()
+        estimator = _construct_instance(Estimator)
         # test cloning
         clone(estimator)
         # test __repr__
@@ -2278,9 +2287,7 @@ def check_parameters_default_constructible(name, Estimator):
             # true for mixins
             return
         params = estimator.get_params()
-        if required_parameters == ["estimator"]:
-            # they can need a non-default argument
-            init_params = init_params[1:]
+        init_params = init_params[len(getattr(estimator, '_required_parameters', [])):]
 
         for init_param in init_params:
             assert init_param.default != init_param.empty, (
