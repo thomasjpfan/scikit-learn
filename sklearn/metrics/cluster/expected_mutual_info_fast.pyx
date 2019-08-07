@@ -6,11 +6,12 @@
 #           Corey Lynch <coreylynch9@gmail.com>
 # License: BSD 3 clause
 
-from libc.math cimport exp, lgamma
+from libc.math cimport exp
 from scipy.special import gammaln
 import numpy as np
 cimport numpy as np
 cimport cython
+from ...utils.lgamma cimport lgamma
 
 np.import_array()
 ctypedef np.float64_t DOUBLE

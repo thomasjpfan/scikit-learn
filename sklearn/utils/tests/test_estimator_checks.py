@@ -11,8 +11,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils import deprecated
 from sklearn.utils.testing import (assert_raises_regex,
                                    ignore_warnings,
-                                   assert_warns, assert_raises,
-                                   SkipTest)
+                                   assert_warns, assert_raises)
 from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils.estimator_checks \
     import check_class_weight_balanced_linear_classifier
@@ -520,19 +519,6 @@ def test_check_estimator_pairwise():
     # test precomputed metric
     est = KNeighborsRegressor(metric='precomputed')
     check_estimator(est)
-
-
-def test_check_estimator_required_parameters_skip():
-    class MyEstimator(BaseEstimator):
-        _required_parameters = ["special_parameter"]
-
-        def __init__(self, special_parameter):
-            self.special_parameter = special_parameter
-
-    assert_raises_regex(SkipTest, r"Can't instantiate estimator MyEstimator "
-                                  r"which requires parameters "
-                                  r"\['special_parameter'\]",
-                                  check_estimator, MyEstimator)
 
 
 def run_tests_without_pytest():
