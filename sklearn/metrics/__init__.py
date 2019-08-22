@@ -79,6 +79,9 @@ from .scorer import get_scorer
 from ._plot.roc_curve import plot_roc_curve
 from ._plot.roc_curve import RocCurveDisplay
 
+from ._plot.confusion_matrix import plot_confusions_matrix
+from ._plot.confusion_matrix import ConfusionMatrixDisplay
+
 
 __all__ = [
     'accuracy_score',
@@ -94,6 +97,7 @@ __all__ = [
     'cluster',
     'cohen_kappa_score',
     'completeness_score',
+    'ConfusionMatrixDisplay',
     'confusion_matrix',
     'consensus_score',
     'coverage_error',
@@ -133,6 +137,7 @@ __all__ = [
     'pairwise_distances_argmin_min',
     'pairwise_distances_chunked',
     'pairwise_kernels',
+    'plot_confusions_matrix',
     'plot_roc_curve',
     'precision_recall_curve',
     'precision_recall_fscore_support',
