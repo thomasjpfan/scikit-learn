@@ -25,7 +25,8 @@ class ConfusionMatrixDisplay:
     def __init__(self, confusion_matrix, classes):
         pass
 
-    def plot(self, cmap='viridis', ax=None):
+    def plot(self, include_values=True, include_colorbar=True,
+             normalize=False, cmap='viridis', ax=None):
         """Plot visualization.
 
         Parameters
@@ -50,7 +51,7 @@ class ConfusionMatrixDisplay:
         pass
 
 
-def plot_confusions_matrix(estimator, y_true, sample_weight=None,
+def plot_confusions_matrix(estimator, X, y_true, sample_weight=None,
                            target_names=None,
                            include_values=True, normalize=False,
                            cmap='viridis', ax=None):
@@ -60,6 +61,15 @@ def plot_confusions_matrix(estimator, y_true, sample_weight=None,
 
     Parameters
     ----------
+    estimator : estimator instance
+        Trained classifier.
+
+    X : {array-like, sparse matrix} of shape (n_samples, n_features)
+        Input values.
+
+    y : array-like of shape (n_samples,)
+        Target values.
+
     normalize : bool, default=False
         Normalizes confusion matrix.
 
