@@ -4,7 +4,7 @@ import pytest
 
 from sklearn.datasets import load_iris
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import plot_confusions_matrix
+from sklearn.metrics import plot_confusion_matrix
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 
@@ -40,7 +40,7 @@ def test_plot_confusion_matrix(pyplot, iris, clf_iris, with_sample_weight,
     if normalize:
         cm = cm.astype(np.float) / cm.sum(axies=1)[:, None]
 
-    disp = plot_confusions_matrix(iris, y_test, sample_weight=sample_weight,
+    disp = plot_confusion_matrix(iris, y_test, sample_weight=sample_weight,
                                   normalize=normalize)
 
     assert_allclose(disp.confusion_matrix, cm)
