@@ -11,7 +11,7 @@ class ConfusionMatrixDisplay:
     confusion_matrix : ndarray of shape (n_classes, n_classes)
         Confusion matrix.
 
-    target_names : ndarray of shape (n_classes,)
+    labels : array-like of shape (n_classes,)
         Target names.
 
     Attributes
@@ -22,7 +22,7 @@ class ConfusionMatrixDisplay:
     figure_ : matplotlib Figure
         Figure containing the confusion matrix.
     """
-    def __init__(self, confusion_matrix, classes):
+    def __init__(self, confusion_matrix, labels):
         pass
 
     def plot(self, include_values=True, include_colorbar=True,
@@ -52,7 +52,7 @@ class ConfusionMatrixDisplay:
 
 
 def plot_confusions_matrix(estimator, X, y_true, sample_weight=None,
-                           target_names=None,
+                           labels=None,
                            include_values=True, normalize=False,
                            cmap='viridis', ax=None):
     """Plot Confusion Matrix.
