@@ -1,3 +1,6 @@
+from ...utils import check_matplotlib_support
+
+
 class ConfusionMatrixDisplay:
     """Confusion Matrix visualization.
 
@@ -11,7 +14,7 @@ class ConfusionMatrixDisplay:
     confusion_matrix : ndarray of shape (n_classes, n_classes)
         Confusion matrix.
 
-    target_names : array-like of shape (n_classes,)
+    target_names : ndarray of shape (n_classes,)
         Target names.
 
     Attributes
@@ -70,6 +73,14 @@ def plot_confusion_matrix(estimator, X, y_true, sample_weight=None,
     sample_weight : array-like of shape (n_samples,), default=None
         Sample weights.
 
+    labels : array-like of shape (n_classes,), default=None
+        List of labels to index the matrix. This may be used to reorder or
+        select a subset of labels. If `None` is given, those that appear at
+        least once in `y_true` or `y_pred` are used in sorted order.
+
+    target_names : array-like of shape (n_classes,), default=None
+        Target names.
+
     normalize : bool, default=False
         Normalizes confusion matrix.
 
@@ -87,4 +98,10 @@ def plot_confusion_matrix(estimator, X, y_true, sample_weight=None,
     -------
     display: :class:`~sklearn.metrics.ConfusionMatrixDisplay`
     """
-    pass
+    check_matplotlib_support("plot_confusion_matrix")
+
+    y_pred = estimator.predict(X)
+    cm = confusion_matrix(y_true, y_pred, sample_weight=sample_weight,
+                          labels=labels)
+
+

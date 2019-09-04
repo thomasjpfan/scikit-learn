@@ -96,8 +96,9 @@ def test_plot_confusion_matrix(pyplot, data, y_pred, n_classes, fitted_clf,
     else:
         expected_target_names = [str(i) for i in range(n_classes)]
 
-    assert x_ticks == expected_target_names
-    assert y_ticks == expected_target_names
+    assert_array_equal(viz.target_names_, expected_target_names)
+    assert_array_equal(x_ticks, expected_target_names)
+    assert_array_equal(y_ticks, expected_target_names)
 
     if normalize:
         cm = cm.astype('float') / cm.sum(axis=1)[:, None]
