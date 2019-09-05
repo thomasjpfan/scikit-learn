@@ -10,8 +10,9 @@ from sklearn.metrics import plot_confusion_matrix
 
 
 @pytest.fixture(scope="module")
-def n_classes()
+def n_classes():
     return 5
+
 
 @pytest.fixture(scope="module")
 def data(n_classes):
