@@ -62,7 +62,7 @@ def test_plot_confusion_matrix(pyplot, data, y_pred, n_classes, fitted_clf,
 
     ax = pyplot.gca() if with_custom_axes else None
 
-    labels = None if with_labels else [2, 1, 0, 3, 4]
+    labels = [2, 1, 0, 3, 4] if with_labels else None
     target_names = ['b', 'd', 'a', 'e', 'f'] if with_target_names else None
 
     cm = confusion_matrix(y, y_pred, sample_weight=sample_weight,
@@ -77,45 +77,47 @@ def test_plot_confusion_matrix(pyplot, data, y_pred, n_classes, fitted_clf,
     if with_custom_axes:
         assert viz.ax_ == ax
 
-    assert_allclose(viz.confusion_matrix_, cm)
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, None]
+
+    assert_allclose(viz.confusion_matrix, cm)
     import matplotlib as mpl
     assert isinstance(viz.im_, mpl.image.AxesImage)
     assert viz.im_.get_cmap().name == cmap
     assert isinstance(viz.ax_, pyplot.Axes)
     assert isinstance(viz.figure_, pyplot.Figure)
 
-    assert viz.im_.get_ylabel() == "True label"
-    assert viz.im_.get_xlabel() == "Predicted label"
+    assert viz.ax_.get_ylabel() == "True label"
+    assert viz.ax_.get_xlabel() == "Predicted label"
 
-    x_ticks = [tick.get_text() for tick in viz.ax_.get_xtickslabels()]
-    y_ticks = [tick.get_text() for tick in viz.ax_.get_ytickslabels()]
+    x_ticks = [tick.get_text() for tick in viz.ax_.get_xticklabels()]
+    y_ticks = [tick.get_text() for tick in viz.ax_.get_yticklabels()]
 
     if with_target_names:
         expected_target_names = target_names
     elif with_labels:
-        expected_target_names = [str(i) for i in labels]
+        expected_target_names = labels
     else:
-        expected_target_names = [str(i) for i in range(n_classes)]
+        expected_target_names = list(range(n_classes))
 
-    assert_array_equal(viz.target_names_, expected_target_names)
-    assert_array_equal(x_ticks, expected_target_names)
-    assert_array_equal(y_ticks, expected_target_names)
+    expected_target_names_str = [str(name) for name in expected_target_names]
 
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, None]
+    assert_array_equal(viz.target_names, expected_target_names)
+    assert_array_equal(x_ticks, expected_target_names_str)
+    assert_array_equal(y_ticks, expected_target_names_str)
 
     image_data = viz.im_.get_array().data
     assert_allclose(image_data, cm)
 
     if include_values:
-        assert viz.values_.shape == (n_classes, n_classes)
+        assert viz.text_.shape == (n_classes, n_classes)
         fmt = '.2f' if normalize else 'd'
         expected_text = np.array([format(v, fmt) for v in cm.ravel(order="C")])
-        values_text = np.array([
-            t.get_text() for t in viz.values_.ravel(order="C")])
-        assert_array_equal(expected_text, values_text)
+        text_text = np.array([
+            t.get_text() for t in viz.text_.ravel(order="C")])
+        assert_array_equal(expected_text, text_text)
     else:
-        assert viz.values_ is None
+        assert viz.text_ is None
 
 
 def test_confusion_matrix_display(pyplot, data, fitted_clf, y_pred, n_classes):
@@ -123,10 +125,14 @@ def test_confusion_matrix_display(pyplot, data, fitted_clf, y_pred, n_classes):
 
     cm = confusion_matrix(y, y_pred)
     viz = plot_confusion_matrix(fitted_clf, X, y, normalize=False,
-                                include_values=True, cmap='viridis')
+                                include_values=True, cmap='viridis',
+                                xticks_rotation=45.0)
 
-    assert_allclose(viz.confusion_matrix_, cm)
-    assert viz.values_ == (n_classes, n_classes)
+    assert_allclose(viz.confusion_matrix, cm)
+    assert viz.text_.shape == (n_classes, n_classes)
+
+    rotations = [tick.get_rotation() for tick in viz.ax_.get_xticklabels()]
+    assert_allclose(rotations, 45.0)
 
     image_data = viz.im_.get_array().data
     assert_allclose(image_data, cm)
@@ -135,8 +141,8 @@ def test_confusion_matrix_display(pyplot, data, fitted_clf, y_pred, n_classes):
     assert viz.im_.get_cmap().name == 'plasma'
 
     viz.plot(include_values=False)
-    assert viz.values_ is None
+    assert viz.text_ is None
 
-    viz.plot(normalize=True)
-    image_data = viz.im_.get_array().data
-    assert_allclose(image_data, cm.astype('float') / cm.sum(axis=1)[:, None])
+    viz.plot(xticks_rotation=90.0)
+    rotations = [tick.get_rotation() for tick in viz.ax_.get_xticklabels()]
+    assert_allclose(rotations, 90.0)
