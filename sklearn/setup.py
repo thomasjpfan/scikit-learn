@@ -1,6 +1,7 @@
 import os
 
 from sklearn._build_utils import maybe_cythonize_extensions
+from sklearn._build_utils.deprecated_modules import _add_deprecated_submodules
 
 
 def configuration(parent_package='', top_path=None):
@@ -10,6 +11,8 @@ def configuration(parent_package='', top_path=None):
     libraries = []
     if os.name == 'posix':
         libraries.append('m')
+
+    _add_deprecated_submodules()
 
     config = Configuration('sklearn', parent_package, top_path)
 
