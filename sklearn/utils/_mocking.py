@@ -50,6 +50,7 @@ class MockDataFrame:
 
 class CheckingClassifier(ClassifierMixin, BaseEstimator):
     """Dummy classifier to test pipelining and meta-estimators.
+    More changes to this file.
 
     Checks some property of X and y in fit / predict.
     This allows testing whether pipelines / cross-validation or metaestimators
