@@ -12,7 +12,8 @@ class ConfusionMatrixDisplay:
     """Confusion Matrix visualization.
 
     It is recommend to use :func:`~sklearn.metrics.plot_confusion_matrix` to
-    create a visualizer. All parameters are stored as attributes.
+    create a :class:`ConfusionMatrixDisplay`. All parameters are stored as
+    attributes.
 
     Read more in the :ref:`User Guide <visualizations>`.
 
@@ -22,7 +23,7 @@ class ConfusionMatrixDisplay:
         Confusion matrix.
 
     normalize : bool
-        Confusion matrix is normalized
+        Confusion matrix is normalized.
 
     target_names : ndarray of shape (n_classes,)
         Target names.
