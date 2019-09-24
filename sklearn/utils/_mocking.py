@@ -18,7 +18,7 @@ class ArraySlicingWrapper:
 
 
 class MockDataFrame:
-    """
+    """This is a awesome docstring.
     Parameters
     ----------
     array
