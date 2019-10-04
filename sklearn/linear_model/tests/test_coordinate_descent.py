@@ -870,7 +870,7 @@ def test_sparse_input_convergence_warning():
 
 
 @pytest.mark.parametrize("backend",
-                         ["loky", "multiprocessing", "threading"])
+                         ["threading"])
 @pytest.mark.parametrize("estimator",
                          [ElasticNetCV, MultiTaskElasticNetCV,
                           LassoCV, MultiTaskLassoCV])
