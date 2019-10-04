@@ -38,10 +38,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-if [[ "$PYTHON_VERSION" == "*" ]]; then
-    $TEST_CMD --pyargs sklearn -m "not serial"
-    $TEST_CMD --pyargs sklearn -m "serial" --cov-append
-else
-    $TEST_CMD --pyargs sklearn
-fi
+$TEST_CMD --pyargs sklearn.linear_model -k test_linear_models_cv_fit_for_all_backends
 set +x
