@@ -32,14 +32,16 @@ if [[ -n "$CHECK_WARNINGS" ]]; then
     TEST_CMD="$TEST_CMD -Werror::DeprecationWarning -Werror::FutureWarning"
 fi
 
-if [[ "$PYTHON_VERSION" == "*" ]]; then
-    TEST_CMD="$TEST_CMD -n2"
-fi
 
 mkdir -p $TEST_DIR
 cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-$TEST_CMD --pyargs sklearn
+if [[ "$PYTHON_VERSION" == "*" ]]; then
+    $TEST_CMD --pyargs sklearn -m "not serial"
+    $TEST_CMD --pyargs sklearn -m "serial" --cov-append
+else
+    $TEST_CMD --pyargs sklearn
+fi
 set +x

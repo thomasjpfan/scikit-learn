@@ -869,6 +869,7 @@ def test_sparse_input_convergence_warning():
     assert not record.list
 
 
+@pytest.mark.serial
 @pytest.mark.parametrize("backend",
                          ["loky", "multiprocessing", "threading"])
 @pytest.mark.parametrize("estimator",
