@@ -17,11 +17,24 @@ jobs:
     OMP_NUM_THREADS: '4'
     OPENBLAS_NUM_THREADS: '4'
     SKLEARN_SKIP_NETWORK_TESTS: '1'
+    CCACHE_DIR: $(Pipeline.Workspace)/ccache
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
+    - bash: |
+        sudo apt-get install ccache -y
+        echo "##vso[task.prependpath]/usr/lib/ccache"
+      displayName: Install ccache and update PATH to use linked versions of gcc, cc, etc
+      condition: eq(variables['Agent.OS'], 'Linux')
+    - task: CacheBeta@0
+      inputs:
+        key: ccache | $(Agent.OS)
+        restoreKeys: ccache
+        path: $(CCACHE_DIR)
+      displayName: ccache
+      condition: eq(variables['Agent.OS'], 'Linux')
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: Add conda to PATH
       condition: startsWith(variables['DISTRIB'], 'conda')
