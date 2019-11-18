@@ -31,7 +31,7 @@ matrix:
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 
-install: source build_tools/travis/install.sh
+install: bash build_tools/travis/install.sh
 script: |
     bash build_tools/travis/test_script.sh
     bash build_tools/travis/test_docs.sh

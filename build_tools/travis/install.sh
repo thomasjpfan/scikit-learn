@@ -16,9 +16,6 @@ set -e
 # Fail fast
 # build_tools/travis/travis_fastfail.sh
 
-sudo apt-get update
-sudo apt-get install python3-pip
-
 echo "List files from cached directories"
 echo "pip:"
 ls $HOME/.cache/pip
