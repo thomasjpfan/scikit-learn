@@ -14,7 +14,7 @@
 set -e
 
 # Fail fast
-build_tools/travis/travis_fastfail.sh
+# build_tools/travis/travis_fastfail.sh
 
 echo "List files from cached directories"
 echo "pip:"
@@ -49,27 +49,27 @@ deactivate || :
 # conda create -n testenv --yes python=3.7
 # source activate testenv
 
-pip install --upgrade pip setuptools
+pip3 install --upgrade pip setuptools
 echo "Installing numpy and scipy master wheels"
 dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
-pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
+pip3 install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
 echo "Installing joblib master"
-pip install https://github.com/joblib/joblib/archive/master.zip
+pip3 install https://github.com/joblib/joblib/archive/master.zip
 echo "Installing pillow master"
-pip install https://github.com/python-pillow/Pillow/archive/master.zip
-pip install pytest==4.6.4 pytest-cov
+pip3 install https://github.com/python-pillow/Pillow/archive/master.zip
+pip3 install pytest==4.6.4 pytest-cov
 
 # Build scikit-learn in the install.sh script to collapse the verbose
 # build output in the travis output when it succeeds.
-python --version
-python -c "import numpy; print('numpy %s' % numpy.__version__)"
-python -c "import scipy; print('scipy %s' % scipy.__version__)"
+python3 --version
+python3 -c "import numpy; print('numpy %s' % numpy.__version__)"
+python3 -c "import scipy; print('scipy %s' % scipy.__version__)"
 
-python setup.py develop
+python3 setup.py develop
 
 ccache --show-stats
 # Useful for debugging how ccache is used
 # cat $CCACHE_LOGFILE
 
 # fast fail
-build_tools/travis/travis_fastfail.sh
+# build_tools/travis/travis_fastfail.sh
