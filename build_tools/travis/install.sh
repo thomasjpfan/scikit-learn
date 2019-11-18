@@ -34,20 +34,20 @@ deactivate || :
 
 # Install miniconda
 
-if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
-    fname=Miniconda3-latest-Linux-x86_64.sh
-elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-    fname=Miniconda3-latest-Linux-armv7l.sh
-fi
-wget https://repo.continuum.io/miniconda/$fname -O miniconda.sh
-MINICONDA_PATH=$HOME/miniconda
-chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
-export PATH=$MINICONDA_PATH/bin:$PATH
-conda update --yes conda
+# if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
+#     fname=Miniconda3-latest-Linux-x86_64.sh
+# elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
+#     fname=Miniconda3-latest-Linux-armv7l.sh
+# fi
+# wget https://repo.continuum.io/miniconda/$fname -O miniconda.sh
+# MINICONDA_PATH=$HOME/miniconda
+# chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
+# export PATH=$MINICONDA_PATH/bin:$PATH
+# conda update --yes conda
 
-# Create environment and install dependencies
-conda create -n testenv --yes python=3.7
-source activate testenv
+# # Create environment and install dependencies
+# conda create -n testenv --yes python=3.7
+# source activate testenv
 
 pip install --upgrade pip setuptools
 echo "Installing numpy and scipy master wheels"

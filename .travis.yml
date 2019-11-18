@@ -1,6 +1,8 @@
 # make it explicit that we favor the new container-based travis workers
 language: python
 
+python: 3.7
+
 cache:
   apt: true
   directories:
