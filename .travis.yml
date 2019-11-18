@@ -25,7 +25,7 @@ matrix:
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[scipy-dev\]/
     -  os: linux
-       arch: amd64
+       arch: arm64
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 

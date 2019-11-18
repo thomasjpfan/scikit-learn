@@ -33,7 +33,12 @@ ccache --max-size 100M --show-stats
 deactivate || :
 
 # Install miniconda
-fname=Miniconda3-latest-Linux-x86_64.sh
+
+if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
+    fname=Miniconda3-latest-Linux-x86_64.sh
+elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
+    fname=Miniconda3-latest-Linux-armv7l.sh
+fi
 wget https://repo.continuum.io/miniconda/$fname -O miniconda.sh
 MINICONDA_PATH=$HOME/miniconda
 chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
