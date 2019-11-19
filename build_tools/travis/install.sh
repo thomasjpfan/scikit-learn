@@ -33,27 +33,27 @@ ccache --max-size 100M --show-stats
 
 dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
 if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
-    pip3 install --upgrade pip setuptools
+    pip install --upgrade pip setuptools
     echo "Installing numpy and scipy master wheels"
-    pip3 install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas
+    pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas
+    echo "Installing pillow master"
+    pip install https://github.com/python-pillow/Pillow/archive/master.zip
 elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas
+    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas python3-pil
 fi
 
-pip3 install --pre --upgrade --timeout=60 -f $dev_url cython
+pip install --pre --upgrade --timeout=60 -f $dev_url cython
 echo "Installing joblib master"
-pip3 install https://github.com/joblib/joblib/archive/master.zip
-echo "Installing pillow master"
-pip3 install https://github.com/python-pillow/Pillow/archive/master.zip
-pip3 install pytest==4.6.4 pytest-cov
+pip install https://github.com/joblib/joblib/archive/master.zip
+pip install pytest==4.6.4 pytest-cov
 
 # Build scikit-learn in the install.sh script to collapse the verbose
 # build output in the travis output when it succeeds.
-python3 --version
-python3 -c "import numpy; print('numpy %s' % numpy.__version__)"
-python3 -c "import scipy; print('scipy %s' % scipy.__version__)"
+python --version
+python -c "import numpy; print('numpy %s' % numpy.__version__)"
+python -c "import scipy; print('scipy %s' % scipy.__version__)"
 
-python3 setup.py develop
+pip install -v -e . --user
 
 ccache --show-stats
 # Useful for debugging how ccache is used
