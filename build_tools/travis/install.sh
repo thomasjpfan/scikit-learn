@@ -37,7 +37,7 @@ if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
     dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
     pip3 install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
 elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas python3-cython
+    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas cython3
 fi
 
 echo "Installing joblib master"
