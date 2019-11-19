@@ -31,15 +31,16 @@ export CXX=/usr/lib/ccache/g++
 # ~60M is used by .ccache when compiling from scratch at the time of writing
 ccache --max-size 100M --show-stats
 
+dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
 if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
     pip3 install --upgrade pip setuptools
     echo "Installing numpy and scipy master wheels"
-    dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
-    pip3 install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
+    pip3 install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas
 elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas cython3
+    sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas
 fi
 
+pip3 install --pre --upgrade --timeout=60 -f $dev_url cython
 echo "Installing joblib master"
 pip3 install https://github.com/joblib/joblib/archive/master.zip
 echo "Installing pillow master"
