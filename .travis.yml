@@ -9,7 +9,7 @@ cache:
   - $HOME/.cache/pip
   - $HOME/.ccache
 
-dist: bionic
+dist: xenial
 
 env:
   global:
@@ -30,6 +30,7 @@ matrix:
     -  python: 3.6
        os: linux
        arch: arm64
+       dist: bionic
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 
