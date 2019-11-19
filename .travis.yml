@@ -28,6 +28,8 @@ matrix:
        if: type = cron OR commit_message =~ /\[scipy-dev\]/
     # python 3.6 is the default in bionic
     -  python: 3.6
+       virtualenv:
+         system_site_packages: true
        os: linux
        arch: arm64
        dist: bionic
