@@ -1,8 +1,6 @@
 # make it explicit that we favor the new container-based travis workers
 language: python
 
-python: 3.7
-
 cache:
   apt: true
   directories:
@@ -27,10 +25,7 @@ matrix:
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[scipy-dev\]/
     # python 3.6 is the default in bionic
-    -  python: 3.6
-       virtualenv:
-         system_site_packages: true
-       os: linux
+    -  os: linux
        arch: arm64
        dist: bionic
        env: CHECK_WARNINGS="true"
