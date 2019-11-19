@@ -25,9 +25,7 @@ matrix:
        env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[scipy-dev\]/
     # python 3.5 is the default in bionic
-    -  python: 3.5
-       virtualenv:
-         system_site_packages: true
+    -  language: minimal
        os: linux
        arch: arm64
        dist: bionic

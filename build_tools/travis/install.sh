@@ -16,6 +16,9 @@ set -e
 # Fail fast
 # build_tools/travis/travis_fastfail.sh
 
+sudo apt-get upgrade
+sudo apt-get install python3-dev
+
 python3 --version
 
 echo "List files from cached directories"
