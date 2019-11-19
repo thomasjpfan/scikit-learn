@@ -27,28 +27,6 @@ export CXX=/usr/lib/ccache/g++
 # ~60M is used by .ccache when compiling from scratch at the time of writing
 ccache --max-size 100M --show-stats
 
-# Deactivate the travis-provided virtual environment and setup a
-# conda-based environment instead
-# If Travvis has language=generic, deactivate does not exist. `|| :` will pass.
-deactivate || :
-
-# Install miniconda
-
-# if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
-#     fname=Miniconda3-latest-Linux-x86_64.sh
-# elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-#     fname=Miniconda3-latest-Linux-armv7l.sh
-# fi
-# wget https://repo.continuum.io/miniconda/$fname -O miniconda.sh
-# MINICONDA_PATH=$HOME/miniconda
-# chmod +x miniconda.sh && ./miniconda.sh -b -p $MINICONDA_PATH
-# export PATH=$MINICONDA_PATH/bin:$PATH
-# conda update --yes conda
-
-# # Create environment and install dependencies
-# conda create -n testenv --yes python=3.7
-# source activate testenv
-
 pip3 install --upgrade pip setuptools
 echo "Installing numpy and scipy master wheels"
 dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
