@@ -13,9 +13,10 @@
 
 set -e
 
-
-sudo apt-get upgrade
-sudo apt-get install ccache jq
+if [ $TRAVIS_CPU_ARCH == "arm64" ]; then
+    sudo apt-get upgrade
+    sudo apt-get install ccache jq
+fi
 
 # Fail fast
 build_tools/travis/travis_fastfail.sh
