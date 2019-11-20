@@ -15,6 +15,7 @@ env:
     - TEST_DIR=/tmp/sklearn
     - OMP_NUM_THREADS=4
     - OPENBLAS_NUM_THREADS=4
+    - VIRTUALENV=testenv
 
 matrix:
   include:
@@ -29,7 +30,6 @@ matrix:
        arch: arm64
        env:
          - CHECK_WARNINGS="true"
-         - VIRTUALENV=testenv
          - DISTRIB=ubuntu
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 
