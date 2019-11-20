@@ -48,7 +48,7 @@ elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
 fi
 
 echo "Installing joblib master"
-pip install https://github.com/joblib/joblib/archive/master.zip
+pip install git+https://github.com/joblib/joblib
 pip install pytest==4.6.4 pytest-cov
 
 # Build scikit-learn in the install.sh script to collapse the verbose
