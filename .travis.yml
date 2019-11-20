@@ -15,7 +15,6 @@ env:
     - TEST_DIR=/tmp/sklearn
     - OMP_NUM_THREADS=4
     - OPENBLAS_NUM_THREADS=4
-    - VIRTUALENV=testenv
 
 matrix:
   include:
@@ -32,10 +31,10 @@ matrix:
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 
 install: source build_tools/travis/install.sh
-script: |
-    bash build_tools/travis/test_script.sh
-    bash build_tools/travis/test_docs.sh
-    bash build_tools/travis/test_pytest_soft_dependency.sh
+script:
+  - bash build_tools/travis/test_script.sh
+  - bash build_tools/travis/test_docs.sh
+  - bash build_tools/travis/test_pytest_soft_dependency.sh
 after_success: source build_tools/travis/after_success.sh
 notifications:
   webhooks:

@@ -42,9 +42,9 @@ if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
 elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
     sudo apt-get install python3-dev python3-scipy python3-numpy python3-pip python3-pandas python3-pil python3-virtualenv
-    python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
+    python3 -m virtualenv --system-site-packages --python=python3 testenv
 
-    source $VIRTUALENV/bin/activate
+    source testenv/bin/activate
 fi
 
 pip install --pre --upgrade --timeout=60 -f $dev_url cython
