@@ -15,7 +15,6 @@ set -e
 
 # arm64 does not have ccache or jq by default
 if [ $TRAVIS_CPU_ARCH == "arm64" ]; then
-    sudo apt-get upgrade
     sudo apt-get install ccache jq
 fi
 
@@ -37,7 +36,7 @@ dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.ra
 if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
     pip install --upgrade pip setuptools
     echo "Installing numpy and scipy master wheels"
-    pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas
+    pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
     echo "Installing pillow master"
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
 elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
@@ -45,9 +44,9 @@ elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
     python3 -m virtualenv --system-site-packages --python=python3 testenv
 
     source testenv/bin/activate
+    pip install cython
 fi
 
-pip install --pre --upgrade --timeout=60 -f $dev_url cython
 echo "Installing joblib master"
 pip install https://github.com/joblib/joblib/archive/master.zip
 pip install pytest==4.6.4 pytest-cov
