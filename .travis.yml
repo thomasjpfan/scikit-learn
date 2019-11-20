@@ -28,9 +28,7 @@ matrix:
     -  language: minimal
        os: linux
        arch: arm64
-       env:
-         - CHECK_WARNINGS="true"
-         - DISTRIB=ubuntu
+       env: CHECK_WARNINGS="true"
        if: type = cron OR commit_message =~ /\[arm-dev\]/
 
 install: source build_tools/travis/install.sh

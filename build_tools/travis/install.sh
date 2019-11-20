@@ -13,6 +13,7 @@
 
 set -e
 
+# arm64 does not have ccache or jq by default
 if [ $TRAVIS_CPU_ARCH == "arm64" ]; then
     sudo apt-get upgrade
     sudo apt-get install ccache jq
@@ -57,7 +58,12 @@ python --version
 python -c "import numpy; print('numpy %s' % numpy.__version__)"
 python -c "import scipy; print('scipy %s' % scipy.__version__)"
 
-pip install -v -e . --user
+if [ $TRAVIS_CPU_ARCH == "amd64" ]; then
+    pip install -v -e .
+elif [ $TRAVIS_CPU_ARCH == "arm64" ]; then
+    pip install -v -e . --user
+fi
+
 
 ccache --show-stats
 # Useful for debugging how ccache is used
