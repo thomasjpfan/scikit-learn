@@ -22,7 +22,7 @@ def __getattr__(name):
                           "'from sklearn.experimental import "
                           "enable_iterative_imputer' before "
                           "importing {name!r}".format(name=name))
-    return importlib.import_module("." + name, __name__)
+    return importlib.import_module(__name__, name)
 
 
 if not sys.version_info >= (3, 7):
