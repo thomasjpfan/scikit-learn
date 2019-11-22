@@ -29,7 +29,10 @@ def test_imports_strategies():
     bad_imports = """
     import pytest
 
-    with pytest.raises(ImportError):
+    msg = (r"To enable this experimental feature, run 'from sklearn."
+           r"experimental import enable_iterative_imputer' "
+           r"before importing 'IterativeImputer'")
+    with pytest.raises(ImportError, match=msg):
         from sklearn.impute import IterativeImputer
 
     import sklearn.experimental
