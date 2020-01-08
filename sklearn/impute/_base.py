@@ -4,6 +4,7 @@
 
 import numbers
 import warnings
+from collections import Counter
 
 import numpy as np
 import numpy.ma as ma
@@ -34,15 +35,27 @@ def _most_frequent(array, extra_value, n_repeat):
        of the array."""
     # Compute the most frequent value in array only
     if array.size > 0:
-        with warnings.catch_warnings():
-            # stats.mode raises a warning when input array contains objects due
-            # to incapacity to detect NaNs. Irrelevant here since input array
-            # has already been NaN-masked.
-            warnings.simplefilter("ignore", RuntimeWarning)
-            mode = stats.mode(array)
+        if array.dtype.kind == 'O':
+            c = Counter(array)
+            mode = c.most_common(1)
+            most_frequent_value = mode[0][0]
+            most_frequent_count = mode[0][1]
 
-        most_frequent_value = mode[0][0]
-        most_frequent_count = mode[1][0]
+            # in case of ties, most_common returns the value that is the first
+            # one seen, scipy.stats.mode returns the smallest value
+            for key, count in c.items():
+                if count == most_frequent_count and key < most_frequent_value:
+                    most_frequent_value = key
+        else:
+            with warnings.catch_warnings():
+                # stats.mode raises a warning when input array contains objects
+                # due to incapacity to detect NaNs. Irrelevant here since input
+                # array has already been NaN-masked.
+                warnings.simplefilter("ignore", RuntimeWarning)
+                mode = stats.mode(array)
+
+            most_frequent_value = mode[0][0]
+            most_frequent_count = mode[1][0]
     else:
         most_frequent_value = 0
         most_frequent_count = 0
