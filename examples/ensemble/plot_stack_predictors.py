@@ -98,10 +98,10 @@ for ax, (name, est) in zip(axs, estimators + [('Stacking Regressor',
     start_time = time.time()
     score = cross_validate(est, X, y,
                            scoring=['r2', 'neg_mean_absolute_error'],
-                           n_jobs=-1, verbose=0)
+                           n_jobs=1, verbose=0)
     elapsed_time = time.time() - start_time
 
-    y_pred = cross_val_predict(est, X, y, n_jobs=-1, verbose=0)
+    y_pred = cross_val_predict(est, X, y, n_jobs=1, verbose=0)
     plot_regression_results(
         ax, y, y_pred,
         name,

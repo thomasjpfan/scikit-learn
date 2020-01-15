@@ -149,7 +149,7 @@ plt.show()
 # Also note that both random features have very low importances (close to 0) as
 # expected.
 result = permutation_importance(rf, X_test, y_test, n_repeats=10,
-                                random_state=42, n_jobs=2)
+                                random_state=42, n_jobs=1)
 sorted_idx = result.importances_mean.argsort()
 
 fig, ax = plt.subplots()
@@ -167,7 +167,7 @@ plt.show()
 # random numerical feature to overfit. You can further confirm this by
 # re-running this example with constrained RF with min_samples_leaf=10.
 result = permutation_importance(rf, X_train, y_train, n_repeats=10,
-                                random_state=42, n_jobs=2)
+                                random_state=42, n_jobs=1)
 sorted_idx = result.importances_mean.argsort()
 
 fig, ax = plt.subplots()

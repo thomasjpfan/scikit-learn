@@ -106,7 +106,7 @@ from sklearn.inspection import permutation_importance
 X, y = make_classification(random_state=0, n_features=5, n_informative=3)
 rf = RandomForestClassifier(random_state=0).fit(X, y)
 result = permutation_importance(rf, X, y, n_repeats=10, random_state=0,
-                                n_jobs=-1)
+                                n_jobs=1)
 
 fig, ax = plt.subplots()
 sorted_idx = result.importances_mean.argsort()
