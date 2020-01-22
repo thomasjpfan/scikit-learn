@@ -207,7 +207,11 @@ def randomized_range_finder(A, size, n_iter,
     analysis
     A. Szlam et al. 2014
     """
-    random_state = check_random_state(random_state)
+    if isinstance(A, np.ndarray):
+        random_state = check_random_state(random_state)
+    else:
+        from cupy.random import RandomState
+        random_state = RandomState()
 
     # Generating normal random vectors with shape: (A.shape[1], size)
     Q = random_state.normal(size=(A.shape[1], size))
@@ -217,10 +221,10 @@ def randomized_range_finder(A, size, n_iter,
 
     # Deal with "auto" mode
     if power_iteration_normalizer == 'auto':
-        if n_iter <= 2:
-            power_iteration_normalizer = 'none'
-        else:
-            power_iteration_normalizer = 'LU'
+        # if n_iter <= 2:
+        power_iteration_normalizer = 'none'
+        # else:
+        #     power_iteration_normalizer = 'LU'
 
     # Perform power iterations with Q to further 'imprint' the top
     # singular vectors of A in Q
@@ -237,7 +241,14 @@ def randomized_range_finder(A, size, n_iter,
 
     # Sample the range of A using by linear projection of Q
     # Extract an orthonormal basis
-    Q, _ = linalg.qr(safe_sparse_dot(A, Q), mode='economic')
+    if isinstance(A, np.ndarray):
+        from scipy.linalg import qr
+        qr_func = qr
+    else:
+        from cupy.linalg import qr
+        qr_func = qr
+
+    Q, _ = qr_func(safe_sparse_dot(A, Q))
     return Q
 
 
@@ -350,11 +361,21 @@ def randomized_svd(M, n_components, n_oversamples=10, n_iter='auto',
     # project M to the (k + p) dimensional space using the basis vectors
     B = safe_sparse_dot(Q.T, M)
 
+    if isinstance(M, np.ndarray):
+        from scipy.linalg import svd
+        svd_func = svd
+    else:
+        from cupy.linalg import svd
+        svd_func = svd
+
     # compute the SVD on the thin matrix: (k + p) wide
-    Uhat, s, V = linalg.svd(B, full_matrices=False)
+    Uhat, s, V = svd_func(B, full_matrices=False)
 
     del B
-    U = np.dot(Q, Uhat)
+    # print(type(Uhat))
+    # print(type(Q))
+    # U = np.dot(Q, Uhat)
+    U = Q @ Uhat
 
     if flip_sign:
         if not transpose:
@@ -525,7 +546,7 @@ def svd_flip(u, v, u_based_decision=True):
     if u_based_decision:
         # columns of u, rows of v
         max_abs_cols = np.argmax(np.abs(u), axis=0)
-        signs = np.sign(u[max_abs_cols, range(u.shape[1])])
+        signs = np.sign(u[max_abs_cols, list(range(u.shape[1]))])
         u *= signs
         v *= signs[:, np.newaxis]
     else:

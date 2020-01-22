@@ -386,8 +386,8 @@ class PCA(_BasePCA):
             raise TypeError('PCA does not support sparse input. See '
                             'TruncatedSVD for a possible alternative.')
 
-        X = check_array(X, dtype=[np.float64, np.float32], ensure_2d=True,
-                        copy=self.copy)
+        # X = check_array(X, dtype=[np.float64, np.float32], ensure_2d=True,
+        #                 copy=self.copy)
 
         # Handle n_components==None
         if self.n_components is None:
@@ -443,7 +443,13 @@ class PCA(_BasePCA):
         self.mean_ = np.mean(X, axis=0)
         X -= self.mean_
 
-        U, S, V = linalg.svd(X, full_matrices=False)
+        if isinstance(X, np.ndarray):
+            from scipy.linalg import svd
+            svd_func = svd
+        else:
+            from cupy.linalg import svd
+            svd_func = svd
+        U, S, V = svd_func(X, full_matrices=False)
         # flip eigenvectors' sign to enforce deterministic output
         U, V = svd_flip(U, V)
 
