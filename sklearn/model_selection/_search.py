@@ -703,9 +703,8 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
                 all_candidate_params.extend(candidate_params)
                 all_out.extend(out)
 
-                nonlocal results
-                results = self._format_results(
-                    all_candidate_params, scorers, n_splits, all_out)
+                self._format_results(
+                    results, all_candidate_params, scorers, n_splits, all_out)
                 return results
 
             self._run_search(evaluate_candidates)
@@ -751,7 +750,8 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
 
         return self
 
-    def _format_results(self, candidate_params, scorers, n_splits, out):
+    def _format_results(self, results, candidate_params, scorers,
+                        n_splits, out):
         n_candidates = len(candidate_params)
 
         # if one choose to see train score, "out" will contain train score info
@@ -767,8 +767,6 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
         test_scores = _aggregate_score_dicts(test_score_dicts)
         if self.return_train_score:
             train_scores = _aggregate_score_dicts(train_score_dicts)
-
-        results = {}
 
         def _store(key_name, array, weights=None, splits=False, rank=False):
             """A small helper to store the scores/times to the cv_results_"""
@@ -835,8 +833,6 @@ class BaseSearchCV(MetaEstimatorMixin, BaseEstimator, metaclass=ABCMeta):
             if self.return_train_score:
                 _store('train_%s' % scorer_name, train_scores[scorer_name],
                        splits=True)
-
-        return results
 
 
 class GridSearchCV(BaseSearchCV):
