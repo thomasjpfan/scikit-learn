@@ -476,8 +476,11 @@ def test_ridge_gcv_vs_ridge_loo_cv(
 
 
 def test_ridge_loo_cv_asym_scoring():
-    # checking on asymmetric scoring
-    scoring = 'explained_variance'
+    # asymmetric scorer
+    def asym_scorer(estimator, X, y):
+        y_pred = estimator.predict(X)
+        return np.sum(np.abs(10*y_pred - y))
+
     n_samples, n_features = 10, 5
     n_targets = 1
     X, y = _make_sparse_offset_regression(
@@ -487,11 +490,11 @@ def test_ridge_loo_cv_asym_scoring():
 
     alphas = [1e-3, .1, 1., 10., 1e3]
     loo_ridge = RidgeCV(cv=n_samples, fit_intercept=True,
-                        alphas=alphas, scoring=scoring,
+                        alphas=alphas, scoring=asym_scorer,
                         normalize=True)
 
     gcv_ridge = RidgeCV(fit_intercept=True,
-                        alphas=alphas, scoring=scoring,
+                        alphas=alphas, scoring=asym_scorer,
                         normalize=True)
 
     loo_ridge.fit(X, y)
