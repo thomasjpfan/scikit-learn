@@ -63,7 +63,8 @@ def _retry_with_clean_cache(openml_path, data_home):
 
 def _open_openml_url(openml_path, data_home):
     """
-    Returns a resource from OpenML.org. Caches it to data_home if required.
+    Returns a resource from OpenML.org. Caches it to data_home if
+    required.
 
     Parameters
     ----------

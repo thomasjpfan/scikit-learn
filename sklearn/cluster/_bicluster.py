@@ -26,7 +26,8 @@ __all__ = ['SpectralCoclustering',
 
 
 def _scale_normalize(X):
-    """Normalize ``X`` by scaling rows and columns independently.
+    """Normalize ``X`` by scaling rows and columns
+    independently.
 
     Returns the normalized matrix and the row and column scaling
     factors.

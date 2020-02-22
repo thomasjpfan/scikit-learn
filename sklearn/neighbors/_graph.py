@@ -13,7 +13,8 @@ from ..utils.validation import check_is_fitted
 
 
 def _check_params(X, metric, p, metric_params):
-    """Check the validity of the input parameters"""
+    """Check the validity of the input
+    parameters"""
     params = zip(['metric', 'p', 'metric_params'],
                  [metric, p, metric_params])
     est_params = X.get_params()

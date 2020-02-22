@@ -355,7 +355,8 @@ class Pipeline(_BaseComposition):
         return self
 
     def fit_transform(self, X, y=None, **fit_params):
-        """Fit the model and transform with the final estimator
+        """Fit the model and transform with the
+        final estimator
 
         Fits all the transforms one after the other and transforms the
         data, then uses fit_transform on transformed data with the final
