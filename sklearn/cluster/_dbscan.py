@@ -15,7 +15,7 @@ from scipy import sparse
 
 from ..base import BaseEstimator, ClusterMixin
 from ..utils import check_array
-from ..utils.validation import _check_sample_weight
+from ..utils.validation import _check_sample_weight, _deprecate_positional_args
 from ..neighbors import NearestNeighbors
 
 from ._dbscan_inner import dbscan_inner
@@ -52,7 +52,8 @@ def dbscan(X, eps=0.5, min_samples=5, metric='minkowski', metric_params=None,
         the options allowed by :func:`sklearn.metrics.pairwise_distances` for
         its metric parameter.
         If metric is "precomputed", X is assumed to be a distance matrix and
-        must be square during fit. X may be a :term:`Glossary <sparse graph>`,
+        must be square during fit.
+        X may be a :term:`sparse graph <sparse graph>`,
         in which case only "nonzero" elements may be considered neighbors.
 
     metric_params : dict, optional
@@ -269,8 +270,8 @@ class DBSCAN(ClusterMixin, BaseEstimator):
     DBSCAN revisited, revisited: why and how you should (still) use DBSCAN.
     ACM Transactions on Database Systems (TODS), 42(3), 19.
     """
-
-    def __init__(self, eps=0.5, min_samples=5, metric='euclidean',
+    @_deprecate_positional_args
+    def __init__(self, eps=0.5, *, min_samples=5, metric='euclidean',
                  metric_params=None, algorithm='auto', leaf_size=30, p=None,
                  n_jobs=None):
         self.eps = eps
