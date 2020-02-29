@@ -7,7 +7,7 @@ parameters:
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
-  condition: eq(dependencies.linting.outputs['gitCommitMessage.runScipyDev'], 'true')
+  condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runScipyDev'], 'true')
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:

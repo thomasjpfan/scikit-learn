@@ -24,7 +24,7 @@ jobs:
     - bash: |
         if [[ $BUILD_SOURCEVERSIONMESSAGE =~ \[scipy-dev\] ]]; then
           echo "##vso[task.setvariable variable=runScipyDev;isOutput=true]true"
-        else:
+        else
           echo "##vso[task.setvariable variable=runScipyDev;isOutput=true]false"
         fi
       name: gitCommitMessage
@@ -32,8 +32,8 @@ jobs:
 
 - template: build_tools/azure/posix.yml
   parameters:
-    name: Linux_nightly
-    vmImage: ubuntu-16.04
+    name: Linux_nightly_scipy_dev
+    vmImage: ubuntu-18.04
     dependsOn: [linting]
     matrix:
       pylatest_scipy_dev:
