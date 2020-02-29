@@ -44,7 +44,6 @@ jobs:
         COVERAGE: 'true'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         TEST_DOCSTRINGS: 'true'
-        CHECK_WARNINGS: 'true'
 
 # # Will run all the time regardless of linting outcome.
 # - template: build_tools/azure/posix.yml
