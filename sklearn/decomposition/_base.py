@@ -21,6 +21,7 @@ class _BasePCA(TransformerMixin, BaseEstimator, metaclass=ABCMeta):
     """Base class for PCA methods.
 
     Warning: This class should not be used directly.
+
     Use derived classes instead.
     """
     def get_covariance(self):

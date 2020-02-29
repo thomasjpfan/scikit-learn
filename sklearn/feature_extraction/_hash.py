@@ -20,7 +20,8 @@ else:
 
 
 def _iteritems(d):
-    """Like d.iteritems, but accepts any collections.Mapping."""
+    """Like d.iteritems, but accepts any
+    collections.Mapping."""
     return d.iteritems() if hasattr(d, "iteritems") else d.items()
 
 
