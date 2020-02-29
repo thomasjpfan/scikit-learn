@@ -3,12 +3,11 @@ parameters:
   vmImage: ''
   matrix: []
   dependsOn: []
-  toRun: 'true'
 
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
-  condition: eq(${{ parameters.toRun }}, 'true')
+  condition: eq($[ dependencies.linting.outputs['gitCommitMessage.runScipyDev'] ], 'true')
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:

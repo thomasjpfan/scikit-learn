@@ -35,7 +35,6 @@ jobs:
     name: Linux_nightly
     vmImage: ubuntu-16.04
     dependsOn: [linting]
-    toRun: $[ dependencies.linting.outputs['gitCommitMessage.runScipyDev'] ]
     matrix:
       pylatest_scipy_dev:
         DISTRIB: 'conda-pip-scipy-dev'
