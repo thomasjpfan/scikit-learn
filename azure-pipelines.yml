@@ -3,7 +3,8 @@ schedules:
 - cron: "30 2 * * *"
   displayName: Run nightly build
   branches:
-    include: master
+    include:
+    - master
   always: true
 
 jobs:
