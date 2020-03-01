@@ -1,4 +1,11 @@
 # Adapted from https://github.com/pandas-dev/pandas/blob/master/azure-pipelines.yml
+schedules:
+- cron: "30 2 * * *"
+  displayName: Run nightly build
+  branches:
+    include: master
+  always: true
+
 jobs:
 - job: linting
   displayName: Linting
@@ -22,7 +29,8 @@ jobs:
         fi
       displayName: Run linting
     - bash: |
-        if [[ $BUILD_SOURCEVERSIONMESSAGE =~ \[scipy-dev\] ]]; then
+        if [[ $BUILD_SOURCEVERSIONMESSAGE =~ \[scipy-dev\] ]] || \
+           [[ $BUILD_REASON == "Schedule" ]]; then
           echo "##vso[task.setvariable variable=runScipyDev;isOutput=true]true"
         else
           echo "##vso[task.setvariable variable=runScipyDev;isOutput=true]false"
@@ -35,13 +43,13 @@ jobs:
     name: Linux_nightly_scipy_dev
     vmImage: ubuntu-18.04
     dependsOn: [linting]
-    toRunKey: 'gitCommitMessage.runScipyDev'
+    additionalJobOptions:
+      condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runScipyDev'], 'true')
     matrix:
       pylatest_scipy_dev:
         DISTRIB: 'conda-pip-scipy-dev'
         PYTHON_VERSION: '*'
         CHECK_WARNINGS: 'true'
-        COVERAGE: 'true'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         TEST_DOCSTRINGS: 'true'
 
