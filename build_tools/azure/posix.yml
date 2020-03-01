@@ -3,7 +3,6 @@ parameters:
   vmImage: ''
   matrix: []
   dependsOn: []
-  toRunKey: ''
   additionalJobOptions:
     condition: ne(variables['Build.Reason'], 'Schedule')
 
