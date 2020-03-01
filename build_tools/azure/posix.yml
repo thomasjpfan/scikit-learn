@@ -3,11 +3,13 @@ parameters:
   vmImage: ''
   matrix: []
   dependsOn: []
+  toRunKey: ''
 
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
-  condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runScipyDev'], 'true')
+${{ if ne(parameters.toRunKey, '') }}:
+  condition: eq(dependencies['linting']['outputs'][${{ parameters.toRunKey }}], 'true')
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:

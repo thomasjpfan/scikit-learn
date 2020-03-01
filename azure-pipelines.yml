@@ -35,6 +35,7 @@ jobs:
     name: Linux_nightly_scipy_dev
     vmImage: ubuntu-18.04
     dependsOn: [linting]
+    toRunKey: 'gitCommitMessage.runScipyDev'
     matrix:
       pylatest_scipy_dev:
         DISTRIB: 'conda-pip-scipy-dev'
