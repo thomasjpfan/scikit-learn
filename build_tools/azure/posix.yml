@@ -9,7 +9,7 @@ jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
   ${{ if ne(parameters.toRunKey, '') }}:
-    condition: eq(dependencies['linting']['outputs'][${{ parameters.toRunKey }}], 'true')
+    condition: eq(dependencies['linting']['outputs']['${{ parameters.toRunKey }}'], 'true')
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:
