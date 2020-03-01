@@ -1,6 +1,6 @@
 # Adapted from https://github.com/pandas-dev/pandas/blob/master/azure-pipelines.yml
 schedules:
-- cron: "*/20 * * * *"
+- cron: "30 2 * * *"
   displayName: Run nightly build
   branches:
     include:
