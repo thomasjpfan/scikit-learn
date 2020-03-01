@@ -4,10 +4,13 @@ parameters:
   vmImage: ''
   matrix: []
   dependsOn: []
+  additionalJobOptions:
+    condition: ne(variables['Build.Reason'], 'Schedule')
 
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
+  ${{ insert }}: ${{ parameters.additionalJobOptions }}
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:
