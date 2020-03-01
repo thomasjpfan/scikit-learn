@@ -4,7 +4,8 @@ parameters:
   matrix: []
   dependsOn: []
   toRunKey: ''
-  additionalJobOptions: {}
+  additionalJobOptions:
+    condition: ne(variables['Build.Reason'], 'Schedule')
 
 jobs:
 - job: ${{ parameters.name }}
