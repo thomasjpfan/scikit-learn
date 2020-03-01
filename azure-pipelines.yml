@@ -45,24 +45,24 @@ jobs:
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         TEST_DOCSTRINGS: 'true'
 
-# # Will run all the time regardless of linting outcome.
-# - template: build_tools/azure/posix.yml
-#   parameters:
-#     name: Linux_Runs
-#     vmImage: ubuntu-18.04
-#     matrix:
-#       pylatest_conda_mkl:
-#         DISTRIB: 'conda'
-#         PYTHON_VERSION: '*'
-#         BLAS: 'mkl'
-#         NUMPY_VERSION: '*'
-#         SCIPY_VERSION: '*'
-#         CYTHON_VERSION: '*'
-#         PILLOW_VERSION: '*'
-#         PYTEST_VERSION: '*'
-#         JOBLIB_VERSION: '*'
-#         THREADPOOLCTL_VERSION: '2.0.0'
-#         COVERAGE: 'true'
+# Will run all the time regardless of linting outcome.
+- template: build_tools/azure/posix.yml
+  parameters:
+    name: Linux_Runs
+    vmImage: ubuntu-18.04
+    matrix:
+      pylatest_conda_mkl:
+        DISTRIB: 'conda'
+        PYTHON_VERSION: '*'
+        BLAS: 'mkl'
+        NUMPY_VERSION: '*'
+        SCIPY_VERSION: '*'
+        CYTHON_VERSION: '*'
+        PILLOW_VERSION: '*'
+        PYTEST_VERSION: '*'
+        JOBLIB_VERSION: '*'
+        THREADPOOLCTL_VERSION: '2.0.0'
+        COVERAGE: 'true'
 
 # - template: build_tools/azure/posix.yml
 #   parameters:
