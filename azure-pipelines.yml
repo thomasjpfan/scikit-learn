@@ -41,12 +41,12 @@ jobs:
 
 - template: build_tools/azure/posix.yml
   parameters:
-    name: Linux_nightly_scipy_dev
+    name: Linux_Nightly
     vmImage: ubuntu-18.04
     dependsOn: [linting]
     condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runScipyDev'], 'true')
     matrix:
-      pylatest_scipy_dev:
+      pylatest_pip_scipy_dev:
         DISTRIB: 'conda-pip-scipy-dev'
         PYTHON_VERSION: '*'
         CHECK_WARNINGS: 'true'
