@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import average_precision_score
-from sklearn.metrics import ndcg_score
 
 from sklearn.utils._testing import (assert_array_almost_equal,
                                    assert_almost_equal,
