@@ -311,7 +311,9 @@ class IsotonicRegression(RegressorMixin, TransformerMixin, BaseEstimator):
         X, y = self._build_y(X, y, sample_weight)
 
         if y.size > 1:
-            eps = 100 * np.finfo(y.dtype).eps
+            eps = np.finfo(y.dtype).eps
+            factor = {'f': 1E3, 'd': 1E6}
+            eps *= factor[y.dtype.char.lower()]
             if self.increasing:
                 y[1:-1:2] += eps
                 y[-2] -= eps
