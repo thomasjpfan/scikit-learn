@@ -171,9 +171,6 @@ class IsotonicRegression(RegressorMixin, TransformerMixin, BaseEstimator):
     f_ : function
         The stepwise interpolating function that covers the input domain ``X``.
 
-    increasing_ : bool
-        Inferred value for ``increasing``.
-
     Notes
     -----
     Ties are broken using the secondary method from Leeuw, 1977.
@@ -312,6 +309,15 @@ class IsotonicRegression(RegressorMixin, TransformerMixin, BaseEstimator):
         # Transform y by running the isotonic regression algorithm and
         # transform X accordingly.
         X, y = self._build_y(X, y, sample_weight)
+
+        if y.size > 1:
+            eps = 100 * np.finfo(y.dtype).eps
+            if self.increasing:
+                y[1:-1:2] += eps
+                y[-2] -= eps
+            else:
+                y[1:-1:2] -= eps
+                y[1] += eps
 
         # It is necessary to store the non-redundant part of the training set
         # on the model to make it possible to support model persistence via

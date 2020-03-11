@@ -5,6 +5,7 @@ import copy
 
 import pytest
 
+from numpy.testing import assert_allclose
 from sklearn.isotonic import (check_increasing, isotonic_regression,
                               IsotonicRegression, _make_unique)
 
@@ -125,7 +126,7 @@ def test_isotonic_regression_ties_min():
     ir = IsotonicRegression()
     ir.fit(x, y)
     assert_array_equal(ir.fit(x, y).transform(x), ir.fit_transform(x, y))
-    assert_array_equal(y_true, ir.fit_transform(x, y))
+    assert_allclose(y_true, ir.fit_transform(x, y))
 
 
 def test_isotonic_regression_ties_max():
@@ -138,7 +139,7 @@ def test_isotonic_regression_ties_max():
     ir = IsotonicRegression()
     ir.fit(x, y)
     assert_array_equal(ir.fit(x, y).transform(x), ir.fit_transform(x, y))
-    assert_array_equal(y_true, ir.fit_transform(x, y))
+    assert_allclose(y_true, ir.fit_transform(x, y))
 
 
 def test_isotonic_regression_ties_secondary_():
@@ -284,7 +285,7 @@ def test_isotonic_sample_weight():
     expected_y = [1, 13.95, 13.95, 13.95, 13.95, 13.95, 24]
     received_y = ir.fit_transform(x, y, sample_weight=sample_weight)
 
-    assert_array_equal(expected_y, received_y)
+    assert_allclose(expected_y, received_y)
 
 
 def test_isotonic_regression_oob_raise():
@@ -457,7 +458,7 @@ def test_fast_predict():
     y_pred_slow = slow_model.predict(X_test)
     y_pred_fast = fast_model.predict(X_test)
 
-    assert_array_equal(y_pred_slow, y_pred_fast)
+    assert_allclose(y_pred_slow, y_pred_fast)
 
 
 def test_isotonic_copy_before_fit():
