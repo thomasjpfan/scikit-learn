@@ -7,6 +7,11 @@ schedules:
     - master
   always: true
 
+trigger:
+  branches:
+    include:
+    - '*'
+
 jobs:
 - job: linting
   displayName: Linting
