@@ -62,6 +62,21 @@ def fetch_rcv1_fxt():
     return _wrapped_fetch(fetch_rcv1, dataset_name='rcv1')
 
 
+def pytest_sessionstart(session):
+    # Test will only run if the dataset is already downloaded
+    download_if_missing = environ.get('SKLEARN_SKIP_NETWORK_TESTS', '1') == '0'
+    if not download_if_missing:
+        return
+
+    # Download dataset if needed before tests are run. This is to avoid a race
+    # condition with file access when running with pytest-xdist
+    fetch_funcs = [fetch_20newsgroups, fetch_20newsgroups_vectorized,
+                   fetch_california_housing, fetch_covtype,
+                   fetch_kddcup99, fetch_olivetti_faces, fetch_rcv1]
+    for fetch_func in fetch_funcs:
+        fetch_func(download_if_missing=True)
+
+
 @pytest.fixture
 def hide_available_pandas(monkeypatch):
     """ Pretend pandas was not installed. """
