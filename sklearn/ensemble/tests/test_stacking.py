@@ -398,7 +398,7 @@ def test_stacking_classifier_stratify_default():
 @pytest.mark.parametrize(
     "stacker, X, y",
     [(StackingClassifier(
-        estimators=[('lr', LogisticRegression()),
+        estimators=[('lr', LogisticRegression(random_state=42)),
                     ('svm', LinearSVC(random_state=42))],
         final_estimator=LogisticRegression(),
         cv=KFold(shuffle=True, random_state=42)),
@@ -416,7 +416,7 @@ def test_stacking_with_sample_weight(stacker, X, y):
     # note: ConvergenceWarning are catch since we are not worrying about the
     # convergence here
     rng = np.random.RandomState(42)
-    total_sample_weight = rng.choice([0.3, 0.7], len(y))
+    total_sample_weight = rng.choice([0.2, 0.8], len(y))
     X_train, X_test, y_train, _, sample_weight_train, _ = train_test_split(
         X, y, total_sample_weight, random_state=42
     )
