@@ -415,8 +415,10 @@ def test_stacking_with_sample_weight(stacker, X, y):
     # check that sample weights has an influence on the fitting
     # note: ConvergenceWarning are catch since we are not worrying about the
     # convergence here
-    rng = np.random.RandomState(42)
-    total_sample_weight = rng.choice([0.2, 0.8], len(y))
+    n_half_samples = len(y) // 2
+    total_sample_weight = np.array(
+        [0.1] * n_half_samples + [0.9] * (len(y) - n_half_samples)
+    )
     X_train, X_test, y_train, _, sample_weight_train, _ = train_test_split(
         X, y, total_sample_weight, random_state=42
     )
