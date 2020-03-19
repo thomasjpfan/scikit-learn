@@ -416,7 +416,7 @@ def test_stacking_with_sample_weight(stacker, X, y):
     # note: ConvergenceWarning are catch since we are not worrying about the
     # convergence here
     rng = np.random.RandomState(42)
-    total_sample_weight = rng.choice([1, 9], len(y))
+    total_sample_weight = rng.choice([2, 3, 4, 5], len(y))
     X_train, X_test, y_train, _, sample_weight_train, _ = train_test_split(
         X, y, total_sample_weight, random_state=42
     )
