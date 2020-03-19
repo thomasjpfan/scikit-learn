@@ -17,6 +17,8 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.datasets import load_iris
 from sklearn.datasets import load_diabetes
 from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import make_classification
+from sklearn.datasets import make_regression
 
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor
@@ -415,11 +417,9 @@ def test_stacking_with_sample_weight(stacker, X, y):
     # check that sample weights has an influence on the fitting
     # note: ConvergenceWarning are catch since we are not worrying about the
     # convergence here
+    X_train, X_test, y_train, _ = train_test_split(X, y, random_state=42)
     rng = np.random.RandomState(42)
-    total_sample_weight = rng.choice([2, 3, 4, 5], len(y))
-    X_train, X_test, y_train, _, sample_weight_train, _ = train_test_split(
-        X, y, total_sample_weight, random_state=42
-    )
+    sample_weight_train = rng.choice([0.1, 0.9], len(y_train))
 
     with ignore_warnings(category=ConvergenceWarning):
         stacker.fit(X_train, y_train)
