@@ -17,8 +17,6 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.datasets import load_iris
 from sklearn.datasets import load_diabetes
 from sklearn.datasets import load_breast_cancer
-from sklearn.datasets import make_classification
-from sklearn.datasets import make_regression
 
 from sklearn.dummy import DummyClassifier
 from sklearn.dummy import DummyRegressor
