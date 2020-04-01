@@ -98,7 +98,7 @@ elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
     python -m pip install -U pip
     python -m pip install pytest==$PYTEST_VERSION pytest-cov pytest-xdist
     python -m pip install pandas matplotlib pyamg scikit-image
-    # Pin pillow vesrion for now
+    # TODO: Remove when fixed, #16824, pin pillow vesrion for now
     pip intall pillow=="7.0.*"
     # do not install dependencies for lightgbm since it requires scikit-learn
     python -m pip install lightgbm --no-deps
