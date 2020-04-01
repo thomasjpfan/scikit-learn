@@ -214,9 +214,10 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
             X_val = y_val = sample_weight_val = None
 
         has_missing_values = np.isnan(X_train).any(axis=0).astype(np.uint8)
-        # categorical features will alway a biin for missing values to handle
-        # unknown categories
-        has_missing_values |= self.categorical_features_
+        if self.categorical_features_ is not None:
+            # categorical features will alway a biin for missing values to
+            # handle unknown categories
+            has_missing_values |= self.categorical_features_
 
         # Bin the data
         # For ease of use of the API, the user-facing GBDT classes accept the
@@ -228,7 +229,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         # convention is that n_bins == max_bins + 1
         n_bins = self.max_bins + 1  # + 1 for missing values
         self.bin_mapper_ = _BinMapper(
-            n_bins=n_bins, categorical_indices=self.categorical_indices_,
+            n_bins=n_bins, categorical=self.categorical_features_,
             random_state=self._random_seed)
         X_binned_train = self._bin_data(X_train, is_training_data=True)
         if X_val is not None:

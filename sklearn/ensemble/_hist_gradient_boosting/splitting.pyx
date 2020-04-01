@@ -728,7 +728,9 @@ cdef class Splitter:
             Y_DTYPE_C lower_bound,
             Y_DTYPE_C upper_bound,
             split_info_struct * split_info) nogil:  # OUT
-        """Find best split
+        """Find best split for categorical features
+
+        Categorical features will
         """
 
 
