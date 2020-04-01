@@ -352,7 +352,8 @@ def _ensure_no_complex_data(array):
 def check_array(array, accept_sparse=False, accept_large_sparse=True,
                 dtype="numeric", order=None, copy=False, force_all_finite=True,
                 ensure_2d=True, allow_nd=False, ensure_min_samples=1,
-                ensure_min_features=1, estimator=None):
+                ensure_min_features=1, estimator=None,
+                use_pandas_categorical_encoding=False):
 
     """Input validation on an array, list, sparse matrix or similar.
 

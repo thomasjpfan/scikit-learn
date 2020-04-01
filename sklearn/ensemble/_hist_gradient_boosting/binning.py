@@ -16,7 +16,7 @@ from ._binning import _map_to_bins
 from .common import X_DTYPE, X_BINNED_DTYPE, ALMOST_INF
 
 
-def _find_binning_thresholds(data, max_bins, categorical_indices=None):
+def _find_binning_thresholds(data, max_bins, categorical=None):
     """Extract feature-wise quantiles from numerical data.
 
     Missing values are ignored for finding the thresholds.
@@ -30,8 +30,8 @@ def _find_binning_thresholds(data, max_bins, categorical_indices=None):
         given feature the number of unique values is less than ``max_bins``,
         then those unique values will be used to compute the bin thresholds,
         instead of the quantiles
-    categorical_indices : list of indicies, default=None
-        Indicates categorical features in data.
+    categorical : array of bool or None
+        Indicates categorical features
 
     Return
     ------
@@ -40,13 +40,10 @@ def _find_binning_thresholds(data, max_bins, categorical_indices=None):
         be used to separate the bins. Thus ``len(binning_thresholds) ==
         n_features``.
     """
-    if categorical_indices is not None:
-        categorical_indices = set(categorical_indices)
-
     binning_thresholds = []
     for f_idx in range(data.shape[1]):
         # categorical feature
-        if categorical_indices is not None and f_idx in categorical_indices:
+        if categorical is not None and categorical[f_idx]:
             binning_thresholds.append(None)
             continue
 
@@ -81,7 +78,7 @@ def _find_binning_thresholds(data, max_bins, categorical_indices=None):
     return binning_thresholds
 
 
-def _find_categories(data, max_bins, categorical_indices):
+def _find_categories(data, max_bins, categorical):
     """Extract feature-wise categories from categorical data
 
     Missing values and negative values are ignored.
@@ -95,18 +92,17 @@ def _find_categories(data, max_bins, categorical_indices):
         given feature the number of unique values is less than ``max_bins``,
         then those unique values will be used to compute the bin thresholds,
         instead of the quantiles
-    categorical_indices : list of indicies
-        Indicates categorical features in data.
+    categorical : array of bool
+        Indicates categorical features
 
     Return
     ------
-    bin_categories : list of arrays or None
+    bin_categories : list of arrays
         For each categorical feature, this gives the categories corresponding
         to each bin. None if ``categorical_indices`` is None.
 
     """
-
-    data = data.take(categorical_indices, axis=1)
+    data = data[:, categorical]
     bin_categories = []
     for f_idx in range(data.shape[1]):
         col_data = data[:, f_idx]
@@ -193,7 +189,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         If ``n_samples > subsample``, then ``sub_samples`` samples will be
         randomly chosen to compute the quantiles. If ``None``, the whole data
         is used.
-    categorical_indices : list of int, default=None
+    categorical : array of bool, default=None
         Indicates categorical features. If the number of features is
         greater than ``n_bins``, then the top ``n_bins`` categories based on
         cardinality are kept. All unknown and negative categories will be
@@ -210,11 +206,11 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         For each feature, gives the real-valued bin threhsolds. There are
         ``max_bins - 1`` thresholds, where ``max_bins = n_bins - 1`` is the
         number of bins used for non-missing values.
-        If ``bin_thresholds_`` corresponds to a categorical index, then
+        If ``bin_thresholds_`` corresponds to a categorical feature, then
         ``bin_thresholds_[categorical_index]`` is None.
     bin_categories_ : list of arrays or None
         For each categorical feature, this gives the categories corresponding
-        to each bin. None if ``categorical_indices`` is None.
+        to each bin. None if ``categorical`` is None.
     n_bins_non_missing_ : array of uint32
         For each feature, gives the number of bins actually used for
         non-missing values. For features with a lot of unique values, this is
@@ -227,10 +223,10 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         empty (and unused) bins.
     """
     def __init__(self, n_bins=256, subsample=int(2e5),
-                 categorical_indices=None, random_state=None):
+                 categorical=None, random_state=None):
         self.n_bins = n_bins
         self.subsample = subsample
-        self.categorical_indices = categorical_indices
+        self.categorical = categorical
         self.random_state = random_state
 
     def fit(self, X, y=None):
@@ -265,18 +261,19 @@ class _BinMapper(TransformerMixin, BaseEstimator):
             X = X.take(subset, axis=0)
 
         self.bin_thresholds_ = _find_binning_thresholds(
-            X, max_bins, categorical_indices=self.categorical_indices)
+            X, max_bins, categorical=self.categorical)
 
-        if self.categorical_indices is not None:
+        if self.categorical is not None:
             self.bin_categories_ = _find_categories(
-                X, max_bins, categorical_indices=self.categorical_indices)
+                X, max_bins, categorical=self.categorical)
         else:
             self.bin_categories_ = None
 
         n_bins_non_missing = []
 
         if self.bin_categories_ is not None:
-            cat_idx_to_bin = dict(zip(self.categorical_indices,
+            categorical_indices = np.flatnonzero(self.categorical)
+            cat_idx_to_bin = dict(zip(categorical_indices,
                                       self.bin_categories_))
         for i, thresholds in enumerate(self.bin_thresholds_):
             if self.bin_categories_ is not None and i in cat_idx_to_bin:
@@ -320,7 +317,8 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         _map_to_bins(X, self.bin_thresholds_, self.missing_values_bin_idx_,
                      binned)
         if self.bin_categories_ is not None:
-            _encode_categories(X, self.categorical_indices,
+            categorical_indices = np.flatnonzero(self.categorical)
+            _encode_categories(X, categorical_indices,
                                self.bin_categories_,
                                self.missing_values_bin_idx_, binned)
         return binned

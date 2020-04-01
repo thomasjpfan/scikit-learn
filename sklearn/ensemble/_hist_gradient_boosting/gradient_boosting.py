@@ -95,24 +95,21 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
     def _check_categories(self, n_features):
         """Check and validate categories params in X"""
         categorical = self.categorical
+
         if categorical is None:
-            self.categorical_indices_ = None
+            self.categorical_features_ = None
             return
 
-        error_msg = ("categorical must be an array-like of feature indicies "
-                     "or bools with shape (n_features,)")
+        error_msg = ("categorical must be an array-like of bool with shape "
+                     "(n_features,)")
 
         categorical = np.asarray(categorical)
 
         if categorical.dtype.kind == 'b':
             if categorical.shape[0] != n_features:
                 raise ValueError(error_msg)
-            self.categorical_indices_ = np.flatnonzero(categorical)
+            self.categorical_features_ = categorical
 
-        elif categorical.dtype.kind == 'i':
-            if any(categorical > n_features):
-                raise ValueError(error_msg)
-            self.categorical_indices_ = categorical
         else:  # unsupported
             raise ValueError(error_msg)
 
@@ -140,8 +137,8 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         acc_compute_hist_time = 0.  # time spent computing histograms
         # time spent predicting X for gradient and hessians update
         acc_prediction_time = 0.
-        X, y = self._validate_data(X, y, dtype=[X_DTYPE],
-                                   force_all_finite=False)
+        X, y = self._validate_data(
+            X, y, dtype=[X_DTYPE], force_all_finite=False)
         y = self._encode_y(y)
         check_consistent_length(X, y)
         # Do not create unit sample weights by default to later skip some
@@ -831,10 +828,9 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
-    categorical : array-like of int or bool or a callable, default=None
-        Indicates the categorical features:
-        - array-like of int : Array of feature indicies.
-        - array-like of bool : Boolean mask for categorical features.
+    categorical : array-like of bool of shape (n_features), default=None.
+        Indicates the categorical features. If None, no features will be
+        consider categorical.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
@@ -1032,10 +1028,9 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
-    categorical : array-like of int or bool or a callable, default=None
-        Indicates the categorical features:
-        - array-like of int : Array of feature indicies.
-        - array-like of bool : Boolean mask for categorical features.
+    categorical : array-like of bool of shape (n_features), default=None.
+        Indicates the categorical features. If None, no features will be
+        consider categorical.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
