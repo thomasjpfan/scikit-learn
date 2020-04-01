@@ -189,7 +189,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         If ``n_samples > subsample``, then ``sub_samples`` samples will be
         randomly chosen to compute the quantiles. If ``None``, the whole data
         is used.
-    categorical : array of bool, default=None
+    categorical : ndarray of bool of shape (n_features,), default=None
         Indicates categorical features. If the number of features is
         greater than ``n_bins``, then the top ``n_bins`` categories based on
         cardinality are kept. All unknown and negative categories will be
@@ -222,8 +222,8 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         is less than ``n_bins - 1`` for a given feature, then there are
         empty (and unused) bins.
     """
-    def __init__(self, n_bins=256, subsample=int(2e5),
-                 categorical=None, random_state=None):
+    def __init__(self, n_bins=256, subsample=int(2e5), categorical=None,
+                 random_state=None):
         self.n_bins = n_bins
         self.subsample = subsample
         self.categorical = categorical

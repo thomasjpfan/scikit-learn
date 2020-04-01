@@ -104,14 +104,21 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                      "(n_features,)")
 
         categorical = np.asarray(categorical)
-
-        if categorical.dtype.kind == 'b':
-            if categorical.shape[0] != n_features:
-                raise ValueError(error_msg)
-            self.categorical_features_ = categorical
-
-        else:  # unsupported
+        if categorical.dtype.kind != 'b':
             raise ValueError(error_msg)
+
+        if categorical.shape[0] != n_features:
+            raise ValueError(error_msg)
+
+        self.categorical_features_ = categorical
+
+        # categorical features can not have monotonic constraints
+        if self.monotonic_cst is not None:
+            monotonic_cst = np.asarray(self.monotonic_cst, dtype=np.uint8) != 0
+            both = categorical & monotonic_cst
+            if both.any():
+                raise ValueError("categorical features can not have "
+                                 "monotonic constraints")
 
     def fit(self, X, y, sample_weight=None):
         """Fit the gradient boosting model.
@@ -207,6 +214,9 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
             X_val = y_val = sample_weight_val = None
 
         has_missing_values = np.isnan(X_train).any(axis=0).astype(np.uint8)
+        # categorical features will alway a biin for missing values to handle
+        # unknown categories
+        has_missing_values |= self.categorical_features_
 
         # Bin the data
         # For ease of use of the API, the user-facing GBDT classes accept the

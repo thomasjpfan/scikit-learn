@@ -166,6 +166,8 @@ class TreeGrower:
     has_missing_values : ndarray of bool or bool, optional (default=False)
         Whether each feature contains missing values (in the training data).
         If it's a bool, the same value is used for all features.
+    categorical : ndarray of bool of shape (n_features,), default=None
+        Indicates categorical features.
     l2_regularization : float, optional (default=0)
         The L2 regularization parameter.
     min_hessian_to_split : float, optional (default=1e-3)
@@ -179,7 +181,7 @@ class TreeGrower:
     def __init__(self, X_binned, gradients, hessians, max_leaf_nodes=None,
                  max_depth=None, min_samples_leaf=20, min_gain_to_split=0.,
                  n_bins=256, n_bins_non_missing=None, has_missing_values=False,
-                 monotonic_cst=None, l2_regularization=0.,
+                 monotonic_cst=None, categorical=None, l2_regularization=0.,
                  min_hessian_to_split=1e-3, shrinkage=1.):
 
         self._validate_parameters(X_binned, max_leaf_nodes, max_depth,
@@ -223,6 +225,13 @@ class TreeGrower:
                     "-1, 0 or 1."
                     )
 
+        if categorical is None:
+            self.has_categorical = False
+            categorical = np.ones(shape=X_binned.shape[1], dtype=np.int8)
+        else:
+            self.has_categorical = True
+            categorical = np.asarray(categorical, dtype=np.int8)
+
         hessians_are_constant = hessians.shape[0] == 1
         self.histogram_builder = HistogramBuilder(
             X_binned, n_bins, gradients, hessians, hessians_are_constant)
@@ -236,6 +245,7 @@ class TreeGrower:
         self.max_leaf_nodes = max_leaf_nodes
         self.has_missing_values = has_missing_values
         self.monotonic_cst = monotonic_cst
+        self.categorical = categorical
         self.l2_regularization = l2_regularization
         self.n_features = X_binned.shape[1]
         self.max_depth = max_depth

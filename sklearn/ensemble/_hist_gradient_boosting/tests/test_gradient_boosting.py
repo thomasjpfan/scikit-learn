@@ -686,7 +686,6 @@ def test_single_node_trees(Est):
 @pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
                                  HistGradientBoostingRegressor))
 @pytest.mark.parametrize('categorical, indices', [
-    ([0, 3], [0, 3]),
     ([True, False, True, True], [0, 2, 3]),
 ])
 def test_categorical_spec(Est, categorical, indices):
@@ -698,16 +697,19 @@ def test_categorical_spec(Est, categorical, indices):
 
 @pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
                                  HistGradientBoostingRegressor))
-@pytest.mark.parametrize('categorical', [
-    [0, 10],  # feature indices greater than n_features
-    [True, True, False, False, True],  # len(mask) > n_features
-])
-def test_categorical_sepec_errors(Est, categorical):
+def test_categorical_spec_errors(Est):
     # Test errors when categories are specified incorrectly
     X, y = make_classification(random_state=0, n_features=4)
+    categorical = [True, True, False, False, True]
     est = Est(categorical=categorical)
 
-    msg = (r"categorical must be an array-like of feature indicies or "
-           r"bools with shape \(n_features,\)")
+    msg = (r"categorical must be an array-like of bool with shape "
+           r"\(n_features,\)")
     with pytest.raises(ValueError, match=msg):
         est.fit(X, y)
+
+    monotonic_cst = [0, -1, 0, 1]
+    categorical = [True, True, False, False]
+    msg = "categorical features can not have monotonic constraints"
+    with pytest.raises(ValueError, match=msg):
+        Est(categorical=categorical, monotonic_cst=monotonic_cst).fit(X, y)

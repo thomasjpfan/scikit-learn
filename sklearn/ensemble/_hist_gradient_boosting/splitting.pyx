@@ -133,6 +133,7 @@ cdef class Splitter:
         unsigned char missing_values_bin_idx
         const unsigned char [::1] has_missing_values
         const char [::1] monotonic_cst
+        const char [::1] categorical
         unsigned char hessians_are_constant
         Y_DTYPE_C l2_regularization
         Y_DTYPE_C min_hessian_to_split
@@ -149,6 +150,7 @@ cdef class Splitter:
                  const unsigned char missing_values_bin_idx,
                  const unsigned char [::1] has_missing_values,
                  const char [::1] monotonic_cst,
+                 const char [::1] categorical,
                  Y_DTYPE_C l2_regularization,
                  Y_DTYPE_C min_hessian_to_split=1e-3,
                  unsigned int min_samples_leaf=20,
@@ -161,6 +163,7 @@ cdef class Splitter:
         self.missing_values_bin_idx = missing_values_bin_idx
         self.has_missing_values = has_missing_values
         self.monotonic_cst = monotonic_cst
+        self.categorical = categorical
         self.l2_regularization = l2_regularization
         self.min_hessian_to_split = min_hessian_to_split
         self.min_samples_leaf = min_samples_leaf
@@ -714,6 +717,20 @@ cdef class Splitter:
                 split_info.sum_gradient_right, split_info.sum_hessian_right,
                 lower_bound, upper_bound, self.l2_regularization)
 
+    cdef void _find_best_bin_to_split_category(
+            self,
+            unsigned int feature_idx,
+            const hist_struct [:, ::1] histograms,  # IN
+            unsigned int n_samples,
+            Y_DTYPE_C sum_gradients,
+            Y_DTYPE_C sum_hessians,
+            Y_DTYPE_C value,
+            Y_DTYPE_C lower_bound,
+            Y_DTYPE_C upper_bound,
+            split_info_struct * split_info) nogil:  # OUT
+        """Find best split
+        """
+
 
 cdef inline Y_DTYPE_C _split_gain(
         Y_DTYPE_C sum_gradient_left,
@@ -809,7 +826,7 @@ cpdef inline Y_DTYPE_C compute_node_value(
     """
 
     cdef:
-        Y_DTYPE_C value 
+        Y_DTYPE_C value
 
     value = -sum_gradient / (sum_hessian + l2_regularization + 1e-15)
 
