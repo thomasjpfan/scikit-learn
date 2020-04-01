@@ -681,3 +681,33 @@ def test_single_node_trees(Est):
                for predictor in est._predictors)
     # Still gives correct predictions thanks to the baseline prediction
     assert_allclose(est.predict(X), y)
+
+
+@pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
+                                 HistGradientBoostingRegressor))
+@pytest.mark.parametrize('categorical, indices', [
+    ([0, 3], [0, 3]),
+    ([True, False, True, True], [0, 2, 3]),
+])
+def test_categorical_spec(Est, categorical, indices):
+    # Test support categories specification from parameters
+    X, y = make_classification(random_state=0, n_features=4)
+    est = Est(categorical=categorical, max_iter=1).fit(X, y)
+    assert_array_equal(est.categorical_indices_, indices)
+
+
+@pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
+                                 HistGradientBoostingRegressor))
+@pytest.mark.parametrize('categorical', [
+    [0, 10],  # feature indices greater than n_features
+    [True, True, False, False, True],  # len(mask) > n_features
+])
+def test_categorical_sepec_errors(Est, categorical):
+    # Test errors when categories are specified incorrectly
+    X, y = make_classification(random_state=0, n_features=4)
+    est = Est(categorical=categorical)
+
+    msg = (r"categorical must be an array-like of feature indicies or "
+           r"bools with shape \(n_features,\)")
+    with pytest.raises(ValueError, match=msg):
+        est.fit(X, y)

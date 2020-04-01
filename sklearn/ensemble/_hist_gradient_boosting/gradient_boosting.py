@@ -29,7 +29,8 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
     @abstractmethod
     def __init__(self, loss, learning_rate, max_iter, max_leaf_nodes,
                  max_depth, min_samples_leaf, l2_regularization, max_bins,
-                 monotonic_cst, warm_start, early_stopping, scoring,
+                 monotonic_cst, categorical,
+                 warm_start, early_stopping, scoring,
                  validation_fraction, n_iter_no_change, tol, verbose,
                  random_state):
         self.loss = loss
@@ -41,6 +42,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         self.l2_regularization = l2_regularization
         self.max_bins = max_bins
         self.monotonic_cst = monotonic_cst
+        self.categorical = categorical
         self.warm_start = warm_start
         self.early_stopping = early_stopping
         self.scoring = scoring
@@ -90,6 +92,30 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                 'multiclass classification.'
                 )
 
+    def _check_categories(self, n_features):
+        """Check and validate categories params in X"""
+        categorical = self.categorical
+        if categorical is None:
+            self.categorical_indices_ = None
+            return
+
+        error_msg = ("categorical must be an array-like of feature indicies "
+                     "or bools with shape (n_features,)")
+
+        categorical = np.asarray(categorical)
+
+        if categorical.dtype.kind == 'b':
+            if categorical.shape[0] != n_features:
+                raise ValueError(error_msg)
+            self.categorical_indices_ = np.flatnonzero(categorical)
+
+        elif categorical.dtype.kind == 'i':
+            if any(categorical > n_features):
+                raise ValueError(error_msg)
+            self.categorical_indices_ = categorical
+        else:  # unsupported
+            raise ValueError(error_msg)
+
     def fit(self, X, y, sample_weight=None):
         """Fit the gradient boosting model.
 
@@ -137,6 +163,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
 
         self._validate_parameters()
         n_samples, self.n_features_ = X.shape  # used for validation in predict
+        self._check_categories(self.n_features_)
 
         # we need this stateful variable to tell raw_predict() that it was
         # called from fit() (this current method), and that the data it has
@@ -193,8 +220,9 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         # actual total number of bins. Everywhere in the code, the
         # convention is that n_bins == max_bins + 1
         n_bins = self.max_bins + 1  # + 1 for missing values
-        self.bin_mapper_ = _BinMapper(n_bins=n_bins,
-                                      random_state=self._random_seed)
+        self.bin_mapper_ = _BinMapper(
+            n_bins=n_bins, categorical_indices=self.categorical_indices_,
+            random_state=self._random_seed)
         X_binned_train = self._bin_data(X_train, is_training_data=True)
         if X_val is not None:
             X_binned_val = self._bin_data(X_val, is_training_data=False)
@@ -803,6 +831,10 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
+    categorical : array-like of int or bool or a callable, default=None
+        Indicates the categorical features:
+        - array-like of int : Array of feature indicies.
+        - array-like of bool : Boolean mask for categorical features.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
@@ -880,7 +912,8 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
     def __init__(self, loss='least_squares', learning_rate=0.1,
                  max_iter=100, max_leaf_nodes=31, max_depth=None,
                  min_samples_leaf=20, l2_regularization=0., max_bins=255,
-                 monotonic_cst=None, warm_start=False, early_stopping='auto',
+                 monotonic_cst=None, categorical=None,
+                 warm_start=False, early_stopping='auto',
                  scoring='loss', validation_fraction=0.1,
                  n_iter_no_change=10, tol=1e-7,
                  verbose=0, random_state=None):
@@ -889,7 +922,8 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
             max_leaf_nodes=max_leaf_nodes, max_depth=max_depth,
             min_samples_leaf=min_samples_leaf,
             l2_regularization=l2_regularization, max_bins=max_bins,
-            monotonic_cst=monotonic_cst, early_stopping=early_stopping,
+            monotonic_cst=monotonic_cst, categorical=categorical,
+            early_stopping=early_stopping,
             warm_start=warm_start, scoring=scoring,
             validation_fraction=validation_fraction,
             n_iter_no_change=n_iter_no_change, tol=tol, verbose=verbose,
@@ -998,6 +1032,10 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
+    categorical : array-like of int or bool or a callable, default=None
+        Indicates the categorical features:
+        - array-like of int : Array of feature indicies.
+        - array-like of bool : Boolean mask for categorical features.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
@@ -1079,6 +1117,7 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
     def __init__(self, loss='auto', learning_rate=0.1, max_iter=100,
                  max_leaf_nodes=31, max_depth=None, min_samples_leaf=20,
                  l2_regularization=0., max_bins=255, monotonic_cst=None,
+                 categorical=None,
                  warm_start=False, early_stopping='auto', scoring='loss',
                  validation_fraction=0.1, n_iter_no_change=10, tol=1e-7,
                  verbose=0, random_state=None):
@@ -1087,7 +1126,8 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
             max_leaf_nodes=max_leaf_nodes, max_depth=max_depth,
             min_samples_leaf=min_samples_leaf,
             l2_regularization=l2_regularization, max_bins=max_bins,
-            monotonic_cst=monotonic_cst, warm_start=warm_start,
+            monotonic_cst=monotonic_cst, categorical=categorical,
+            warm_start=warm_start,
             early_stopping=early_stopping, scoring=scoring,
             validation_fraction=validation_fraction,
             n_iter_no_change=n_iter_no_change, tol=tol, verbose=verbose,
