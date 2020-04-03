@@ -36,3 +36,8 @@ cpdef enum MonotonicConstraint:
     NO_CST = 0
     POS = 1
     NEG = -1
+
+
+cdef packed struct sorted_idx_context:
+    hist_struct * feature_hist
+    Y_DTYPE_C cat_smooth

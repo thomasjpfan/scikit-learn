@@ -2,6 +2,7 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 # cython: language_level=3
+
 """This module contains routines and data structures to:
 
 - Find the best possible split of a node. For a given node, a split is
@@ -17,7 +18,7 @@ import numpy as np
 cimport numpy as np
 IF SKLEARN_OPENMP_PARALLELISM_ENABLED:
     from openmp cimport omp_get_max_threads
-from libc.stdlib cimport malloc, free
+from libc.stdlib cimport malloc, free, qsort
 from libc.string cimport memcpy
 from numpy.math cimport INFINITY
 
@@ -26,6 +27,11 @@ from .common cimport Y_DTYPE_C
 from .common cimport hist_struct
 from .common import HISTOGRAM_DTYPE
 from .common cimport MonotonicConstraint
+
+cdef extern from "<stdlib.h>" nogil:
+    void qsort_s(void *ptr, size_t count, size_t size,
+                 int (*comp)(const void *, const void *, void *),
+                 void *context );
 
 
 cdef struct split_info_struct:
@@ -436,6 +442,7 @@ cdef class Splitter:
                 # See algo 3 from the XGBoost paper
                 # https://arxiv.org/abs/1603.02754
 
+
                 self._find_best_bin_to_split_left_to_right(
                     feature_idx, has_missing_values[feature_idx],
                     histograms, n_samples, sum_gradients, sum_hessians,
@@ -717,6 +724,7 @@ cdef class Splitter:
                 split_info.sum_gradient_right, split_info.sum_hessian_right,
                 lower_bound, upper_bound, self.l2_regularization)
 
+    @cython.initializedcheck(False)
     cdef void _find_best_bin_to_split_category(
             self,
             unsigned int feature_idx,
@@ -725,14 +733,112 @@ cdef class Splitter:
             Y_DTYPE_C sum_gradients,
             Y_DTYPE_C sum_hessians,
             Y_DTYPE_C value,
+            char monotonic_cst,
             Y_DTYPE_C lower_bound,
             Y_DTYPE_C upper_bound,
             split_info_struct * split_info) nogil:  # OUT
         """Find best split for categorical features
 
-        Categorical features will
+        Categorical features will always have a missing bin
         """
 
+        cdef:
+            unsigned int bin_idx
+            # categorical features will always have a missing value
+            unsigned int end = self.n_bins_non_missing[feature_idx]
+            unsigned int * sorted_idx
+            unsigned int used_bin = 0
+            const hist_struct[::1] feature_hist = histograms[feature_idx, :]
+            # used to store accumlated values for sorting
+            Y_DTYPE_C * accumlated_values
+            Y_DTYPE_C sum_gradients_bin
+            Y_DTYPE_C sum_hessians_bin
+            # Reduces the effect of noises in categorical features,
+            # especially for categoires with few data
+            # TODO: Make this user adjustable?
+            Y_DTYPE_C CAT_SMOOTH = 10.0
+            # Used for find best split
+            # TODO: Make this user adjustable?
+            unsigned int MAX_CAT_THRESHOLD = 32
+            unsigned int max_num_cat
+            # holds directional information
+            int * find_direction
+            int * start_position
+            int direction
+            int position
+            Y_DTYPE_C sum_gradient_left, sum_hessian_left
+            Y_DTYPE_C sum_gradient_right, sum_hessian_right
+            unsigned int n_samples_left, n_samples_right
+            unsigned int i, j
+            Y_DTYPE_C best_gain = -1.
+
+        sorted_idx = <unsigned int *> malloc(end * sizeof(unsigned int))
+
+        # filter out categoires based on CAT_SMOOTH
+        for bin_idx in range(end):
+            if feature_hist[bin_idx].count >= CAT_SMOOTH:
+                sorted_idx[used_bin] = bin_idx
+                used_bin += 1
+
+        # all categoires were filtered
+        if used_bin == 0:
+            free(sorted_idx)
+            return
+
+        # sort idx based on
+        accumlated_values = <Y_DTYPE_C *> malloc(used_bin * sizeof(Y_DTYPE_C))
+        for bin_idx in range(used_bin):
+            sum_gradients_bin = feature_hist[bin_idx].sum_gradients
+            if self.hessians_are_constant:
+                sum_hessians_bin = feature_hist[bin_idx].count
+            else:
+                sum_hessians_bin = feature_hist[bin_idx].sum_hessians
+
+            accumlated_values[bin_idx] = \
+                sum_gradients_bin / (sum_hessians_bin + CAT_SMOOTH)
+
+        qsort_s(sorted_idx, used_bin, sizeof(unsigned int), compare_sorted_idx,
+                accumlated_values)
+
+        max_num_cat = min(MAX_CAT_THRESHOLD, (used_bin + 1) / 2)
+
+        find_direction = <int *> malloc(2 * sizeof(int))
+        find_direction[0] = 1
+        find_direction[1] = -1
+
+        start_position = <int *> malloc(2 * sizeof(int))
+        start_position[0] = 0
+        start_position[1] = used_bin - 1
+
+        for i in range(2):
+            direction = find_direction[i]
+            position = start_position[i]
+            sum_gradient_left, sum_hessian_left = 0., 0.
+            n_samples_left = 0
+            for bin_idx in range(used_bin):
+                bin_idx = sorted_idx[position];
+                position += direction
+
+
+
+
+
+        # sort histogram
+        free(find_direction)
+        free(start_position)
+        free(sorted_idx)
+        free(accumlated_values)
+
+
+cdef int compare_sorted_idx(const void * a,
+                            const void * b,
+                            void * context) nogil:
+    cdef:
+        unsigned int l_idx = (<unsigned int *>a)[0]
+        unsigned int r_idx = (<unsigned int *>b)[0]
+        Y_DTYPE_C * accumlated_values = <Y_DTYPE_C *>context
+
+    return <int>(accumlated_values[l_idx] < accumlated_values[r_idx])
 
 cdef inline Y_DTYPE_C _split_gain(
         Y_DTYPE_C sum_gradient_left,
