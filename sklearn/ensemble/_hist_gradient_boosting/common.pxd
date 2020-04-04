@@ -32,6 +32,8 @@ cdef packed struct node_struct:
     unsigned int depth
     unsigned char is_leaf
     X_BINNED_DTYPE_C bin_threshold
+    unsigned char is_categorical
+    X_BITSET_DTYPE_C cat_threshold
 
 
 cpdef enum MonotonicConstraint:
