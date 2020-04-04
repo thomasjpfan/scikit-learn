@@ -16,6 +16,7 @@ HISTOGRAM_DTYPE = np.dtype([
 ])
 
 PREDICTOR_RECORD_DTYPE = np.dtype([
+    ('cat_threshold', (np.uint64, 4)),
     ('value', Y_DTYPE),
     ('count', np.uint32),
     ('feature_idx', np.uint32),
@@ -27,6 +28,7 @@ PREDICTOR_RECORD_DTYPE = np.dtype([
     ('depth', np.uint32),
     ('is_leaf', np.uint8),
     ('bin_threshold', X_BINNED_DTYPE),
+    ('is_categorical', np.uint8),
 ])
 
 ALMOST_INF = 1e300  # see LightGBM AvoidInf()
