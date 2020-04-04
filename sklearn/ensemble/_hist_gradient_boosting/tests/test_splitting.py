@@ -50,12 +50,14 @@ def test_histogram_split(n_bins):
             monotonic_cst = np.array(
                 [MonotonicConstraint.NO_CST] * X_binned.shape[1],
                 dtype=np.int8)
+            categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
             missing_values_bin_idx = n_bins - 1
             splitter = Splitter(X_binned,
                                 n_bins_non_missing,
                                 missing_values_bin_idx,
                                 has_missing_values,
                                 monotonic_cst,
+                                categorical,
                                 l2_regularization,
                                 min_hessian_to_split,
                                 min_samples_leaf, min_gain_to_split,
@@ -119,11 +121,12 @@ def test_gradient_and_hessian_sanity(constant_hessian):
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
-                        has_missing_values, monotonic_cst, l2_regularization,
-                        min_hessian_to_split, min_samples_leaf,
-                        min_gain_to_split, constant_hessian)
+                        has_missing_values, monotonic_cst, categorical,
+                        l2_regularization, min_hessian_to_split,
+                        min_samples_leaf, min_gain_to_split, constant_hessian)
 
     hists_parent = builder.compute_histograms_brute(sample_indices)
     value_parent = compute_node_value(sum_gradients, sum_hessians,
@@ -233,11 +236,13 @@ def test_split_indices():
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
-                        has_missing_values, monotonic_cst, l2_regularization,
-                        min_hessian_to_split, min_samples_leaf,
-                        min_gain_to_split, hessians_are_constant)
+                        has_missing_values, monotonic_cst, categorical,
+                        l2_regularization, min_hessian_to_split,
+                        min_samples_leaf, min_gain_to_split,
+                        hessians_are_constant)
 
     assert np.all(sample_indices == splitter.partition)
 
@@ -295,9 +300,11 @@ def test_min_gain_to_split():
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
-                        has_missing_values, monotonic_cst, l2_regularization,
+                        has_missing_values, monotonic_cst, categorical,
+                        l2_regularization,
                         min_hessian_to_split, min_samples_leaf,
                         min_gain_to_split, hessians_are_constant)
 
@@ -437,10 +444,11 @@ def test_splitting_missing_values(X_binned, all_gradients,
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing,
                         missing_values_bin_idx, has_missing_values,
-                        monotonic_cst,
+                        monotonic_cst, categorical,
                         l2_regularization, min_hessian_to_split,
                         min_samples_leaf, min_gain_to_split,
                         hessians_are_constant)

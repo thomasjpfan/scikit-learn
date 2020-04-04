@@ -7,6 +7,8 @@ ctypedef np.npy_float64 X_DTYPE_C
 ctypedef np.npy_uint8 X_BINNED_DTYPE_C
 ctypedef np.npy_float64 Y_DTYPE_C
 ctypedef np.npy_float32 G_H_DTYPE_C
+ctypedef np.npy_uint64 X_BITSET_INNER_DTYPE_C
+ctypedef X_BITSET_INNER_DTYPE_C[4] X_BITSET_DTYPE_C
 
 cdef packed struct hist_struct:
     # Same as histogram dtype but we need a struct to declare views. It needs
@@ -36,8 +38,3 @@ cpdef enum MonotonicConstraint:
     NO_CST = 0
     POS = 1
     NEG = -1
-
-
-cdef packed struct sorted_idx_context:
-    hist_struct * feature_hist
-    Y_DTYPE_C cat_smooth
