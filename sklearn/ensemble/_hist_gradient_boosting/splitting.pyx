@@ -154,7 +154,7 @@ cdef class Splitter:
         unsigned char missing_values_bin_idx
         const unsigned char [::1] has_missing_values
         const char [::1] monotonic_cst
-        const char [::1] categorical
+        const unsigned char [::1] categorical
         unsigned char hessians_are_constant
         Y_DTYPE_C l2_regularization
         Y_DTYPE_C min_hessian_to_split
@@ -171,7 +171,7 @@ cdef class Splitter:
                  const unsigned char missing_values_bin_idx,
                  const unsigned char [::1] has_missing_values,
                  const char [::1] monotonic_cst,
-                 const char [::1] categorical,
+                 const unsigned char [::1] categorical,
                  Y_DTYPE_C l2_regularization,
                  Y_DTYPE_C min_hessian_to_split=1e-3,
                  unsigned int min_samples_leaf=20,

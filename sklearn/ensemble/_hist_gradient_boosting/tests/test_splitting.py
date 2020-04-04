@@ -50,7 +50,7 @@ def test_histogram_split(n_bins):
             monotonic_cst = np.array(
                 [MonotonicConstraint.NO_CST] * X_binned.shape[1],
                 dtype=np.int8)
-            categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
+            categorical = np.zeros_like(monotonic_cst, dtype=np.uint8)
             missing_values_bin_idx = n_bins - 1
             splitter = Splitter(X_binned,
                                 n_bins_non_missing,
@@ -121,7 +121,7 @@ def test_gradient_and_hessian_sanity(constant_hessian):
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
-    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.uint8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
                         has_missing_values, monotonic_cst, categorical,
@@ -236,7 +236,7 @@ def test_split_indices():
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
-    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.uint8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
                         has_missing_values, monotonic_cst, categorical,
@@ -300,7 +300,7 @@ def test_min_gain_to_split():
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
-    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.uint8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing, missing_values_bin_idx,
                         has_missing_values, monotonic_cst, categorical,
@@ -444,7 +444,7 @@ def test_splitting_missing_values(X_binned, all_gradients,
     monotonic_cst = np.array(
         [MonotonicConstraint.NO_CST] * X_binned.shape[1],
         dtype=np.int8)
-    categorical = np.zeros_like(monotonic_cst, dtype=np.int8)
+    categorical = np.zeros_like(monotonic_cst, dtype=np.uint8)
     missing_values_bin_idx = n_bins - 1
     splitter = Splitter(X_binned, n_bins_non_missing,
                         missing_values_bin_idx, has_missing_values,

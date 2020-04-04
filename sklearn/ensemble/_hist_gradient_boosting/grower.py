@@ -227,10 +227,10 @@ class TreeGrower:
 
         if categorical is None:
             self.has_categorical = False
-            categorical = np.ones(shape=X_binned.shape[1], dtype=np.int8)
+            categorical = np.ones(shape=X_binned.shape[1], dtype=np.uint8)
         else:
             self.has_categorical = True
-            categorical = np.asarray(categorical, dtype=np.int8)
+            categorical = np.asarray(categorical, dtype=np.uint8)
 
         hessians_are_constant = hessians.shape[0] == 1
         self.histogram_builder = HistogramBuilder(
