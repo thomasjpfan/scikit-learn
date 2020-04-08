@@ -17,6 +17,7 @@ from .common cimport Y_DTYPE_C
 from .common import Y_DTYPE
 from .common cimport X_BINNED_DTYPE_C
 from .common cimport node_struct
+from ._bitset cimport in_bitset
 
 
 def _predict_from_numeric_data(
@@ -85,16 +86,24 @@ cdef inline Y_DTYPE_C _predict_one_from_binned_data(
     while True:
         if node.is_leaf:
             return node.value
-        if binned_data[row, node.feature_idx] ==  missing_values_bin_idx:
-            if node.missing_go_to_left:
+
+        if node.is_categorical:
+            if in_bitset(binned_data[row, node.feature_idx],
+                         node.cat_threshold):
                 node = nodes[node.left]
             else:
                 node = nodes[node.right]
         else:
-            if binned_data[row, node.feature_idx] <= node.bin_threshold:
-                node = nodes[node.left]
+            if binned_data[row, node.feature_idx] ==  missing_values_bin_idx:
+                if node.missing_go_to_left:
+                    node = nodes[node.left]
+                else:
+                    node = nodes[node.right]
             else:
-                node = nodes[node.right]
+                if binned_data[row, node.feature_idx] <= node.bin_threshold:
+                    node = nodes[node.left]
+                else:
+                    node = nodes[node.right]
 
 def _compute_partial_dependence(
     node_struct [:] nodes,

@@ -905,9 +905,11 @@ cdef class Splitter:
         if found_better_split:
             split_info.gain = best_gain
 
-            # unused
+            # bin_idx and missing_go_to_left is unused for categorical splits
+            # the missing value is encoded in cat_threshold
             split_info.bin_idx = 0
-            # we scan from right to left so missing values go to the left
+            split_info.missing_go_to_left = False
+
             split_info.sum_gradient_left = best_sum_gradient_left
             split_info.sum_gradient_right = sum_gradients - best_sum_gradient_left
             split_info.sum_hessian_left = best_sum_hessian_left

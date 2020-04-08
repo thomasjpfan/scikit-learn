@@ -8,6 +8,7 @@ X_DTYPE = np.float64
 X_BINNED_DTYPE = np.uint8  # hence max_bins == 256
 # dtype for gradients and hessians arrays
 G_H_DTYPE = np.float32
+X_BITSET_INNER_DTYPE = np.uint32
 
 HISTOGRAM_DTYPE = np.dtype([
     ('sum_gradients', Y_DTYPE),  # sum of sample gradients in bin
@@ -16,7 +17,7 @@ HISTOGRAM_DTYPE = np.dtype([
 ])
 
 PREDICTOR_RECORD_DTYPE = np.dtype([
-    ('cat_threshold', (np.uint64, 4)),
+    ('cat_threshold', (X_BITSET_INNER_DTYPE, 8)),
     ('value', Y_DTYPE),
     ('count', np.uint32),
     ('feature_idx', np.uint32),
