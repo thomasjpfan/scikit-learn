@@ -556,13 +556,17 @@ def _fill_predictor_node_array(predictor_nodes, grower_node,
         node['feature_idx'] = feature_idx
         node['bin_threshold'] = bin_idx
         node['missing_go_to_left'] = split_info.missing_go_to_left
+        node['is_categorical'] = split_info.is_categorical
 
-        if split_info.bin_idx == n_bins_non_missing[feature_idx] - 1:
-            # Split is on the last non-missing bin: it's a "split on nans". All
-            # nans go to the right, the rest go to the left.
-            node['threshold'] = np.inf
-        elif bin_thresholds is not None:
-            node['threshold'] = bin_thresholds[feature_idx][bin_idx]
+        if split_info.is_categorical:
+            node['cat_threshold'] = split_info.cat_threshold
+        else:
+            if split_info.bin_idx == n_bins_non_missing[feature_idx] - 1:
+                # Split is on the last non-missing bin: it's a "split on nans".
+                # All nans go to the right, the rest go to the left.
+                node['threshold'] = np.inf
+            elif bin_thresholds is not None:
+                node['threshold'] = bin_thresholds[feature_idx][bin_idx]
 
         next_free_idx += 1
 
