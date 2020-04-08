@@ -7,8 +7,8 @@ ctypedef np.npy_float64 X_DTYPE_C
 ctypedef np.npy_uint8 X_BINNED_DTYPE_C
 ctypedef np.npy_float64 Y_DTYPE_C
 ctypedef np.npy_float32 G_H_DTYPE_C
-ctypedef np.npy_uint64 X_BITSET_INNER_DTYPE_C
-ctypedef X_BITSET_INNER_DTYPE_C[4] X_BITSET_DTYPE_C
+ctypedef np.npy_uint32 X_BITSET_INNER_DTYPE_C
+ctypedef X_BITSET_INNER_DTYPE_C[8] X_BITSET_DTYPE_C
 
 cdef packed struct hist_struct:
     # Same as histogram dtype but we need a struct to declare views. It needs
