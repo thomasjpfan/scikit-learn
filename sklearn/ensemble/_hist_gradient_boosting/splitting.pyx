@@ -505,7 +505,7 @@ cdef class Splitter:
             split_info.value_left,
             split_info.value_right,
             split_info.is_categorical,
-            np.array(split_info.cat_threshold, dtype=np.uint64)
+            np.array(split_info.cat_threshold, dtype=np.uint32)
         )
         free(split_infos)
         return out
@@ -803,7 +803,7 @@ cdef class Splitter:
             unsigned int i, j
             Y_DTYPE_C gain
             Y_DTYPE_C best_gain = -1.0
-            unsigned char best_direction
+            int best_direction
             unsigned char found_better_split = False
             Y_DTYPE_C best_sum_hessian_left
             Y_DTYPE_C best_sum_gradient_left
@@ -905,6 +905,8 @@ cdef class Splitter:
         if found_better_split:
             split_info.gain = best_gain
 
+            # unused
+            split_info.bin_idx = 0
             # we scan from right to left so missing values go to the left
             split_info.sum_gradient_left = best_sum_gradient_left
             split_info.sum_gradient_right = sum_gradients - best_sum_gradient_left
@@ -926,13 +928,19 @@ cdef class Splitter:
             split_info.is_categorical = True
             init_bitset(split_info.cat_threshold)
 
+            with gil:
+                print("best_direction", best_direction)
             if best_direction == 1:  # left
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[i].bin_idx
+                    with gil:
+                        print(bin_idx)
                     insert_bitset(bin_idx, split_info.cat_threshold)
             else:
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[used_bin - 1 - i].bin_idx
+                    with gil:
+                        print(bin_idx)
                     insert_bitset(bin_idx, split_info.cat_threshold)
 
         free(cat_sort_infos)
@@ -1013,18 +1021,19 @@ cdef inline unsigned char sample_goes_left(
         X_BITSET_DTYPE_C cat_threshold) nogil:
     """Helper to decide whether sample should go to left or right child."""
 
-    cdef:
-        unsigned char go_left_missing = missing_go_to_left \
-            and bin_value == missing_values_bin_idx
-
-    if bin_value == missing_values_bin_idx:
-        return missing_go_to_left
-
     if is_categorical:
+        # missing value is encoded in cat_threshold
         return in_bitset(bin_value, cat_threshold)
+    else:  # numerical
+        return (
+            (
+                missing_go_to_left and
+                bin_value == missing_values_bin_idx
+            )
+            or (
+                bin_value <= split_bin_idx
+            ))
 
-    else:
-        return bin_value <= split_bin_idx
 
 cpdef inline Y_DTYPE_C compute_node_value(
         Y_DTYPE_C sum_gradient,

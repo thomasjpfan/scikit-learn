@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
 
 from sklearn.ensemble._hist_gradient_boosting.common import HISTOGRAM_DTYPE
 from sklearn.ensemble._hist_gradient_boosting.common import G_H_DTYPE
@@ -571,7 +572,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
          [1, 10, 1] * 11,  # all_gradients
          [0, 2],  # thresholds
          3,  # n_bins_non_missing
-         False),   # has_missing_values
+         False),  # has_missing_values
 
         # 4 categories (including missing value)
         ([0, 1, 2] * 11 + [9] * 11,  # X_binned
@@ -597,7 +598,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
         # split on every 8 categories
         (list(range(256)) * 12,  # X_binned
          [1, 1, 1, 1, 1, 1, 1, 10] * 384,  # all_gradients
-         list(range(7, 255, 8)),  # thresholds
+         list(range(7, 256, 8)),  # thresholds
          255,  # n_bins_non_missing
          True),  # has_missing_values
      ])
@@ -648,3 +649,11 @@ def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
 
     assert split_info.is_categorical
     _assert_threshold_in_bitset(thresholds, split_info.cat_threshold)
+
+    # make sure samples are split correctly
+    samples_left, samples_right, _ = splitter.split_indices(
+        split_info, splitter.partition)
+
+    left_mask = np.isin(X_binned.ravel(), thresholds)
+    assert_array_equal(sample_indices[left_mask], samples_left)
+    assert_array_equal(sample_indices[~left_mask], samples_right)

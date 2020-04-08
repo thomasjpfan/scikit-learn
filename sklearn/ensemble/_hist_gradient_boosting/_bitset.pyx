@@ -10,7 +10,7 @@ cdef inline void init_bitset(X_BITSET_DTYPE_C bitset) nogil: # OUT
     cdef:
         unsigned int i
 
-    for i in range(4):
+    for i in range(8):
         bitset[i] = 0
 
 cdef inline void insert_bitset(X_BINNED_DTYPE_C val,
