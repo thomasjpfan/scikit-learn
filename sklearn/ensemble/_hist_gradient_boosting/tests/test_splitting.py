@@ -604,6 +604,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
      ])
 def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
                                       n_bins_non_missing, has_missing_values):
+    # Tests various combinations of categorical splits
 
     n_samples = len(X_binned)
     n_bins = max(X_binned) + 1

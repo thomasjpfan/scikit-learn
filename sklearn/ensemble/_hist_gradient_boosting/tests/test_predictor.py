@@ -95,6 +95,8 @@ def _construct_bitset(thresholds):
     ([10, 14],  [0, 0, 0, 0, 0, 0]),
 ])
 def test_categorical_predictor(thresholds, expected_predictions):
+    # Test predictor outputs are correct with categorical features
+
     cat_threshold = _construct_bitset(thresholds)
     X = np.array([[0, 4, 60, 124, 240, 255]], dtype=X_BINNED_DTYPE).T
     nodes = np.zeros(3, dtype=PREDICTOR_RECORD_DTYPE)

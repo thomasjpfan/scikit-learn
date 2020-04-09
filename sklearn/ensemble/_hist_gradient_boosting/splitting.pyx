@@ -930,19 +930,13 @@ cdef class Splitter:
             split_info.is_categorical = True
             init_bitset(split_info.cat_threshold)
 
-            with gil:
-                print("best_direction", best_direction)
             if best_direction == 1:  # left
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[i].bin_idx
-                    with gil:
-                        print(bin_idx)
                     insert_bitset(bin_idx, split_info.cat_threshold)
             else:
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[used_bin - 1 - i].bin_idx
-                    with gil:
-                        print(bin_idx)
                     insert_bitset(bin_idx, split_info.cat_threshold)
 
         free(cat_sort_infos)
