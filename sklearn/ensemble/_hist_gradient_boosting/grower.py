@@ -227,7 +227,7 @@ class TreeGrower:
 
         if categorical is None:
             self.has_categorical = False
-            categorical = np.ones(shape=X_binned.shape[1], dtype=np.uint8)
+            categorical = np.zeros(shape=X_binned.shape[1], dtype=np.uint8)
         else:
             self.has_categorical = True
             categorical = np.asarray(categorical, dtype=np.uint8)

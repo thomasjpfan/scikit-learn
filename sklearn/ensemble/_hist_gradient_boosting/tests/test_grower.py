@@ -405,62 +405,28 @@ def test_split_on_nan_with_infinite_values():
     np.testing.assert_allclose(predictions_binned, -gradients)
 
 
-# def test_fill_predictor_node_array_categorical():
-#     nodes = np.zeros(3, dtype=PREDICTOR_RECORD_DTYPE)
-#     cat_threshold = np.arange(8, dtype=X_BITSET_INNER_DTYPE)
+def test_grow_tree_categories():
+    # Checks growing the tree with
 
-#     # We just construct a simple tree with 1 root and 2 children
-#     # parent node
-#     nodes[0]['left'] = 1
-#     nodes[0]['right'] = 2
-#     nodes[0]['feature_idx'] = 0
-#     nodes[0]['is_categorical'] = True
-#     nodes[0]['cat_threshold'] = cat_threshold
+    X_binned = np.array([[0, 1] * 11],
+                        dtype=X_BINNED_DTYPE).reshape(-1, 1)
+    X_binned = np.asfortranarray(X_binned)
 
-#     root = TreeNode(
-#         depth=0,
-#         sample_indices=np.arange(5, dtype=np.uint32),
-#         sum_gradients=np.ones(5, dtype=G_H_DTYPE),
-#         sum_hessians=np.ones(5, dtype=G_H_DTYPE),
-#         value=0
-#     )
-#     root.is_leaf = False
-#     root.split_info = SplitInfo(
-#         gain=1, feature_idx=1, bin_idx=0,
-#         missing_go_to_left=False,
-#     )
+    all_gradients = np.array([1, 10] * 11, dtype=G_H_DTYPE)
+    all_hessians = np.ones(1, dtype=G_H_DTYPE)
+    categorical = np.ones(1, dtype=np.uint8)
 
-#     left = TreeNode(
-#         depth=1,
-#         sample_indices=np.array([1, 2, 3], dtype=np.uint32),
-#         sum_gradients=np.ones(3, dtype=G_H_DTYPE),
-#         sum_hessians=np.ones(3, dtype=G_H_DTYPE),
-#         value=1)
-#     left.is_leaf = True
+    grower = TreeGrower(X_binned, all_gradients, all_hessians,
+                        n_bins=4, shrinkage=1.0,
+                        min_samples_leaf=1,
+                        categorical=categorical)
+    grower.grow()
+    assert grower.n_nodes == 3
 
-#     right = TreeNode(
-#         depth=1,
-#         sample_indices=np.array([4, 5], dtype=np.uint32),
-#         sum_gradients=np.ones(2, dtype=G_H_DTYPE),
-#         sum_hessians=np.ones(2, dtype=G_H_DTYPE),
-#         value=0)
-#     right.is_leaf = True
-
-#     _fill_predictor_node_array(nodes, root, None, 5)
-
-
-# def test_grow_tree_categories():
-#     X_binned = np.array([[0, 1, 2, 3] * 11],
-#                         dtype=X_BINNED_DTYPE).reshape(-1, 1)
-#     X_binned = np.asfortranarray(X_binned)
-
-#     all_gradients = np.array([[1, 10, 1, 1] * 11], dtype=G_H_DTYPE)
-#     all_hessians = np.ones(1, dtype=G_H_DTYPE)
-
-#     grower = TreeGrower(X_binned, all_gradients, all_hessians,
-#                         n_bins=4, shrinkage=1.0,
-#                         min_samples_leaf=1)
-
-#     grower.grow()
-
-    # predictor = grower.make_predictor()
+    predictor = grower.make_predictor()
+    root = predictor.nodes[0]
+    assert root['count'] == 22
+    assert root['depth'] == 0
+    assert root['is_categorical']
+    assert root['cat_threshold'][0] == 1
+    np.testing.assert_array_equal(root['cat_threshold'], [1] + [0] * 7)
