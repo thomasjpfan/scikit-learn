@@ -30,7 +30,7 @@ class TreePredictor:
         """Return maximum depth among all leaves."""
         return int(self.nodes['depth'].max())
 
-    def predict(self, X):
+    def predict(self, X, X_binned_cat=None, orig_feature_to_binned_cat=None):
         """Predict raw values for non-binned data.
 
         Parameters
@@ -44,7 +44,8 @@ class TreePredictor:
             The raw predicted values.
         """
         out = np.empty(X.shape[0], dtype=Y_DTYPE)
-        _predict_from_numeric_data(self.nodes, X, out)
+        _predict_from_numeric_data(
+            self.nodes, X, X_binned_cat, orig_feature_to_binned_cat, out)
         return out
 
     def predict_binned(self, X, missing_values_bin_idx):

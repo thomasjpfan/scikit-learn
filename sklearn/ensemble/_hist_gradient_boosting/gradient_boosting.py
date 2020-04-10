@@ -112,7 +112,15 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         if categorical.shape[0] != n_features:
             raise ValueError(error_msg)
 
-        self.categorical_features_ = categorical
+        if categorical.dtype.kind == 'i':
+            # converts feature indicies to mask
+            categorical_features_ = np.zeros_like
+
+        if np.sum(categorical) == 0:
+            # no categories
+            self.categorical_features_ = None
+        else:
+            self.categorical_features_ = categorical
 
         # categorical features can not have monotonic constraints
         if self.monotonic_cst is not None:
@@ -388,6 +396,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                     n_bins_non_missing=self.bin_mapper_.n_bins_non_missing_,
                     has_missing_values=has_missing_values,
                     monotonic_cst=self.monotonic_cst,
+                    categorical=self.categorical_features_,
                     max_leaf_nodes=self.max_leaf_nodes,
                     max_depth=self.max_depth,
                     min_samples_leaf=self.min_samples_leaf,
@@ -590,7 +599,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                                for score in recent_scores]
         return not any(recent_improvements)
 
-    def _bin_data(self, X, is_training_data):
+    def _bin_data(self, X, is_training_data, categorical_only=False):
         """Bin data X.
 
         If is_training_data, then set the bin_mapper_ attribute.
@@ -605,7 +614,9 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         if is_training_data:
             X_binned = self.bin_mapper_.fit_transform(X)  # F-aligned array
         else:
-            X_binned = self.bin_mapper_.transform(X)  # F-aligned array
+            # F-aligned array
+            X_binned = self.bin_mapper_.transform(
+                X, categorical_only=categorical_only)
             # We convert the array to C-contiguous since predicting is faster
             # with this layout (training is faster on F-arrays though)
             X_binned = np.ascontiguousarray(X_binned)
@@ -684,6 +695,24 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
             dtype=self._baseline_prediction.dtype
         )
         raw_predictions += self._baseline_prediction
+
+        # bin categorical features when predicting outside of training loop
+        bin_categories = (not is_binned and
+                          self.categorical_features_ is not None)
+        if bin_categories:
+            X_binned_cat = self._bin_data(X, is_training_data=False,
+                                          categorical_only=True)
+
+            # maps from original feature to categorical feature in
+            # X_binned_cat
+            orig_feature_to_binned_cat = np.zeros_like(
+                self.categorical_features_, dtype=int)
+            orig_feature_to_binned_cat[self.categorical_features_] = \
+                np.arange(np.sum(self.categorical_features_))
+        else:
+            X_binned_cat = None
+            orig_feature_to_binned_cat = None
+
         for predictors_of_ith_iteration in self._predictors:
             for k, predictor in enumerate(predictors_of_ith_iteration):
                 if is_binned:
@@ -692,7 +721,9 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                         missing_values_bin_idx=self.bin_mapper_.missing_values_bin_idx_  # noqa
                     )
                 else:
-                    predict = predictor.predict
+                    predict = partial(
+                        predictor.predict, X_binned_cat=X_binned_cat,
+                        orig_feature_to_binned_cat=orig_feature_to_binned_cat)
                 raw_predictions[k, :] += predict(X)
 
         return raw_predictions
@@ -887,6 +918,9 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         first entry is the score of the ensemble before the first iteration.
         Scores are computed according to the ``scoring`` parameter. Empty if
         no early stopping or if ``validation_fraction`` is None.
+    categorical_features_ : ndarray, shape (n_features, ) or None
+        Boolean mask for the categorical features in data encoded as
+        ``np.uint8``. ``None`` if there are no categorical features.
 
     Examples
     --------

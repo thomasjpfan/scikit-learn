@@ -462,6 +462,8 @@ cdef class Splitter:
                 # See algo 3 from the XGBoost paper
                 # https://arxiv.org/abs/1603.02754
 
+                split_infos[feature_idx].is_categorical = \
+                    categorical[feature_idx]
                 if categorical[feature_idx]:
                     self._find_best_bin_to_split_category(
                         feature_idx, has_missing_values[feature_idx],
@@ -639,8 +641,6 @@ cdef class Splitter:
                 split_info.sum_gradient_right, split_info.sum_hessian_right,
                 lower_bound, upper_bound, self.l2_regularization)
 
-            split_info.is_categorical = False
-
     cdef void _find_best_bin_to_split_right_to_left(
             self,
             unsigned int feature_idx,
@@ -754,8 +754,6 @@ cdef class Splitter:
             split_info.value_right = compute_node_value(
                 split_info.sum_gradient_right, split_info.sum_hessian_right,
                 lower_bound, upper_bound, self.l2_regularization)
-
-            split_info.is_categorical = False
 
     @cython.initializedcheck(False)
     cdef void _find_best_bin_to_split_category(
@@ -927,7 +925,6 @@ cdef class Splitter:
                 lower_bound, upper_bound, self.l2_regularization)
 
             # create bitset with values from best_sort_idx
-            split_info.is_categorical = True
             init_bitset(split_info.cat_threshold)
 
             if best_direction == 1:  # left

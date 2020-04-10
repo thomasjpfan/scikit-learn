@@ -319,6 +319,17 @@ def test_infinite_values():
     assert_array_equal(bin_mapper.transform(X), expected_binned_X)
 
 
+@pytest.mark.parametrize("categorical", [None, [False]])
+def test_categorical_transform_error_with_no_categoricals(categorical):
+    X = np.arange(10, dtype=float).reshape(-1, 1)
+    bin_mapper = _BinMapper(n_bins=5, categorical=categorical).fit(X)
+
+    msg = ("categorical_only=True can only be set when there are "
+           "categorical features")
+    with pytest.raises(ValueError, match=msg):
+        bin_mapper.transform(X, categorical_only=True)
+
+
 @pytest.mark.parametrize("n_bins", [7, 15, 256])
 def test_categorical_n_bins_greater_than_equal_cardinality(n_bins):
     # test n_bins enough to hold all categories
@@ -416,8 +427,9 @@ def test_categorical_default_categories_are_missing(missing_value):
      (256, [10, 5])]
 )
 def test_categorical_with_numerical_features(n_bins, n_bins_non_missing):
-    X1 = np.arange(0, 10).reshape(-1, 1)
-    X2 = np.arange(0, 5).reshape(-1, 1)
+    # check binmapper with mixed data
+    X1 = np.arange(10, 20).reshape(-1, 1)
+    X2 = np.arange(10, 15).reshape(-1, 1)
     X2 = np.r_[X2, X2]
     X = np.c_[X1, X2]
 
@@ -429,6 +441,12 @@ def test_categorical_with_numerical_features(n_bins, n_bins_non_missing):
     assert len(bin_thresholds) == 2
     assert bin_thresholds[1] is None
 
-    bin_categories =  bin_mapper.bin_categories_
+    bin_categories = bin_mapper.bin_categories_
     assert len(bin_categories) == 1
-    assert_array_equal(bin_categories[0], np.arange(0, 5))
+    assert_array_equal(bin_categories[0], np.arange(10, 15))
+
+    # check that transform on mixed data contains the same result
+    # as transform on the categorical
+    X_trans_all = bin_mapper.transform(X)
+    X_trans_cats = bin_mapper.transform(X, categorical_only=True)
+    assert_array_equal(X_trans_all[:, [1]], X_trans_cats)

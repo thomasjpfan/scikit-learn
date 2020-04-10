@@ -97,11 +97,13 @@ def _find_categories(data, max_bins, categorical):
 
     Return
     ------
-    bin_categories : list of arrays
+    bin_categories : list of arrays or None
         For each categorical feature, this gives the categories corresponding
-        to each bin. None if ``categorical_indices`` is None.
-
+        to each bin. None if ``categorical`` is all False.
     """
+    if np.sum(categorical) == 0:
+        return None
+
     data = data[:, categorical]
     bin_categories = []
     for f_idx in range(data.shape[1]):
@@ -210,7 +212,8 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         ``bin_thresholds_[categorical_index]`` is None.
     bin_categories_ : list of arrays or None
         For each categorical feature, this gives the categories corresponding
-        to each bin. None if ``categorical`` is None.
+        to each bin. None if ``categorical`` is None or if ``categorical`` is
+        all False.
     n_bins_non_missing_ : array of uint32
         For each feature, gives the number of bins actually used for
         non-missing values. For features with a lot of unique values, this is
@@ -275,6 +278,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
             categorical_indices = np.flatnonzero(self.categorical)
             cat_idx_to_bin = dict(zip(categorical_indices,
                                       self.bin_categories_))
+
         for i, thresholds in enumerate(self.bin_thresholds_):
             if self.bin_categories_ is not None and i in cat_idx_to_bin:
                 # category
@@ -290,7 +294,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
 
         return self
 
-    def transform(self, X):
+    def transform(self, X, categorical_only=False):
         """Bin data X.
 
         Missing values will be mapped to the last bin.
@@ -300,11 +304,18 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         X : array-like, shape (n_samples, n_features)
             The data to bin.
 
+        categorical_only : bool, default=False
+            Only returns the bin for categorical features.
+
         Returns
         -------
         X_binned : array-like, shape (n_samples, n_features)
             The binned data (fortran-aligned).
         """
+        if categorical_only and self.bin_categories_ is None:
+            raise ValueError("categorical_only=True can only be set when "
+                             "there are categorical features")
+
         X = check_array(X, dtype=[X_DTYPE], force_all_finite=False)
         check_is_fitted(self)
         if X.shape[1] != self.n_bins_non_missing_.shape[0]:
@@ -313,12 +324,23 @@ class _BinMapper(TransformerMixin, BaseEstimator):
                 'to transform()'.format(self.n_bins_non_missing_.shape[0],
                                         X.shape[1])
             )
-        binned = np.zeros_like(X, dtype=X_BINNED_DTYPE, order='F')
-        _map_to_bins(X, self.bin_thresholds_, self.missing_values_bin_idx_,
-                     binned)
-        if self.bin_categories_ is not None:
-            categorical_indices = np.flatnonzero(self.categorical)
-            _encode_categories(X, categorical_indices,
+
+        if not categorical_only:
+            binned = np.zeros_like(X, dtype=X_BINNED_DTYPE, order='F')
+            _map_to_bins(X, self.bin_thresholds_, self.missing_values_bin_idx_,
+                         binned)
+            if self.bin_categories_ is not None:
+                categorical_indices = np.flatnonzero(self.categorical)
+                _encode_categories(X, categorical_indices,
+                                   self.bin_categories_,
+                                   self.missing_values_bin_idx_, binned)
+        else:
+            n_samples = X.shape[0]
+            n_categories = len(self.bin_categories_)
+            binned = np.zeros((n_samples, n_categories), dtype=X_BINNED_DTYPE,
+                              order='C')
+            _encode_categories(X[:, self.categorical], np.arange(n_categories),
                                self.bin_categories_,
                                self.missing_values_bin_idx_, binned)
+
         return binned

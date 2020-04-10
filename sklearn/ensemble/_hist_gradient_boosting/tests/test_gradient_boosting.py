@@ -6,6 +6,7 @@ from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.base import clone, BaseEstimator, TransformerMixin
 from sklearn.pipeline import make_pipeline
+from sklearn.metrics import r2_score
 
 # To use this experimental feature, we need to explicitly ask for it:
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
@@ -683,19 +684,36 @@ def test_single_node_trees(Est):
     assert_allclose(est.predict(X), y)
 
 
-# TODO: Uncomment when categorical features are fully supported
-# @pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
-#                                  HistGradientBoostingRegressor))
-# def test_categorical_spec(Est):
-#     # Test support categories specification from parameters
-#     rng = np.random.RandomState(42)
-#     X, y = make_classification(random_state=0, n_features=4)
-#     categorical = [True, False, False, True]
-#     indices = [0, 3]
-#     X[:, indices] = rng.randint(high=10, size=(X.shape[0], 2))
+@pytest.mark.parametrize("insert_missing", [False, True])
+def test_categorical_sanity(insert_missing):
+    # Test support categories with or without missing data
 
-#     est = Est(categorical=categorical, max_iter=1).fit(X, y)
-#     assert_array_equal(est.categorical_indices_, indices)
+    X, y = make_regression(n_samples=5000, n_features=20, random_state=0)
+
+    # even indicies are categorical
+    categorical = np.zeros(X.shape[1], dtype=bool)
+    categorical[::2] = 1
+
+    X[:, categorical] = KBinsDiscretizer(
+        encode='ordinal', n_bins=20).fit_transform(X[:, categorical])
+
+    if insert_missing:
+        rng = np.random.RandomState(42)
+        mask = rng.binomial(1, 0.01, size=X.shape).astype(np.bool)
+        X[mask] = np.nan
+
+    est = HistGradientBoostingRegressor(categorical=categorical).fit(X, y)
+    assert_array_equal(est.categorical_features_, categorical)
+
+    y_pred = est.predict(X)
+    assert r2_score(y, y_pred) >= 0.8
+
+    X_test = np.zeros((1, X.shape[1]), dtype=float)
+    X_test[:, ::2] = 30  # unknown category
+    X_test[:, 10:] = np.nan  # sets the last 10 features to be missing
+
+    # Does not error on unknown or missing categories
+    est.predict(X_test)
 
 
 @pytest.mark.parametrize('Est', (HistGradientBoostingClassifier,
