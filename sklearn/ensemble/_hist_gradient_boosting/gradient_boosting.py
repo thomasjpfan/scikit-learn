@@ -96,36 +96,41 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
 
     def _check_categories(self, n_features):
         """Check and validate categories params in X"""
-        categorical = self.categorical
-
-        if categorical is None:
+        if self.categorical is None:
             self.categorical_features_ = None
             return
 
         error_msg = ("categorical must be an array-like of bool with shape "
                      "(n_features,)")
 
-        categorical = np.asarray(categorical)
-        if categorical.dtype.kind != 'b':
+        cat_feats = np.asarray(self.categorical)
+        if cat_feats.dtype.kind not in ('b', 'i'):
             raise ValueError(error_msg)
 
-        if categorical.shape[0] != n_features:
+        if cat_feats.dtype.kind == 'b' and cat_feats.shape[0] != n_features:
             raise ValueError(error_msg)
 
-        if categorical.dtype.kind == 'i':
+        if cat_feats.dtype.kind == 'i':
+            if np.any(cat_feats >= n_features):
+                raise ValueError(error_msg)
             # converts feature indicies to mask
-            categorical_features_ = np.zeros_like
+            tmp = np.zeros(n_features, dtype=np.uint8)
+            tmp[cat_feats] = 1
+            cat_feats = tmp
 
-        if np.sum(categorical) == 0:
+        if np.sum(cat_feats) == 0:
             # no categories
             self.categorical_features_ = None
         else:
-            self.categorical_features_ = categorical
+            self.categorical_features_ = np.asarray(cat_feats, dtype=np.uint8)
+        print(self.categorical_features_)
 
         # categorical features can not have monotonic constraints
-        if self.monotonic_cst is not None:
+        if (self.categorical_features_ is not None and
+                self.monotonic_cst is not None):
             monotonic_cst = np.asarray(self.monotonic_cst, dtype=np.uint8) != 0
-            both = categorical & monotonic_cst
+            cat_bool = self.categorical_features_ == 1
+            both = cat_bool & monotonic_cst
             if both.any():
                 raise ValueError("categorical features can not have "
                                  "monotonic constraints")
@@ -233,7 +238,8 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         # convention is that n_bins == max_bins + 1
         n_bins = self.max_bins + 1  # + 1 for missing values
         self.bin_mapper_ = _BinMapper(
-            n_bins=n_bins, categorical=self.categorical_features_,
+            n_bins=n_bins,
+            categorical=self.categorical_features_,
             random_state=self._random_seed)
         X_binned_train = self._bin_data(X_train, is_training_data=True)
         if X_val is not None:
@@ -707,7 +713,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
             # X_binned_cat
             orig_feature_to_binned_cat = np.zeros_like(
                 self.categorical_features_, dtype=int)
-            orig_feature_to_binned_cat[self.categorical_features_] = \
+            orig_feature_to_binned_cat[self.categorical_features_ == 1] = \
                 np.arange(np.sum(self.categorical_features_))
         else:
             X_binned_cat = None
