@@ -851,7 +851,10 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         <monotonic_cst_gbdt>`.
     categorical : array-like of bool of shape (n_features), default=None.
         Indicates the categorical features. If None, no features will be
-        consider categorical.
+        consider categorical. If the number of features is greater than
+        ``n_bins``, then the top ``n_bins`` categories based on cardinality
+        are kept. All unknown and negative categories will be considered
+        missing.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
