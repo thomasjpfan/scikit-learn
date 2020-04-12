@@ -104,24 +104,20 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                      "(n_features,)")
 
         cat_feats = np.asarray(self.categorical)
-        if cat_feats.dtype.kind != 'b':
-            raise ValueError(error_msg)
-
-        if cat_feats.shape[0] != n_features:
+        if cat_feats.dtype.kind != 'b' or cat_feats.shape[0] != n_features:
             raise ValueError(error_msg)
 
         if np.sum(cat_feats) == 0:
             # no categories
             self.categorical_features_ = None
         else:
-            self.categorical_features_ = np.asarray(cat_feats, dtype=np.uint8)
+            self.categorical_features_ = np.asarray(cat_feats, dtype=bool)
 
         # categorical features can not have monotonic constraints
         if (self.categorical_features_ is not None and
                 self.monotonic_cst is not None):
             monotonic_cst = np.asarray(self.monotonic_cst, dtype=np.uint8) != 0
-            cat_bool = self.categorical_features_ == 1
-            both = cat_bool & monotonic_cst
+            both = self.categorical_features_ & monotonic_cst
             if both.any():
                 raise ValueError("categorical features can not have "
                                  "monotonic constraints")
@@ -704,7 +700,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
             # X_binned_cat
             orig_feature_to_binned_cat = np.zeros_like(
                 self.categorical_features_, dtype=int)
-            orig_feature_to_binned_cat[self.categorical_features_ == 1] = \
+            orig_feature_to_binned_cat[self.categorical_features_] = \
                 np.arange(np.sum(self.categorical_features_))
         else:
             X_binned_cat = None
@@ -916,8 +912,8 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         Scores are computed according to the ``scoring`` parameter. Empty if
         no early stopping or if ``validation_fraction`` is None.
     categorical_features_ : ndarray, shape (n_features, ) or None
-        Boolean mask for the categorical features in data encoded as
-        ``np.uint8``. ``None`` if there are no categorical features.
+        Boolean mask for the categorical features. ``None`` if there are no
+        categorical features.
 
     Examples
     --------

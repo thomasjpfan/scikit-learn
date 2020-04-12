@@ -336,7 +336,7 @@ def test_categorical_n_bins_greater_than_equal_cardinality(n_bins):
     X = np.array([[4] * 2 + [1] * 3 + [10] * 4 +
                   [0] * 4 + [9] + [7] * 5], dtype=float).T
 
-    bin_mapper = _BinMapper(n_bins=n_bins, categorical=np.array([1])).fit(X)
+    bin_mapper = _BinMapper(n_bins=n_bins, categorical=np.array([True])).fit(X)
     assert bin_mapper.n_bins_non_missing_ == [6]
     assert_allclose(bin_mapper.bin_categories_, [[0, 1, 4, 7, 9, 10]])
 
@@ -366,7 +366,8 @@ def test_categorical_n_bins_less_than_cardinality(
                   [0] * 4 + [9] + [7] * 5], dtype=X_DTYPE).T
     X_test = np.array([[10, 1, -1, 9, np.nan, 7, 4, 100, 0]], dtype=X_DTYPE).T
 
-    bin_mapper = _BinMapper(n_bins=n_bins, categorical=np.array([1])).fit(X)
+    bin_mapper = _BinMapper(n_bins=n_bins,
+                            categorical=np.array([True])).fit(X)
     assert bin_mapper.n_bins_non_missing_ == [n_bins - 1]
     assert_allclose(bin_mapper.bin_categories_, [bin_categories])
     X_trans = bin_mapper.transform(X_test)
@@ -386,7 +387,7 @@ def test_categorical_n_bins_less_than_cardinality_ties():
 
     # With 4 bins used for non missing values. categories 1, 2, 3, 4
     # will have its own bin, the rest will be placed in the missing bin.
-    bin_mapper = _BinMapper(n_bins=5, categorical=np.array([1])).fit(X)
+    bin_mapper = _BinMapper(n_bins=5, categorical=np.array([True])).fit(X)
     assert bin_mapper.n_bins_non_missing_ == [4]
     assert_allclose(bin_mapper.bin_categories_, [[1, 2, 3, 4]])
 
@@ -396,7 +397,7 @@ def test_categorical_n_bins_less_than_cardinality_ties():
 
     # With 3 bins usd for non missing values. categoires 1, 2
     # will have its own bin, the rest will be placed in the missing bin.
-    bin_mapper = _BinMapper(n_bins=3, categorical=np.array([1])).fit(X)
+    bin_mapper = _BinMapper(n_bins=3, categorical=np.array([True])).fit(X)
     assert bin_mapper.n_bins_non_missing_ == [2]
     assert_allclose(bin_mapper.bin_categories_, [[1, 2]])
 
@@ -411,7 +412,7 @@ def test_categorical_default_categories_are_missing(missing_value):
     X = np.array([[0] * 10 + [1] * 12 +
                   [missing_value] * 13], dtype=X_DTYPE).T
 
-    bin_mapper = _BinMapper(n_bins=3, categorical=np.array([1])).fit(X)
+    bin_mapper = _BinMapper(n_bins=3, categorical=np.array([True])).fit(X)
     assert bin_mapper.n_bins_non_missing_ == [2]
     assert_array_equal(bin_mapper.bin_categories_, [[0, 1]])
 
@@ -434,7 +435,7 @@ def test_categorical_with_numerical_features(n_bins, n_bins_non_missing):
     X = np.c_[X1, X2]
 
     bin_mapper = _BinMapper(n_bins=n_bins,
-                            categorical=np.array([0, 1])).fit(X)
+                            categorical=np.array([False, True])).fit(X)
     assert_array_equal(bin_mapper.n_bins_non_missing_, n_bins_non_missing)
     bin_thresholds = bin_mapper.bin_thresholds_
 
