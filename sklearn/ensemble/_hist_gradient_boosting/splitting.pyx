@@ -493,6 +493,15 @@ cdef class Splitter:
                 split_infos)
             split_info = split_infos[best_feature_idx]
 
+            # For categorical splits, where there are no missing
+            # values during fiitting, samples with missing values during
+            # predict() will go to whichever child has the most samples.
+            if (categorical[best_feature_idx] and
+                    not has_missing_values[best_feature_idx] and
+                    split_info.n_samples_left > split_info.n_samples_right):
+                insert_bitset(self.missing_values_bin_idx,
+                              split_info.cat_threshold)
+
         out = SplitInfo(
             split_info.gain,
             split_info.feature_idx,
@@ -904,7 +913,11 @@ cdef class Splitter:
             split_info.gain = best_gain
 
             # bin_idx is unused for categorical splits
+            # missing_go_to_left is unused for categorical splits, during
+            # predit the categories will always be binned and use
+            # cat_threshold
             split_info.bin_idx = 0
+            split_info.missing_go_to_left = False
 
             split_info.sum_gradient_left = best_sum_gradient_left
             split_info.sum_gradient_right = sum_gradients - best_sum_gradient_left
@@ -933,9 +946,6 @@ cdef class Splitter:
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[used_bin - 1 - i].bin_idx
                     insert_bitset(bin_idx, split_info.cat_threshold)
-
-            split_info.missing_go_to_left = in_bitset(missing_values_bin_idx,
-                                                      split_info.cat_threshold)
 
         free(cat_sort_infos)
 

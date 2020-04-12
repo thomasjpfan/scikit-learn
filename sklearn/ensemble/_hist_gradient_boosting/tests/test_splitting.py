@@ -565,13 +565,23 @@ def _assert_threshold_in_bitset(thresholds, bitset):
 
 @pytest.mark.parametrize(
     "X_binned, all_gradients, thresholds, n_bins_non_missing,"
-    "has_missing_values",
+    "missing_values_bin_idx, has_missing_values",
     [
         # 3 categories (finds threshold by going left first)
         ([0, 1, 2] * 11,  # X_binned
          [1, 10, 1] * 11,  # all_gradients
          [0, 2],  # thresholds
          3,  # n_bins_non_missing
+         3,  # missing_values_bin_idx
+         False),  # has_missing_values
+
+        # 5 categories where the left node has more samples
+        # threshold includes the missing value value
+        ([0, 1, 2, 3, 4] * 11 + [1] * 50,  # X_binned
+         [1, 10, 1, 1, 1] * 11 + [10] * 50,  # all_gradients
+         [1, 5],  # threshold
+         5,  # n_bins_non_missing
+         5,  # missing_values_bin_idx
          False),  # has_missing_values
 
         # 4 categories (including missing value)
@@ -579,6 +589,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
          [1, 5, 1] * 11 + [1] * 11,  # all_gradients
          [1],  # thresholds
          3,  # n_bins_non_missing
+         9,  # missing_values_bin_idx
          True),   # has_missing_values
 
         # split is on the missing value
@@ -586,6 +597,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
          [1, 1, 1, 1, 1] * 11 + [20] * 12,  # all_gradients
          [255],  # thresholds
          5,  # n_bins_non_missing
+         255,  # missing_values_bin_idx
          True),   # has_missing_values
 
         # split on even categories
@@ -593,6 +605,7 @@ def _assert_threshold_in_bitset(thresholds, bitset):
          [1, 10] * 360,  # all_gradients
          list(range(0, 60, 2)),  # thresholds
          59,  # n_bins_non_missing
+         59,  # missing_values_bin_idx
          True),  # has_missing_values
 
         # split on every 8 categories
@@ -600,10 +613,13 @@ def _assert_threshold_in_bitset(thresholds, bitset):
          [1, 1, 1, 1, 1, 1, 1, 10] * 384,  # all_gradients
          list(range(7, 256, 8)),  # thresholds
          255,  # n_bins_non_missing
+         255,  # missing_values_bin_idx
          True),  # has_missing_values
      ])
 def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
-                                      n_bins_non_missing, has_missing_values):
+                                      n_bins_non_missing,
+                                      missing_values_bin_idx,
+                                      has_missing_values):
     # Tests various combinations of categorical splits
 
     n_samples = len(X_binned)
@@ -632,7 +648,6 @@ def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
     monotonic_cst = np.array([MonotonicConstraint.NO_CST] * X_binned.shape[1],
                              dtype=np.int8)
     categorical = np.ones_like(monotonic_cst, dtype=np.uint8)
-    missing_values_bin_idx = n_bins - 1
 
     splitter = Splitter(X_binned, n_bins_non_missing,
                         missing_values_bin_idx, has_missing_values,
@@ -650,12 +665,6 @@ def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
 
     assert split_info.is_categorical
     _assert_threshold_in_bitset(thresholds, split_info.cat_threshold)
-
-    # missing_go_to_left is set correctly
-    if has_missing_values:
-        missing_value_bin_idx = n_bins - 1
-        expected_missing_go_to_left = missing_value_bin_idx in thresholds
-        assert split_info.missing_go_to_left == expected_missing_go_to_left
 
     # make sure samples are split correctly
     samples_left, samples_right, _ = splitter.split_indices(
