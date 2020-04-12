@@ -94,16 +94,20 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                 'multiclass classification.'
                 )
 
-    def _check_categories(self, n_features):
+    def _check_categories(self, n_features, X_orig):
         """Check and validate categories params in X"""
         if self.categorical is None:
             self.categorical_features_ = None
             return
 
         error_msg = ("categorical must be an array-like of bool with shape "
-                     "(n_features,)")
+                     "(n_features,) or 'pandas'")
 
-        cat_feats = np.asarray(self.categorical)
+        if hasattr(X_orig, "dtypes"):
+            cat_feats = np.asarray(X_orig.dtypes == 'category')
+        else:
+            cat_feats = np.asarray(self.categorical)
+
         if cat_feats.dtype.kind != 'b' or cat_feats.shape[0] != n_features:
             raise ValueError(error_msg)
 
@@ -146,8 +150,12 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         acc_compute_hist_time = 0.  # time spent computing histograms
         # time spent predicting X for gradient and hessians update
         acc_prediction_time = 0.
+        X_orig = X
+        use_pd_categorical_encoding = (isinstance(self.categorical, str) and
+                                       self.categorical == 'pandas')
         X, y = self._validate_data(
-            X, y, dtype=[X_DTYPE], force_all_finite=False)
+            X, y, dtype=[X_DTYPE], force_all_finite=False,
+            use_pd_categorical_encoding=use_pd_categorical_encoding)
         y = self._encode_y(y)
         check_consistent_length(X, y)
         # Do not create unit sample weights by default to later skip some
@@ -169,7 +177,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
 
         self._validate_parameters()
         n_samples, self.n_features_ = X.shape  # used for validation in predict
-        self._check_categories(self.n_features_)
+        self._check_categories(self.n_features_, X_orig)
 
         # we need this stateful variable to tell raw_predict() that it was
         # called from fit() (this current method), and that the data it has
@@ -673,8 +681,11 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         raw_predictions : array, shape (n_samples * n_trees_per_iteration,)
             The raw predicted values.
         """
-        X = check_array(X, dtype=[X_DTYPE, X_BINNED_DTYPE],
-                        force_all_finite=False)
+        use_pd_categorical_encoding = (isinstance(self.categorical, str) and
+                                       self.categorical == 'pandas')
+        X = check_array(
+            X, dtype=[X_DTYPE, X_BINNED_DTYPE], force_all_finite=False,
+            use_pd_categorical_encoding=use_pd_categorical_encoding)
         check_is_fitted(self)
         if X.shape[1] != self.n_features_:
             raise ValueError(
@@ -849,10 +860,13 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
-    categorical : array-like of bool of shape (n_features) or default=None.
+    categorical : array-like of bool of shape (n_features) or 'pandas', \
+        default=None.
         Indicates the categorical features.
         - None : no features will be consider categorical.
         - boolean array-like : boolean mask indicating categorical features.
+        - 'pandas' : categorical features will be infered using pandas
+        categorical dtypes
         If the number of features is greater than ``n_bins``, then the top
         ``n_bins`` categories based on cardinality are kept. Categories
         encoded as negative number will be considered missing.
@@ -1057,10 +1071,13 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
         and 0 respectively correspond to a positive constraint, negative
         constraint and no constraint. Read more in the :ref:`User Guide
         <monotonic_cst_gbdt>`.
-    categorical : array-like of bool of shape (n_features) or default=None.
+    categorical : array-like of bool of shape (n_features) or 'pandas', \
+        default=None.
         Indicates the categorical features.
         - None : no features will be consider categorical.
         - boolean array-like : boolean mask indicating categorical features.
+        - 'pandas' : categorical features will be infered using pandas
+        categorical dtypes
         If the number of features is greater than ``n_bins``, then the top
         ``n_bins`` categories based on cardinality are kept. Categories
         encoded as negative number will be considered missing.

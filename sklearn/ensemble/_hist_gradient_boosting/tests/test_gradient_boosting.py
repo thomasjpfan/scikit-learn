@@ -687,8 +687,7 @@ def test_single_node_trees(Est):
 @pytest.mark.parametrize("insert_missing", [False, True])
 def test_categorical_sanity(insert_missing):
     # Test support categories with or without missing data
-
-    X, y = make_regression(n_samples=10_000, n_features=20, random_state=0)
+    X, y = make_regression(n_samples=5000, n_features=20, random_state=0)
 
     # even indicies are categorical
     categorical = np.zeros(X.shape[1], dtype=bool)
@@ -707,6 +706,51 @@ def test_categorical_sanity(insert_missing):
     assert_array_equal(est.categorical_features_, categorical)
 
     y_pred = est.predict(X)
+    assert r2_score(y, y_pred) >= 0.8
+
+    X_test = np.zeros((1, X.shape[1]), dtype=float)
+    X_test[:, ::2] = 30  # unknown category
+    X_test[:, 10:] = np.nan  # sets the last 10 features to be missing
+
+    # Does not error on unknown or missing categories
+    est.predict(X_test)
+
+
+def test_categorical_pandas():
+    # Correctly intakes pandas dataframe for fitting and prediction
+
+    pd = pytest.importorskip("pandas")
+    n_samples, n_features = 5000, 20
+    X, y = make_regression(n_samples=n_samples, n_features=n_features,
+                           random_state=0)
+
+    # even indicies are categorical
+    categorical = np.zeros(X.shape[1], dtype=bool)
+    categorical[::2] = 1
+
+    X[:, categorical] = KBinsDiscretizer(
+        encode='ordinal', n_bins=20).fit_transform(X[:, categorical])
+
+    df = pd.DataFrame(X,
+                      columns=[f'col_{i}' for i in range(n_features)])
+
+    rng = np.random.RandomState(42)
+    for idx in np.flatnonzero(categorical):
+        df.iloc[:, idx] = df.iloc[:, idx].astype('category')
+
+        # insesrt some missing categories
+        mask = rng.binomial(1, 0.01, size=n_samples).astype(np.bool)
+        df.iloc[mask, idx] = np.nan
+
+    # uses strings for categorial names
+    df.iloc[:, 0] = (df.iloc[:, 0].cat.rename_categories(
+        [f'cat_name_{i}' for i in range(20)]))
+
+    est = HistGradientBoostingRegressor(categorical='pandas',
+                                        random_state=0).fit(df, y)
+    assert_array_equal(est.categorical_features_, categorical)
+
+    y_pred = est.predict(df)
     assert r2_score(y, y_pred) >= 0.8
 
     X_test = np.zeros((1, X.shape[1]), dtype=float)

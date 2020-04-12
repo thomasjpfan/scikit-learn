@@ -1181,7 +1181,11 @@ def test_check_array_pandas_categorical_encoding():
                        'z': [1.0, 2.0, 3.0, 4.0]}, columns=['a', 'z'])
     df['a'] = df['a'].astype('category')
 
-    result = check_array(df, use_pandas_categorical_encoding=True)
+    result = check_array(df, use_pd_categorical_encoding=True)
 
-    expected = np.array([[0, 1, 2, 1], [1, 2, 3, 4]])
+    expected = np.array([[0, 1, 2, 1], [1, 2, 3, 4]]).T
     assert_allclose(expected, result)
+
+    y = np.ones(4)
+    X, y = check_X_y(df, y, use_pd_categorical_encoding=True)
+    assert_allclose(expected, X)
