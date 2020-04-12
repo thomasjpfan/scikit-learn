@@ -212,8 +212,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         ``bin_thresholds_[categorical_index]`` is None.
     bin_categories_ : list of arrays or None
         For each categorical feature, this gives the categories corresponding
-        to each bin. None if ``categorical`` is None or if ``categorical`` is
-        all False.
+        to each bin.
     n_bins_non_missing_ : array of uint32
         For each feature, gives the number of bins actually used for
         non-missing values. For features with a lot of unique values, this is
@@ -266,21 +265,21 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         self.bin_thresholds_ = _find_binning_thresholds(
             X, max_bins, categorical=self.categorical)
 
-        if self.categorical is not None:
+        if self.categorical is not None and np.sum(self.categorical) != 0:
             self.bin_categories_ = _find_categories(
                 X, max_bins, categorical=self.categorical)
         else:
-            self.bin_categories_ = None
+            self.bin_categories_ = []
 
         n_bins_non_missing = []
 
-        if self.bin_categories_ is not None:
+        if self.bin_categories_:
             categorical_indices = np.flatnonzero(self.categorical)
             cat_idx_to_bin = dict(zip(categorical_indices,
                                       self.bin_categories_))
 
         for i, thresholds in enumerate(self.bin_thresholds_):
-            if self.bin_categories_ is not None and i in cat_idx_to_bin:
+            if self.bin_categories_ and i in cat_idx_to_bin:
                 # category
                 n_bins_non_missing.append(cat_idx_to_bin[i].shape[0])
             else:
@@ -312,7 +311,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         X_binned : array-like, shape (n_samples, n_features)
             The binned data (fortran-aligned).
         """
-        if categorical_only and self.bin_categories_ is None:
+        if categorical_only and not self.bin_categories_:
             raise ValueError("categorical_only=True can only be set when "
                              "there are categorical features")
 
@@ -329,7 +328,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
             binned = np.zeros_like(X, dtype=X_BINNED_DTYPE, order='F')
             _map_to_bins(X, self.bin_thresholds_, self.missing_values_bin_idx_,
                          binned)
-            if self.bin_categories_ is not None:
+            if self.bin_categories_:
                 categorical_indices = np.flatnonzero(self.categorical)
                 _encode_categories(X, categorical_indices,
                                    self.bin_categories_,
@@ -339,7 +338,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
             n_categories = len(self.bin_categories_)
             binned = np.zeros((n_samples, n_categories), dtype=X_BINNED_DTYPE,
                               order='C')
-            _encode_categories(X[:, self.categorical == 1],
+            _encode_categories(X[:, self.categorical],
                                np.arange(n_categories),
                                self.bin_categories_,
                                self.missing_values_bin_idx_, binned)

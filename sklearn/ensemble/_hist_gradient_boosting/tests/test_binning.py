@@ -319,10 +319,13 @@ def test_infinite_values():
     assert_array_equal(bin_mapper.transform(X), expected_binned_X)
 
 
-@pytest.mark.parametrize("categorical", [None, [False]])
+@pytest.mark.parametrize("categorical", [None, np.array([False])])
 def test_categorical_transform_error_with_no_categoricals(categorical):
+    # Properties and
     X = np.arange(10, dtype=float).reshape(-1, 1)
     bin_mapper = _BinMapper(n_bins=5, categorical=categorical).fit(X)
+
+    assert len(bin_mapper.bin_categories_) == 0
 
     msg = ("categorical_only=True can only be set when there are "
            "categorical features")

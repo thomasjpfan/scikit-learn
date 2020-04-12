@@ -651,6 +651,12 @@ def test_splitting_categorical_sanity(X_binned, all_gradients, thresholds,
     assert split_info.is_categorical
     _assert_threshold_in_bitset(thresholds, split_info.cat_threshold)
 
+    # missing_go_to_left is set correctly
+    if has_missing_values:
+        missing_value_bin_idx = n_bins - 1
+        expected_missing_go_to_left = missing_value_bin_idx in thresholds
+        assert split_info.missing_go_to_left == expected_missing_go_to_left
+
     # make sure samples are split correctly
     samples_left, samples_right, _ = splitter.split_indices(
         split_info, splitter.partition)

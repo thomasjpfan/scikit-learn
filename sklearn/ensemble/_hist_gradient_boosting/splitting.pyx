@@ -903,10 +903,8 @@ cdef class Splitter:
         if found_better_split:
             split_info.gain = best_gain
 
-            # bin_idx and missing_go_to_left is unused for categorical splits
-            # the missing value is encoded in cat_threshold
+            # bin_idx is unused for categorical splits
             split_info.bin_idx = 0
-            split_info.missing_go_to_left = False
 
             split_info.sum_gradient_left = best_sum_gradient_left
             split_info.sum_gradient_right = sum_gradients - best_sum_gradient_left
@@ -935,6 +933,9 @@ cdef class Splitter:
                 for i in range(best_sort_thres + 1):
                     bin_idx = cat_sort_infos[used_bin - 1 - i].bin_idx
                     insert_bitset(bin_idx, split_info.cat_threshold)
+
+            split_info.missing_go_to_left = in_bitset(missing_values_bin_idx,
+                                                      split_info.cat_threshold)
 
         free(cat_sort_infos)
 
