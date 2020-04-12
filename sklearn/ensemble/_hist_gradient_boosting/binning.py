@@ -92,7 +92,7 @@ def _find_categories(data, max_bins, categorical):
         given feature the number of unique values is less than ``max_bins``,
         then those unique values will be used to compute the bin thresholds,
         instead of the quantiles
-    categorical : array of bool
+    categorical : array of int
         Indicates categorical features
 
     Return
@@ -104,7 +104,7 @@ def _find_categories(data, max_bins, categorical):
     if np.sum(categorical) == 0:
         return None
 
-    data = data[:, categorical]
+    data = data[:, categorical == 1]
     bin_categories = []
     for f_idx in range(data.shape[1]):
         col_data = data[:, f_idx]
@@ -339,7 +339,8 @@ class _BinMapper(TransformerMixin, BaseEstimator):
             n_categories = len(self.bin_categories_)
             binned = np.zeros((n_samples, n_categories), dtype=X_BINNED_DTYPE,
                               order='C')
-            _encode_categories(X[:, self.categorical], np.arange(n_categories),
+            _encode_categories(X[:, self.categorical == 1],
+                               np.arange(n_categories),
                                self.bin_categories_,
                                self.missing_values_bin_idx_, binned)
 
