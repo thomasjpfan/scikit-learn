@@ -30,7 +30,7 @@ def _find_binning_thresholds(data, max_bins, categorical=None):
         given feature the number of unique values is less than ``max_bins``,
         then those unique values will be used to compute the bin thresholds,
         instead of the quantiles
-    categorical : array of bool or None
+    categorical : ndarray of bool or None
         Indicates categorical features
 
     Return
@@ -81,7 +81,8 @@ def _find_binning_thresholds(data, max_bins, categorical=None):
 def _find_categories(data, max_bins, categorical):
     """Extract feature-wise categories from categorical data
 
-    Missing values and negative values are ignored.
+    Missing values and negative values are ignored. They will be considered
+    missing when ``_encode_categories`` is called.
 
     Parameters
     ----------
@@ -92,19 +93,16 @@ def _find_categories(data, max_bins, categorical):
         given feature the number of unique values is less than ``max_bins``,
         then those unique values will be used to compute the bin thresholds,
         instead of the quantiles
-    categorical : array of int
-        Indicates categorical features
+    categorical : ndarray of bool of shape (n_features,)
+        Indicates categorical features.
 
     Return
     ------
     bin_categories : list of arrays or None
         For each categorical feature, this gives the categories corresponding
-        to each bin. None if ``categorical`` is all False.
+        to each bin.
     """
-    if np.sum(categorical) == 0:
-        return None
-
-    data = data[:, categorical == 1]
+    data = data[:, categorical]
     bin_categories = []
     for f_idx in range(data.shape[1]):
         col_data = data[:, f_idx]
@@ -129,7 +127,9 @@ def _find_categories(data, max_bins, categorical):
 
 def _encode_categories(data, categorical_indices, bin_categories,
                        missing_values_bin_idx, binned):
-    """Encode categories
+    """Encode categories.
+
+    Missing values and unknown values are mapped to the missing bin.
 
     Parameters
     ----------
@@ -313,7 +313,7 @@ class _BinMapper(TransformerMixin, BaseEstimator):
         """
         if categorical_only and not self.bin_categories_:
             raise ValueError("categorical_only=True can only be set when "
-                             "there are categorical features")
+                             "there are categorical features in fit")
 
         X = check_array(X, dtype=[X_DTYPE], force_all_finite=False)
         check_is_fitted(self)
