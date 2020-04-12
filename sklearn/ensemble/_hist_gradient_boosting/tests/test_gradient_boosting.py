@@ -702,9 +702,9 @@ def test_categorical_sanity(insert_missing):
         mask = rng.binomial(1, 0.01, size=X.shape).astype(np.bool)
         X[mask] = np.nan
 
-    est = HistGradientBoostingRegressor(categorical=None,
+    est = HistGradientBoostingRegressor(categorical=categorical,
                                         random_state=0).fit(X, y)
-    # assert_array_equal(est.categorical_features_, categorical)
+    assert_array_equal(est.categorical_features_, categorical)
 
     y_pred = est.predict(X)
     assert r2_score(y, y_pred) >= 0.8

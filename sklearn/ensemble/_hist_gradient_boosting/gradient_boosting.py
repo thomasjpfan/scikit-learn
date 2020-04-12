@@ -104,26 +104,17 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                      "(n_features,)")
 
         cat_feats = np.asarray(self.categorical)
-        if cat_feats.dtype.kind not in ('b', 'i'):
+        if cat_feats.dtype.kind != 'b':
             raise ValueError(error_msg)
 
-        if cat_feats.dtype.kind == 'b' and cat_feats.shape[0] != n_features:
+        if cat_feats.shape[0] != n_features:
             raise ValueError(error_msg)
-
-        if cat_feats.dtype.kind == 'i':
-            if np.any(cat_feats >= n_features):
-                raise ValueError(error_msg)
-            # converts feature indicies to mask
-            tmp = np.zeros(n_features, dtype=np.uint8)
-            tmp[cat_feats] = 1
-            cat_feats = tmp
 
         if np.sum(cat_feats) == 0:
             # no categories
             self.categorical_features_ = None
         else:
             self.categorical_features_ = np.asarray(cat_feats, dtype=np.uint8)
-        print(self.categorical_features_)
 
         # categorical features can not have monotonic constraints
         if (self.categorical_features_ is not None and
