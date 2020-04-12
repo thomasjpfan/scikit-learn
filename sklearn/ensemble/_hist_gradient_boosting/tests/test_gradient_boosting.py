@@ -734,17 +734,20 @@ def test_categorical_pandas():
     df = pd.DataFrame(X,
                       columns=[f'col_{i}' for i in range(n_features)])
 
+    # make columns pandas categoricals
+    categorical_indicies = np.flatnonzero(categorical)
     rng = np.random.RandomState(42)
-    for idx in np.flatnonzero(categorical):
+    for idx in categorical_indicies:
         df.iloc[:, idx] = df.iloc[:, idx].astype('category')
 
         # insesrt some missing categories
         mask = rng.binomial(1, 0.01, size=n_samples).astype(np.bool)
         df.iloc[mask, idx] = np.nan
 
-    # uses strings for categorial names
-    df.iloc[:, 0] = (df.iloc[:, 0].cat.rename_categories(
-        [f'cat_name_{i}' for i in range(20)]))
+    # uses strings for some categorical names
+    for idx in categorical_indicies[::2]:
+        df.iloc[:, idx] = (df.iloc[:, 0].cat.rename_categories(
+            [f'cat_name_{i}' for i in range(20)]))
 
     est = HistGradientBoostingRegressor(categorical='pandas',
                                         random_state=0).fit(df, y)
@@ -757,7 +760,7 @@ def test_categorical_pandas():
     X_test[:, ::2] = 30  # unknown category
     X_test[:, 10:] = np.nan  # sets the last 10 features to be missing
 
-    # Does not error on unknown or missing categories
+    # Does not error when using a numpy array as input for predict
     est.predict(X_test)
 
 

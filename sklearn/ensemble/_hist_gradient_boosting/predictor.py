@@ -37,6 +37,12 @@ class TreePredictor:
         ----------
         X : ndarray, shape (n_samples, n_features)
             The input samples.
+        X_binned_cat : ndarray, shape (n_samples, n_categorical_features), \
+            default=None
+            Binned category features.
+        orig_feature_to_binned_cat : ndarray, shape (n_features), default=None
+            Mapping from originl feature index to column corresponding to
+            ``X_binned_cat``.
 
         Returns
         -------
