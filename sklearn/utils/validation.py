@@ -511,10 +511,19 @@ def check_array(array, accept_sparse=False, accept_large_sparse=True,
         array = array.sparse.to_coo()
 
     if hasattr(array, 'dtypes') and use_pd_categorical_encoding:
-        array = array.copy()
-        categorical_indiicies = np.flatnonzero(array.dtypes == 'category')
-        for idx in categorical_indiicies:
-            array.iloc[:, idx] = array.iloc[:, idx].cat.codes
+        orig_columns = array.columns
+        cat_mask = array.dtypes == 'category'
+        if np.any(cat_mask):
+
+            cat_dict = {}
+            for name in orig_columns[cat_mask]:
+                cat_dict[name] = array[name].cat.codes
+
+            # create new dataframe using category codes
+            import pandas as pd
+            cat_df = pd.DataFrame(cat_dict)
+            array = pd.concat((array.loc[:, ~cat_mask], cat_df),
+                              axis='columns')[orig_columns]
 
     if sp.issparse(array):
         _ensure_no_complex_data(array)

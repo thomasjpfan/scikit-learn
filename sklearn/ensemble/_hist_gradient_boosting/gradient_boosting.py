@@ -869,7 +869,8 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
         categorical dtypes
         If the number of features is greater than ``n_bins``, then the top
         ``n_bins`` categories based on cardinality are kept. Categories
-        encoded as negative number will be considered missing.
+        encoded as negative number will be considered missing. Read more in
+        the :ref:`User Guide <categorical_support_gbdt>`.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
@@ -1080,7 +1081,8 @@ class HistGradientBoostingClassifier(BaseHistGradientBoosting,
         categorical dtypes
         If the number of features is greater than ``n_bins``, then the top
         ``n_bins`` categories based on cardinality are kept. Categories
-        encoded as negative number will be considered missing.
+        encoded as negative number will be considered missing. Read more in
+        the :ref:`User Guide <categorical_support_gbdt>`.
     warm_start : bool, optional (default=False)
         When set to ``True``, reuse the solution of the previous call to fit
         and add more estimators to the ensemble. For results to be valid, the
