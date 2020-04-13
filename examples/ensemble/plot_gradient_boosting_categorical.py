@@ -33,7 +33,7 @@ print(f"Number of numerical featuers: {n_numerical_features}")
 ##############################################################################
 # Create gradient boosting estimator with one hot encoding
 # --------------------------------------------------------
-# Next, we create a pipeline that will one hot encode the categories
+# Next, we create a pipeline that will one hot encode the categorical features
 # and let rest of the numerical data to passthrough:
 
 from sklearn.experimental import enable_hist_gradient_boosting  # noqa
@@ -65,7 +65,7 @@ hist_native = HistGradientBoostingRegressor(categorical='pandas')
 # Finally, we train the models using cross validation. Here we compare the
 # models performance in terms of :func:`~metrics.r2_score` and fit times. We
 # show that fit times are faster with native categorical support and that the
-# test scores and scores tiimes are comparable:
+# test scores and scores times are comparable:
 
 from sklearn.model_selection import cross_validate
 import matplotlib.pyplot as plt
