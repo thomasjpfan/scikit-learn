@@ -49,7 +49,8 @@ preprocessor = make_column_transformer(
     remainder='passthrough'
 )
 
-hist_one_hot = make_pipeline(preprocessor, HistGradientBoostingRegressor())
+hist_one_hot = make_pipeline(preprocessor,
+                             HistGradientBoostingRegressor(random_state=0))
 
 ##############################################################################
 # Create gradient boosting estimator with native categorical support
@@ -57,7 +58,8 @@ hist_one_hot = make_pipeline(preprocessor, HistGradientBoostingRegressor())
 # The :class:`~ensemble.HistGradientBoostingRegressor` has native support
 # for categorical features using the `categorical` parameter:
 
-hist_native = HistGradientBoostingRegressor(categorical='pandas')
+hist_native = HistGradientBoostingRegressor(categorical='pandas',
+                                            random_state=0)
 
 ##############################################################################
 # Train the models with cross-validation
