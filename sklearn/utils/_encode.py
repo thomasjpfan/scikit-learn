@@ -27,8 +27,7 @@ def _unique(values, *, return_inverse=False):
     # check for non-uniform types in object dtype
     if values.dtype == object:
         try:
-            uniques = sorted(set(values))
-            uniques = np.array(uniques, dtype=values.dtype)
+            _ = sorted(set(values))
         except TypeError:
             types = sorted(t.__qualname__
                            for t in set(type(v) for v in values))
