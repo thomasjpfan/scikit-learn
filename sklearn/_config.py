@@ -83,7 +83,8 @@ def set_config(assume_finite=None, working_memory=None,
 
 
 @contextmanager
-def config_context(**new_config):
+def config_context(assume_finite=None, working_memory=None,
+                   print_changed_only=None, display=None):
     """Context manager for global scikit-learn configuration
 
     Parameters
@@ -142,8 +143,8 @@ def config_context(**new_config):
     get_config: Retrieve current values of the global configuration
     """
     old_config = get_config().copy()
-    set_config(**new_config)
-
+    set_config(assume_finite=assume_finite, working_memory=working_memory,
+               print_changed_only=print_changed_only, display=display)
     try:
         yield
     finally:
