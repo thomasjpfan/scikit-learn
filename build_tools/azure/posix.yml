@@ -30,9 +30,9 @@ jobs:
     - bash: sudo chown -R $USER $CONDA
       displayName: Take ownership of conda installation
       condition: startsWith(variables['DISTRIB'], 'conda')
-    # - script: |
-    #     build_tools/azure/install.sh
-    #   displayName: 'Install'
+    - script: |
+        build_tools/azure/install.sh
+      displayName: 'Install'
     - script: |
         build_tools/azure/test_script.sh
       displayName: 'Test Library'
