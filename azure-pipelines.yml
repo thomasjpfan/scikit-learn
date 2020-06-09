@@ -186,6 +186,7 @@ jobs:
       pylatest_conda_mkl:
         DISTRIB: 'conda'
         PYTHON_VERSION: '*'
+        PYTEST_VERSION: '*'
         CHECK_WARNINGS: 'true'
         PYTHON_ARCH: '64'
         COVERAGE: 'true'

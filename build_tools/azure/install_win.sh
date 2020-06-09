@@ -5,26 +5,27 @@ if [ "$PYTHON_ARCH" == "64" ]; then
     conda create -n $VIRTUALENV -q -y python=$PYTHON_VERSION numpy scipy cython matplotlib wheel pillow joblib
 
     source activate $VIRTUALENV
-    pip install threadpoolctl
+    python -m pip install threadpoolctl
 else
-    pip install numpy scipy cython wheel pillow joblib threadpoolctl
+    python -m pip install numpy scipy cython wheel pytest pillow joblib threadpoolctl
 fi
 
 if [ "$PYTEST_VERSION" == "*" ]; then
-    pip install pytest
+    python -m pip install pytest
 else
-    pip install pytest==$PYTEST_VERSION
+    python -m pip install pytest==$PYTEST_VERSION
 fi
+python -m pip install pytest-xdist
 
 if [ "$COVERAGE" == "true" ]; then
-    pip install pytest-cov codecov
+    python -m pip install pytest-cov codecov
 fi
 
 python --version
-pip --version
+python -m pip --version
 
 # Install the build and runtime dependencies of the project.
 python setup.py bdist_wheel bdist_wininst -b doc/logos/scikit-learn-logo.bmp
 
 # Install the generated wheel package to test it
-pip install --pre --pre --no-index --find-links dist/ scikit-learn
+python -m pip install --pre --pre --no-index --find-links dist/ scikit-learn
