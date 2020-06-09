@@ -31,11 +31,6 @@ if LooseVersion(pytest.__version__) < PYTEST_MIN_VERSION:
                       .format(PYTEST_MIN_VERSION))
 
 
-def pytest_addoption(parser):
-    parser.addoption("--run-network", action="store_true", default=False,
-                     help="run network tests")
-
-
 dataset_fetchers = {
     'fetch_20newsgroups_fxt': fetch_20newsgroups,
     'fetch_20newsgroups_vectorized_fxt': fetch_20newsgroups_vectorized,
@@ -53,11 +48,10 @@ def _fetch_fixture(f):
         try:
             return f(*args, **kwargs)
         except IOError:
-            pytest.skip("test requires --run-network to run")
+            pytest.skip("test requires -m 'not skipnetwork' to run")
     return pytest.fixture(lambda: wrapped)
 
 
-# create pytest fixtures
 fetch_20newsgroups_fxt = _fetch_fixture(fetch_20newsgroups)
 fetch_20newsgroups_vectorized_fxt = \
     _fetch_fixture(fetch_20newsgroups_vectorized)
@@ -79,20 +73,28 @@ def pytest_collection_modifyitems(config, items):
                                    'text.HashingVectorizer')):
                 item.add_marker(skip_marker)
 
-    # Run network tests
-    if config.getoption("--run-network"):
-        # download datasets during collection to avoid thread unsafe behavior
-        # when running pytest in parallel with pytest-xdist
-        dataset_features_set = set(dataset_fetchers)
-        datasets_to_download = set()
+    not_skip_network = 'not skipnetwork' in config.getoption("markexpr")
+    skip_network = pytest.mark.skip(
+        reason="test requires -m 'not skipnetwork' to run")
 
-        for item in items:
-            if not item.keywords:
-                continue
-            dataset_to_fetch = set(item.keywords) and dataset_features_set
-            if dataset_to_fetch:
-                datasets_to_download |= dataset_to_fetch
+    # download datasets during collection to avoid thread unsafe behavior
+    # when running pytest in parallel with pytest-xdist
+    dataset_features_set = set(dataset_fetchers)
+    datasets_to_download = set()
 
+    for item in items:
+        if not item.keywords:
+            continue
+        dataset_to_fetch = set(item.keywords) and dataset_features_set
+        if not dataset_to_fetch:
+            continue
+
+        if not_skip_network:
+            datasets_to_download |= dataset_to_fetch
+        else:
+            item.add_marker(skip_network)
+
+    if not_skip_network:
         for name in datasets_to_download:
             dataset_fetchers[name]()
 
@@ -133,6 +135,11 @@ def pytest_collection_modifyitems(config, items):
 def pytest_configure(config):
     import sys
     sys._is_pytest_session = True
+    # declare our custom markers to avoid PytestUnknownMarkWarning
+    config.addinivalue_line(
+        "markers",
+        "skipnetwork: mark a test to skip execution"
+    )
 
 
 def pytest_unconfigure(config):
