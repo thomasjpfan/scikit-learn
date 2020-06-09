@@ -85,7 +85,7 @@ def pytest_collection_modifyitems(config, items):
     for item in items:
         if not item.keywords:
             continue
-        dataset_to_fetch = set(item.keywords) and dataset_features_set
+        dataset_to_fetch = set(item.keywords) & dataset_features_set
         if not dataset_to_fetch:
             continue
 
