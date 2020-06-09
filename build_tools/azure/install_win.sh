@@ -28,4 +28,4 @@ python -m pip --version
 python setup.py bdist_wheel bdist_wininst -b doc/logos/scikit-learn-logo.bmp
 
 # Install the generated wheel package to test it
-python -m pip install --pre --pre --no-index --find-links dist/ scikit-learn
+python -m pip install --pre --no-index --find-links dist/ scikit-learn
