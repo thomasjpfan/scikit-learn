@@ -33,7 +33,8 @@ run_tests() {
     # Tests that require large downloads over the networks are skipped in CI.
     # Here we make sure, that they are still run on a regular basis.
     if [[ "$SKLEARN_RUN_NETWORK_TESTS" == "true" ]]; then
-        TEST_CMD="$TEST_CMD -m \'not skipnetwork\'"
+        MARKER="not skipnetwork"
+        TEST_CMD="$TEST_CMD -m '$MARKER'"
     fi
 
     if [[ "$COVERAGE" == "true" ]]; then
