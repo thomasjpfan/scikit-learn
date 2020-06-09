@@ -7,8 +7,7 @@ UNAMESTR=`uname`
 
 TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
 
-MARKER="not skipnetwork"
-TEST_CMD="$TEST_CMD -m $MARKER"
+TEST_CMD="$TEST_CMD -m \\'not skipnetwork\\'"
 
 echo $TEST_CMD
 exit 0
