@@ -185,7 +185,7 @@ jobs:
     matrix:
       pylatest_conda_mkl:
         DISTRIB: 'conda'
-        PYTHON_VERSION: '*'
+        PYTHON_VERSION: '3.8'
         PYTEST_VERSION: '*'
         CHECK_WARNINGS: 'true'
         PYTHON_ARCH: '64'
