@@ -42,6 +42,7 @@ dataset_fetchers = {
 }
 
 
+# fetching a dataset with this fixture will never download if missing
 def _fetch_fixture(f):
     def wrapped(*args, **kwargs):
         kwargs['download_if_missing'] = False
