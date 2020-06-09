@@ -5,6 +5,14 @@ set -x
 
 UNAMESTR=`uname`
 
+TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
+
+MARKER="\'not skipnetwork\'"
+TEST_CMD="$TEST_CMD -m $MARKER"
+
+echo $TEST_CMD
+exit 0
+
 make_conda() {
     TO_INSTALL="$@"
     conda create -n $VIRTUALENV --yes $TO_INSTALL
