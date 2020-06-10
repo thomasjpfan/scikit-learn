@@ -28,7 +28,6 @@ TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
 if [[ "$SKLEARN_RUN_NETWORK_TESTS" == "true" ]]; then
     TEST_CMD="$TEST_CMD --run-network"
 fi
-rcv1
 
 if [[ "$COVERAGE" == "true" ]]; then
     export COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
