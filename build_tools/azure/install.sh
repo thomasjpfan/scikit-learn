@@ -19,32 +19,40 @@ version_ge() {
     test "$(printf "${1}\n${2}" | sort -rV | head -n 1)" == "$1"
 }
 
+
+get_dep() {
+    echo $(python build_tools/get_deps.py single $1)
+}
+
 if [[ "$DISTRIB" == "conda" ]]; then
 
-    TO_INSTALL="python=$PYTHON_VERSION pip \
-                numpy=$NUMPY_VERSION scipy=$SCIPY_VERSION \
-                cython=$CYTHON_VERSION joblib=$JOBLIB_VERSION\
+    TO_INSTALL="python=$PYTHON_VERSION \
+                pip \
+                numpy=$(get_dep numpy) \
+                scipy=$(get_dep scipy) \
+                cython=$(get_dep cython) \
+                joblib=$(get_dep joblib) \
                 blas[build=$BLAS]"
 
-    if [[ -n "$PANDAS_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pandas=$PANDAS_VERSION"
-    fi
+    # if [[ -n "$PANDAS_VERSION" ]]; then
+    #     TO_INSTALL="$TO_INSTALL pandas=$PANDAS_VERSION"
+    # fi
 
-    if [[ -n "$PYAMG_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pyamg=$PYAMG_VERSION"
-    fi
+    # if [[ -n "$PYAMG_VERSION" ]]; then
+    #     TO_INSTALL="$TO_INSTALL pyamg=$PYAMG_VERSION"
+    # fi
 
-    if [[ -n "$PILLOW_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL pillow=$PILLOW_VERSION"
-    fi
+    # if [[ -n "$PILLOW_VERSION" ]]; then
+    #     TO_INSTALL="$TO_INSTALL pillow=$PILLOW_VERSION"
+    # fi
 
-    if [[ -n "$SCIKIT_IMAGE_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL scikit-image=$SCIKIT_IMAGE_VERSION"
-    fi
+    # if [[ -n "$SCIKIT_IMAGE_VERSION" ]]; then
+    #     TO_INSTALL="$TO_INSTALL scikit-image=$SCIKIT_IMAGE_VERSION"
+    # fi
 
-    if [[ -n "$MATPLOTLIB_VERSION" ]]; then
-        TO_INSTALL="$TO_INSTALL matplotlib=$MATPLOTLIB_VERSION"
-    fi
+    # if [[ -n "$MATPLOTLIB_VERSION" ]]; then
+    #     TO_INSTALL="$TO_INSTALL matplotlib=$MATPLOTLIB_VERSION"
+    # fi
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
