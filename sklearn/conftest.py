@@ -35,7 +35,7 @@ def pytest_addoption(parser):
     # Adding pytest again for test run with --pyargs
     with suppress(ValueError):
         parser.addoption("--run-network", action="store_true",
-                        help="run network tests")
+                         help="run network tests")
 
 
 # fetching a dataset with this fixture will never download if missing
