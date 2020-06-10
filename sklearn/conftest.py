@@ -1,3 +1,4 @@
+from contextlib import suppress
 import platform
 import pytest
 
@@ -31,8 +32,10 @@ def pyplot():
 
 
 def pytest_addoption(parser):
-    parser.addoption("--use-network", action="store_true",
-                     help="use network tests")
+    # Adding pytest again for test run with --pyargs
+    with suppress(ValueError):
+        parser.addoption("--run-network", action="store_true",
+                        help="run network tests")
 
 
 # fetching a dataset with this fixture will never download if missing
@@ -42,7 +45,7 @@ def _fetch_fixture(f):
         try:
             return f(*args, **kwargs)
         except IOError:
-            pytest.skip("test requires --use-network to run")
+            pytest.skip("test requires --run-network to run")
     return pytest.fixture(lambda: wrapped)
 
 
@@ -78,9 +81,9 @@ def pytest_collection_modifyitems(config, items):
                                    'text.HashingVectorizer')):
                 item.add_marker(skip_marker)
 
-    run_network_tests = config.getoption("--use-network")
+    run_network_tests = config.getoption("--run-network")
     skip_network = pytest.mark.skip(
-        reason="test requires --use-network to run")
+        reason="test requires --run-network to run")
 
     # download datasets during collection to avoid thread unsafe behavior
     # when running pytest in parallel with pytest-xdist
@@ -103,10 +106,3 @@ def pytest_collection_modifyitems(config, items):
     if run_network_tests:
         for name in datasets_to_download:
             dataset_fetchers[name]()
-
-
-def pytest_configure(config):
-    config.addinivalue_line(
-        "markers",
-        "network: mark a test for execution if network available."
-    )

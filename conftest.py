@@ -16,6 +16,11 @@ if LooseVersion(pytest.__version__) < PYTEST_MIN_VERSION:
                       .format(PYTEST_MIN_VERSION))
 
 
+def pytest_addoption(parser):
+    parser.addoption("--run-network", action="store_true",
+                     help="run network tests")
+
+
 def pytest_configure(config):
     import sys
     sys._is_pytest_session = True

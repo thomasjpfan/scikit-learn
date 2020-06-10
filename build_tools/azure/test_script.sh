@@ -26,9 +26,9 @@ TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
 # Tests that require large downloads over the networks are skipped in CI.
 # Here we make sure, that they are still run on a regular basis.
 if [[ "$SKLEARN_RUN_NETWORK_TESTS" == "true" ]]; then
-    TEST_CMD="$TEST_CMD --use-network"
+    TEST_CMD="$TEST_CMD --run-network"
 fi
-
+rcv1
 
 if [[ "$COVERAGE" == "true" ]]; then
     export COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
