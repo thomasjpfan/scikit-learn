@@ -23,6 +23,12 @@ pip list
 
 TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
 
+# Tests that require large downloads over the networks are skipped in CI.
+# Here we make sure, that they are still run on a regular basis.
+if [[ "$SKLEARN_RUN_NETWORK_TESTS" == "true" ]]; then
+    TEST_CMD="$TEST_CMD --use-network"
+fi
+
 
 if [[ "$COVERAGE" == "true" ]]; then
     export COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
@@ -42,11 +48,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-if [[ "$SKLEARN_RUN_NETWORK_TESTS" == "true" ]]; then
-    # Tests that require large downloads over the networks are skipped in CI.
-    # Here we make sure, that they are still run on a regular basis.
-    $TEST_CMD --pyargs sklearn -m 'not skipnetwork'
-else
-    $TEST_CMD --pyargs sklearn
-fi
+$TEST_CMD --pyargs sklearn
 set +x
