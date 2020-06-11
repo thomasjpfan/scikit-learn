@@ -116,7 +116,7 @@ if [[ "$COVERAGE" == "true" ]]; then
     python -m pip install codecov pytest-cov
 fi
 
-if [[ "$PYTEST_XDIST" == "true" ]]; then
+if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
     python -m pip install pytest-xdist
 fi
 

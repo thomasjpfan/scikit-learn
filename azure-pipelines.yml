@@ -102,7 +102,6 @@ jobs:
         BLAS: 'openblas'
         NUMPY_VERSION: 'min'
         SCIPY_VERSION: 'min'
-        PILLOW_VERSION: 'min'
         MATPLOTLIB_VERSION: 'min'
         # latest version of joblib available in conda for Python 3.6
         JOBLIB_VERSION: '0.13.2'
@@ -133,6 +132,7 @@ jobs:
         PYTHON_VERSION: '3.6'
         PANDAS_VERSION: 'none'
         JOBLIB_VERSION: 'min'
+        PYTEST_XDIST_VERSION: 'none'
         THREADPOOLCTL_VERSION: 'min'
 
 - template: build_tools/azure/posix.yml
