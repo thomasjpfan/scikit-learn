@@ -48,7 +48,7 @@ import sklearn
 
 VERSION = sklearn.__version__
 
-from sklearn._build_utils.dependencies import extras_to_requires  # noqa
+from dependencies import extras_to_requires  # noqa
 
 # Optional setuptools features
 # We need to import setuptools early, if we want setuptools features,

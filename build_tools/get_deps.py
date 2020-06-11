@@ -6,7 +6,7 @@ import argparse
 # make sklearn._build_utils avaliable
 sys.path.insert(0, str(Path('.').parent))
 
-from sklearn._build_utils.dependencies import package_to_extras  # noqa
+from dependencies import package_to_extras  # noqa
 
 parser = argparse.ArgumentParser(
         description='Get dependencies for from setup.py')
