@@ -12,6 +12,9 @@ from distutils.command.clean import clean as Clean
 from pkg_resources import parse_version
 import traceback
 import importlib
+from dependencies import extras_to_requires
+from dependencies import SCIPY_MIN_VERSION
+from dependencies import NUMPY_MIN_VERSION
 try:
     import builtins
 except ImportError:
@@ -47,8 +50,6 @@ PROJECT_URLS = {
 import sklearn
 
 VERSION = sklearn.__version__
-
-from dependencies import extras_to_requires  # noqa
 
 # Optional setuptools features
 # We need to import setuptools early, if we want setuptools features,
