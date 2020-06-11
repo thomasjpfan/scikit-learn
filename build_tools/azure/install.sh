@@ -29,7 +29,7 @@ get_dep() {
     elif [[ "${version%%[^0-9.]*}" ]]; then
         # version number is explicity passed
         echo " $package==$version"
-    elif [[ "$version" == "*" ]]; then
+    elif [[ "$version" == "latest" ]]; then
         # * means latest
         echo " $(python build_tools/get_deps.py $package)"
     elif [[ "$version" == "min" ]]; then
