@@ -1,3 +1,4 @@
+import warnings
 from .base import _check_classifier_response_method
 
 from .. import average_precision_score
@@ -30,6 +31,14 @@ class PrecisionRecallDisplay:
     estimator_name : str, default=None
         Name of estimator. If None, then the estimator name is not shown.
 
+        .. deprecated:: 0.24
+            `estimator_name` is deprecated in favor of `name`.
+
+    name : str, default=None
+        Label for precision recall curve.
+
+        .. versionadded:: 0.24
+
     Attributes
     ----------
     line_ : matplotlib Artist
@@ -60,11 +69,24 @@ class PrecisionRecallDisplay:
     >>> disp.plot() # doctest: +SKIP
     """
     def __init__(self, precision, recall, *,
-                 average_precision=None, estimator_name=None):
+                 average_precision=None, estimator_name=None,
+                 name=None):
         self.precision = precision
         self.recall = recall
         self.average_precision = average_precision
-        self.estimator_name = estimator_name
+
+        if estimator_name is not None:
+            warnings.warn("estimator_name is deprecated in version 0.24 in "
+                          "favor of name and will be removed in version 0.26",
+                          FutureWarning)
+            if name is None:
+                name = estimator_name
+
+        self.name = name
+
+    @property
+    def estimator_name(self):
+        return self.name
 
     @_deprecate_positional_args
     def plot(self, ax=None, *, name=None, **kwargs):
@@ -96,7 +118,7 @@ class PrecisionRecallDisplay:
         if ax is None:
             fig, ax = plt.subplots()
 
-        name = self.estimator_name if name is None else name
+        name = self.name if name is None else name
 
         line_kwargs = {"drawstyle": "steps-post"}
         if self.average_precision is not None and name is not None:
@@ -194,6 +216,6 @@ def plot_precision_recall_curve(estimator, X, y, *,
     name = name if name is not None else estimator.__class__.__name__
     viz = PrecisionRecallDisplay(
         precision=precision, recall=recall,
-        average_precision=average_precision, estimator_name=name
+        average_precision=average_precision, name=name
     )
     return viz.plot(ax=ax, name=name, **kwargs)

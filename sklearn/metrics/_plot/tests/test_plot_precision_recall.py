@@ -15,6 +15,7 @@ from sklearn.exceptions import NotFittedError
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import make_column_transformer
+from sklearn.utils._testing import ignore_warnings
 
 
 # TODO: Remove when https://github.com/numpy/numpy/issues/14397 is resolved
@@ -104,6 +105,7 @@ def test_plot_precision_recall(pyplot, response_method, with_sample_weight):
     assert disp.average_precision == pytest.approx(avg_prec)
 
     assert disp.estimator_name == "LogisticRegression"
+    assert disp.name == "LogisticRegression"
 
     # cannot fail thanks to pyplot fixture
     import matplotlib as mpl  # noqa
@@ -134,6 +136,7 @@ def test_precision_recall_curve_pipeline(pyplot, clf):
     clf.fit(X, y)
     disp = plot_precision_recall_curve(clf, X, y)
     assert disp.estimator_name == clf.__class__.__name__
+    assert disp.name == clf.__class__.__name__
 
 
 def test_precision_recall_curve_string_labels(pyplot):
@@ -154,6 +157,7 @@ def test_precision_recall_curve_string_labels(pyplot):
 
     assert disp.average_precision == pytest.approx(avg_prec)
     assert disp.estimator_name == lr.__class__.__name__
+    assert disp.name == lr.__class__.__name__
 
 
 def test_plot_precision_recall_curve_estimator_name_multiple_calls(pyplot):
@@ -164,6 +168,7 @@ def test_plot_precision_recall_curve_estimator_name_multiple_calls(pyplot):
     clf = LogisticRegression().fit(X, y)
     disp = plot_precision_recall_curve(clf, X, y, name=clf_name)
     assert disp.estimator_name == clf_name
+    assert disp.name == clf_name
     pyplot.close("all")
     disp.plot()
     assert clf_name in disp.line_.get_label()
@@ -173,6 +178,7 @@ def test_plot_precision_recall_curve_estimator_name_multiple_calls(pyplot):
     assert clf_name in disp.line_.get_label()
 
 
+@ignore_warnings(category=FutureWarning)
 @pytest.mark.parametrize(
     "average_precision, estimator_name, expected_label",
     [
@@ -190,3 +196,14 @@ def test_default_labels(pyplot, average_precision, estimator_name,
                                   estimator_name=estimator_name)
     disp.plot()
     assert disp.line_.get_label() == expected_label
+
+
+# TODO: Remove when estimator_name is deprecated in 0.26
+def test_estimator_name_deprecated():
+    prec = np.array([1, 0.5, 0])
+    recall = np.array([0, 0.5, 1])
+
+    msg = ("estimator_name is deprecated in version 0.24 in favor of name "
+           "and will be removed in version 0.26")
+    with pytest.warns(FutureWarning, match=msg):
+        PrecisionRecallDisplay(prec, recall, estimator_name="a name")
