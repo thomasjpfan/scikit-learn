@@ -41,7 +41,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
 
     TO_INSTALL="python=$PYTHON_VERSION pip blas[build=$BLAS]"
 
-    TO_INSTALL="$TO_INSTALL$(get_dep numpy "$NUMPY_VERSION")"
+    TO_INSTALL="$TO_INSTALL$(get_dep numpy $NUMPY_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep scipy $SCIPY_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep cython $CYTHON_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep joblib $JOBLIB_VERSION)"
@@ -113,12 +113,13 @@ python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
                       $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
 
 if [[ "$COVERAGE" == "true" ]]; then
-    python -m pip install codecov $(get_dep pytest-cov "*")
+    python -m pip install codecov $(get_dep pytest-cov "latest")
 fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
-    python -m pip install $(get_dep sphinx "*") $(get_dep numpydoc "*")
+    python -m pip install $(get_dep sphinx "latest") \
+                          $(get_dep numpydoc "latest")
 fi
 
 python --version

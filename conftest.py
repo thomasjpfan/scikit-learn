@@ -15,7 +15,7 @@ from _pytest.doctest import DoctestItem
 
 from sklearn.utils import _IS_32BIT
 from sklearn.externals import _pilutil
-from sklearn.decomposition import PYTEST_MIN_VERSION
+from dependencies import PYTEST_MIN_VERSION
 
 
 if LooseVersion(pytest.__version__) < PYTEST_MIN_VERSION:
