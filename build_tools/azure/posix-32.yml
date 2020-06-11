@@ -14,8 +14,8 @@ jobs:
   variables:
     TEST_DIR: '$(Agent.WorkFolder)/tmp_folder'
     JUNITXML: 'test-data.xml'
-    OMP_NUM_THREADS: '4'
-    OPENBLAS_NUM_THREADS: '4'
+    OMP_NUM_THREADS: '2'
+    OPENBLAS_NUM_THREADS: '2'
     SKLEARN_SKIP_NETWORK_TESTS: '1'
     NUMPY_VERSION: 'latest'
     SCIPY_VERSION: 'latest'

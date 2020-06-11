@@ -116,6 +116,10 @@ if [[ "$COVERAGE" == "true" ]]; then
     python -m pip install codecov $(get_dep pytest-cov "latest")
 fi
 
+if [[ "$PYTEST_XDIST" == "true" ]]; then
+    python -m pip install pytest-xdist
+fi
+
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
     python -m pip install $(get_dep sphinx "latest") \

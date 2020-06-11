@@ -94,6 +94,7 @@ jobs:
         JOBLIB_VERSION: 'min'
         PANDAS_VERSION: 'none'
         THREADPOOLCTL_VERSION: 'min'
+        PYTEST_XDIST_VERSION: 'none'
       # Linux + Python 3.6 build with OpenBLAS and without SITE_JOBLIB
       py36_conda_openblas:
         DISTRIB: 'conda'
@@ -105,7 +106,8 @@ jobs:
         MATPLOTLIB_VERSION: 'min'
         # latest version of joblib available in conda for Python 3.6
         JOBLIB_VERSION: '0.13.2'
-        THREADPOOLCTL_VERSION: 'min'
+        THREADPOOLCTL_VERSION: '2.0.0'
+        PYTEST_XDIST_VERSION: 'none'
         COVERAGE: 'true'
       # Linux environment to test the latest available dependencies and MKL.
       # It runs tests requiring lightgbm, pandas and PyAMG.
