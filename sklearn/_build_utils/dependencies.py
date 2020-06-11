@@ -55,11 +55,9 @@ for package, (min_version, extras) in dependent_packages.items():
 # Used by CI to get the min dependencies
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-            description='Get dependencies for from setup.py')
+            description='Get min dependencies for a package')
 
-    # for getting version of a single dependency
     parser.add_argument('package', choices=dependent_packages)
     args = parser.parse_args()
     min_version = dependent_packages[args.package][0]
-
     print(min_version)
