@@ -1,4 +1,5 @@
 """All dependencies for scikit-learn."""
+from typing import Dict, Set
 from collections import defaultdict
 import platform
 
@@ -32,6 +33,7 @@ package_to_extras = {
     'seaborn': ('>=0.9.0', 'docs,examples'),
     'memory_profiler': ('>=0.57.0', 'benchmark,docs'),
     'pytest': ('>={}'.format(PYTEST_MIN_VERSION), 'tests'),
+    'pytest-xdist': ('>=1.32.0', 'tests'),
     'pytest-cov': ('>=2.9.0', 'tests'),
     'flake8': ('>=3.8.2', 'tests'),
     'mypy': ('>=0.770', 'tests'),
@@ -44,7 +46,7 @@ package_to_extras = {
 
 
 # create inverse mapping for setuptools
-extras_to_requires = defaultdict(set)
+extras_to_requires: Dict[str, Set[str]] = defaultdict(set)
 for package, (version_spec, extras) in package_to_extras.items():
     for extra in extras.split(','):
         extras_to_requires[extra].add("{}{}".format(package, version_spec))

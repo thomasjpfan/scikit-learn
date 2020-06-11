@@ -21,38 +21,34 @@ version_ge() {
 
 
 get_dep() {
-    echo $(python build_tools/get_deps.py single $1)
+    package=$1
+    version=$2
+    if [[ "$version" == "none" ]]; then
+        # do not install with none
+        echo
+    elif [[ "${version%%[^0-9.]*}" ]]; then
+        # version number is explicity passed
+        echo "$package==$version"
+    elif [[ "$version" == "*" ]]; then
+        # * means latest
+        echo "$(python build_tools/get_deps.py $package)"
+    elif [[ "$version" == "min" ]]; then
+        echo "$(python build_tools/get_deps.py --min-version $package)"
+    fi
 }
 
 if [[ "$DISTRIB" == "conda" ]]; then
 
-    TO_INSTALL="python=$PYTHON_VERSION \
-                pip \
-                numpy=$(get_dep numpy) \
-                scipy=$(get_dep scipy) \
-                cython=$(get_dep cython) \
-                joblib=$(get_dep joblib) \
-                blas[build=$BLAS]"
+    TO_INSTALL="python=$PYTHON_VERSION pip blas[build=$BLAS]"
 
-    # if [[ -n "$PANDAS_VERSION" ]]; then
-    #     TO_INSTALL="$TO_INSTALL pandas=$PANDAS_VERSION"
-    # fi
-
-    # if [[ -n "$PYAMG_VERSION" ]]; then
-    #     TO_INSTALL="$TO_INSTALL pyamg=$PYAMG_VERSION"
-    # fi
-
-    # if [[ -n "$PILLOW_VERSION" ]]; then
-    #     TO_INSTALL="$TO_INSTALL pillow=$PILLOW_VERSION"
-    # fi
-
-    # if [[ -n "$SCIKIT_IMAGE_VERSION" ]]; then
-    #     TO_INSTALL="$TO_INSTALL scikit-image=$SCIKIT_IMAGE_VERSION"
-    # fi
-
-    # if [[ -n "$MATPLOTLIB_VERSION" ]]; then
-    #     TO_INSTALL="$TO_INSTALL matplotlib=$MATPLOTLIB_VERSION"
-    # fi
+    TO_INSTALL="$TO_INSTALL $(get_dep numpy $NUMPY_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep scipy $SCIPY_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep cython $CYTHON_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep joblib $JOBLIB_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep pandas $PANDAS_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep pyamg $PYAMG_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep pillow $PILLOW_VERSION)"
+    TO_INSTALL="$TO_INSTALL $(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
@@ -73,38 +69,29 @@ if [[ "$DISTRIB" == "conda" ]]; then
 
 	make_conda $TO_INSTALL
 
-    pip install threadpoolctl==$THREADPOOLCTL_VERSION
-
-    if [[ "$PYTEST_VERSION" == "*" ]]; then
-        python -m pip install pytest
-    else
-        python -m pip install pytest=="$PYTEST_VERSION"
-    fi
-
-    if [[ "$PYTHON_VERSION" == "*" ]]; then
-        python -m pip install pytest-xdist
-    fi
-
 elif [[ "$DISTRIB" == "ubuntu" ]]; then
     sudo add-apt-repository --remove ppa:ubuntu-toolchain-r/test
     sudo apt-get update
     sudo apt-get install python3-scipy python3-matplotlib libatlas3-base libatlas-base-dev python3-virtualenv
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
-    python -m pip install pytest==$PYTEST_VERSION pytest-cov cython joblib==$JOBLIB_VERSION threadpoolctl==$THREADPOOLCTL_VERSION
+    python -m pip install $(get_dep cython $CYTHON_VERSION) \
+                          $(get_dep joblib $JOBLIB_VERSION) \
+
 elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     apt-get update
     apt-get install -y python3-dev python3-scipy python3-matplotlib libatlas3-base libatlas-base-dev python3-virtualenv
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
-    python -m pip install pytest==$PYTEST_VERSION pytest-cov cython joblib==$JOBLIB_VERSION threadpoolctl==$THREADPOOLCTL_VERSION
+    python -m pip install $(get_dep cython $CYTHON_VERSION) \
+                          $(get_dep joblib $JOBLIB_VERSION)
+
 elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
     # Since conda main channel usually lacks behind on the latest releases,
     # we use pypi to test against the latest releases of the dependencies.
     # conda is still used as a convenient way to install Python and pip.
     make_conda "python=$PYTHON_VERSION"
     python -m pip install -U pip
-    python -m pip install pytest==$PYTEST_VERSION pytest-cov pytest-xdist
 
     python -m pip install pandas matplotlib pyamg scikit-image
     # do not install dependencies for lightgbm since it requires scikit-learn
@@ -112,7 +99,6 @@ elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
 elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     make_conda "python=$PYTHON_VERSION"
     python -m pip install -U pip
-    python -m pip install pytest==$PYTEST_VERSION pytest-cov pytest-xdist
     echo "Installing numpy and scipy master wheels"
     dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
     pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
@@ -122,16 +108,18 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
 fi
 
+python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION)
+                      $(get_dep pytest $PYTEST_VERSION) \
+                      $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
+
 if [[ "$COVERAGE" == "true" ]]; then
-    python -m pip install coverage codecov pytest-cov
+    python -m pip install codecov $(get_dep pytest-cov "*")
 fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
-    # FIXME: until jinja2 2.10.2 is released with a fix the import station for
-    # collections.abc so as to not raise a spurious deprecation warning
-    python -m pip install sphinx==2.1.2
-    python -m pip install numpydoc
+    python -m pip install $(get_dep sphinx "*")
+    python -m pip install $(get_dep numpydoc "*")
 fi
 
 python --version

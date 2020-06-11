@@ -76,13 +76,6 @@ jobs:
         DISTRIB: 'conda'
         PYTHON_VERSION: '*'
         BLAS: 'mkl'
-        NUMPY_VERSION: '*'
-        SCIPY_VERSION: '*'
-        CYTHON_VERSION: '*'
-        PILLOW_VERSION: '*'
-        PYTEST_VERSION: '*'
-        JOBLIB_VERSION: '*'
-        THREADPOOLCTL_VERSION: '2.0.0'
         COVERAGE: 'true'
 
 # - template: build_tools/azure/posix.yml
