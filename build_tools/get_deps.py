@@ -1,6 +1,12 @@
-"""Get version for dependencies."""
+"""Get version for dependencies. Used only in the CI"""
+import sys
+from pathlib import Path
 import argparse
-from sklearn._build_utils.dependencies import package_to_extras
+
+# make sklearn._build_utils avaliable
+sys.path.insert(0, str(Path('.').parent))
+
+from sklearn._build_utils.dependencies import package_to_extras  # noqa
 
 parser = argparse.ArgumentParser(
         description='Get dependencies for from setup.py')
