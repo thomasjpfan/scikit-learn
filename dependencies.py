@@ -44,7 +44,7 @@ package_to_extras = {
     'mypy': ('0.770', 'tests'),
     'pyamg': ('4.0.0', 'tests'),
     'sphinx': ('2.1.2', 'docs'),
-    'sphinx-gallery0.7.0': ('0.7.0', 'docs'),
+    'sphinx-gallery': ('0.7.0', 'docs'),
     'numpydoc': ('0.9.2', 'docs'),
     'Pillow': ('7.1.2', 'docs'),
 }
