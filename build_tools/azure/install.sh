@@ -76,7 +76,7 @@ elif [[ "$DISTRIB" == "ubuntu" ]]; then
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
     python -m pip install $(get_dep cython $CYTHON_VERSION) \
-                          $(get_dep joblib $JOBLIB_VERSION) \
+                          $(get_dep joblib $JOBLIB_VERSION)
 
 elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     apt-get update
@@ -108,7 +108,7 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
 fi
 
-python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION)
+python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
                       $(get_dep pytest $PYTEST_VERSION) \
                       $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
 
@@ -118,8 +118,7 @@ fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
-    python -m pip install $(get_dep sphinx "*")
-    python -m pip install $(get_dep numpydoc "*")
+    python -m pip install $(get_dep sphinx "*") $(get_dep numpydoc "*")
 fi
 
 python --version
