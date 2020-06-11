@@ -5,11 +5,10 @@
 # doc/modules/clustering.rst and use sklearn from the local folder rather than
 # the one from site-packages.
 
-import platform
 from distutils.version import LooseVersion
-from sklearn.externals import _pilutil
 
 import pytest
+
 
 PYTEST_MIN_VERSION = '3.3.0'
 
@@ -25,16 +24,6 @@ def pytest_addoption(parser):
 
 
 def pytest_collection_modifyitems(config, items):
-
-    # FeatureHasher is not compatible with PyPy
-    if platform.python_implementation() == 'PyPy':
-        skip_marker = pytest.mark.skip(
-            reason='FeatureHasher is not compatible with PyPy')
-        for item in items:
-            if item.name.endswith(('_hash.FeatureHasher',
-                                   'text.HashingVectorizer')):
-                item.add_marker(skip_marker)
-
     # Skip tests which require internet if the flag is provided
     if config.getoption("--skip-network"):
         skip_network = pytest.mark.skip(
@@ -42,14 +31,6 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "network" in item.keywords:
                 item.add_marker(skip_network)
-
-    if _pilutil.pillow_installed:
-        skip_marker = pytest.mark.skip(reason="pillow (or PIL) not installed!")
-        for item in items:
-            if item.name in [
-                    "sklearn.feature_extraction.image.PatchExtractor",
-                    "sklearn.feature_extraction.image.extract_patches_2d"]:
-                item.add_marker(skip_marker)
 
 
 def pytest_configure(config):

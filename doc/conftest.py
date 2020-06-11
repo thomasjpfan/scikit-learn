@@ -2,14 +2,9 @@ import os
 from os.path import exists
 from os.path import join
 import warnings
-from contextlib import suppress
-from distutils.version import LooseVersion
-import sys
 
-import pytest
-from _pytest.doctest import DoctestItem
+import numpy as np
 
-from sklearn.utils import _IS_32BIT
 from sklearn.utils import IS_PYPY
 from sklearn.utils._testing import SkipTest
 from sklearn.utils._testing import check_skip_network
@@ -93,29 +88,3 @@ def pytest_runtest_setup(item):
         setup_impute()
     elif fname.endswith('statistical_inference/unsupervised_learning.rst'):
         setup_unsupervised_learning()
-
-
-def pytest_collection_modifyitems(config, items):
-    # numpy changed the str/repr formatting of numpy arrays in 1.14. We want to
-    # run doctests only for numpy >= 1.14.
-    skip_doctests = False
-    with suppress(ImportError):
-        import numpy as np
-        if LooseVersion(np.__version__) < LooseVersion('1.14'):
-            reason = 'doctests are only run for numpy >= 1.14'
-            skip_doctests = True
-        elif _IS_32BIT:
-            reason = ('doctest are only run when the default numpy int is '
-                      '64 bits.')
-            skip_doctests = True
-        elif sys.platform.startswith("win32"):
-            reason = ("doctests are not run for Windows because numpy arrays "
-                      "repr is inconsistent across platforms.")
-            skip_doctests = True
-
-    if skip_doctests:
-        skip_marker = pytest.mark.skip(reason=reason)
-
-        for item in items:
-            if isinstance(item, DoctestItem):
-                item.add_marker(skip_marker)
