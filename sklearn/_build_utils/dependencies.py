@@ -38,7 +38,7 @@ dependent_packages = {
     'flake8': ('3.8.2', 'tests'),
     'mypy': ('0.770', 'tests'),
     'pyamg': ('4.0.0', 'tests'),
-    'sphinx': ('2.1.2', 'docs'),
+    'sphinx': ('3.0.3', 'docs'),
     'sphinx-gallery': ('0.7.0', 'docs'),
     'numpydoc': ('0.9.2', 'docs'),
     'Pillow': ('7.1.2', 'docs'),
