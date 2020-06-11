@@ -122,7 +122,8 @@ fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
-    python -m pip install sphinx numpydoc
+    python -m pip install sphinx
+    python -m pip install numpydoc
 fi
 
 python --version
