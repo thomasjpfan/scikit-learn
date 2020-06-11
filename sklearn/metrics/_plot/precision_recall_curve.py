@@ -84,6 +84,7 @@ class PrecisionRecallDisplay:
 
         self.name = name
 
+    # TODO: Remove when estimator_name is deprecated in 0.26
     @property
     def estimator_name(self):
         return self.name
