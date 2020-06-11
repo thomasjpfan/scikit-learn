@@ -52,7 +52,7 @@ jobs:
       - MINICONDA_PATH: ~/miniconda
       - CONDA_ENV_NAME: testenv
       - PYTHON_VERSION: 3
-      - SPHINX_VERSION: 'min'
+      - SPHINX_VERSION: '3.0.3'
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh
