@@ -15,18 +15,13 @@ else:
 JOBLIB_MIN_VERSION = '0.11'
 THREADPOOLCTL_MIN_VERSION = '2.0.0'
 PYTEST_MIN_VERSION = '3.3.0'
-
-# The following places need to be in sync with regard to Cython version:
-# - sklearn/_build_utils/__init__.py
-# - dependencies.py
-# - advanced installation guide
 CYTHON_MIN_VERSION = '0.28.5'
 
 
 # 'build' and 'install' is included to have structured metadata for CI.
 # It will NOT be included in setup's extras_require
 # The values are (version_spec, comma seperated tags)
-package_to_extras = {
+dependent_packages = {
     'numpy': (NUMPY_MIN_VERSION, 'build,install'),
     'scipy': (SCIPY_MIN_VERSION, 'build,install'),
     'joblib': (JOBLIB_MIN_VERSION, 'install'),
@@ -52,7 +47,7 @@ package_to_extras = {
 
 # create inverse mapping for setuptools
 extras_to_requires: dict = defaultdict(set)
-for package, (min_version, extras) in package_to_extras.items():
+for package, (min_version, extras) in dependent_packages.items():
     for extra in extras.split(','):
         extras_to_requires[extra].add("{}>={}".format(package, min_version))
 
@@ -63,8 +58,8 @@ if __name__ == '__main__':
             description='Get dependencies for from setup.py')
 
     # for getting version of a single dependency
-    parser.add_argument('package', choices=package_to_extras)
+    parser.add_argument('package', choices=dependent_packages)
     args = parser.parse_args()
-    min_version = package_to_extras[args.package][0]
+    min_version = dependent_packages[args.package][0]
 
     print(min_version)

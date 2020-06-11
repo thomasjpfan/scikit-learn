@@ -33,7 +33,7 @@ get_dep() {
         # * means latest
         echo " $package"
     elif [[ "$version" == "min" ]]; then
-        echo " $package==$(python dependencies.py $package)"
+        echo " $package==$(python sklearn/_build_utils/dependencies.py $package)"
     fi
 }
 
