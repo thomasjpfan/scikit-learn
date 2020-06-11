@@ -16,7 +16,10 @@ JOBLIB_MIN_VERSION = '0.11'
 THREADPOOLCTL_MIN_VERSION = '2.0.0'
 PYTEST_MIN_VERSION = '3.3.0'
 
-# Keep in sync with sklearn/_build_utils/__init__.py
+# The following places need to be in sync with regard to Cython version:
+# - sklearn/_build_utils/__init__.py
+# - dependencies.py
+# - advanced installation guide
 CYTHON_MIN_VERSION = '0.28.5'
 
 

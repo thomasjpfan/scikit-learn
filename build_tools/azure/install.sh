@@ -47,7 +47,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
     TO_INSTALL="$TO_INSTALL$(get_dep joblib $JOBLIB_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep pandas $PANDAS_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep pyamg $PYAMG_VERSION)"
-    TO_INSTALL="$TO_INSTALL$(get_dep pillow $PILLOW_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep Pillow $PILLOW_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
@@ -113,7 +113,7 @@ python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
                       $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
 
 if [[ "$COVERAGE" == "true" ]]; then
-    python -m pip install codecov $(get_dep pytest-cov "latest")
+    python -m pip install codecov pytest-cov
 fi
 
 if [[ "$PYTEST_XDIST" == "true" ]]; then
@@ -122,8 +122,7 @@ fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
     # numpydoc requires sphinx
-    python -m pip install $(get_dep sphinx "latest") \
-                          $(get_dep numpydoc "latest")
+    python -m pip install sphinx numpydoc
 fi
 
 python --version
