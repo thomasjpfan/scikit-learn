@@ -64,15 +64,13 @@ SETUPTOOLS_COMMANDS = {
 if SETUPTOOLS_COMMANDS.intersection(sys.argv):
     import setuptools
 
-    # remove 'build' and 'install' so they are not shown in extras_require
-    extra_requires = extras_to_requires.copy()
-    del extra_requires['build']
-    del extra_requires['install']
-
     extra_setuptools_args = dict(
         zip_safe=False,  # the package can run out of an .egg file
         include_package_data=True,
-        extras_require=extras_to_requires,
+        extras_require={
+            key: extras_to_requires[key] for
+            key in ['examples', 'docs', 'tests', 'benchmark']
+        },
     )
 else:
     extra_setuptools_args = dict()

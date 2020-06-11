@@ -31,9 +31,9 @@ get_dep() {
         echo " $package==$version"
     elif [[ "$version" == "latest" ]]; then
         # * means latest
-        echo " $(python build_tools/get_deps.py $package)"
+        echo " $package"
     elif [[ "$version" == "min" ]]; then
-        echo " $(python build_tools/get_deps.py --min-version $package)"
+        echo " $package=$(python dependencies.py $package)"
     fi
 }
 
