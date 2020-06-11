@@ -129,6 +129,7 @@ jobs:
       py36_ubuntu_atlas_32bit:
         DISTRIB: 'ubuntu-32'
         PYTHON_VERSION: '3.6'
+        PANDAS_VERSION: 'none'
         JOBLIB_VERSION: 'min'
         THREADPOOLCTL_VERSION: 'min'
 
@@ -150,19 +151,19 @@ jobs:
         SKLEARN_TEST_NO_OPENMP: 'true'
         SKLEARN_SKIP_OPENMP_TEST: 'true'
 
-# - template: build_tools/azure/windows.yml
-#   parameters:
-#     name: Windows
-#     vmImage: vs2017-win2016
-#     dependsOn: [linting]
-#     condition: and(ne(variables['Build.Reason'], 'Schedule'), succeeded('linting'))
-#     matrix:
-#       py37_conda_mkl:
-#         PYTHON_VERSION: '3.7'
-#         CHECK_WARNINGS: 'true'
-#         PYTHON_ARCH: '64'
-#         PYTEST_VERSION: '*'
-#         COVERAGE: 'true'
-#       py36_pip_openblas_32bit:
-#         PYTHON_VERSION: '3.6'
-#         PYTHON_ARCH: '32'
+- template: build_tools/azure/windows.yml
+  parameters:
+    name: Windows
+    vmImage: vs2017-win2016
+    dependsOn: [linting]
+    condition: and(ne(variables['Build.Reason'], 'Schedule'), succeeded('linting'))
+    matrix:
+      py37_conda_mkl:
+        PYTHON_VERSION: '3.7'
+        CHECK_WARNINGS: 'true'
+        PYTHON_ARCH: '64'
+        PYTEST_VERSION: '*'
+        COVERAGE: 'true'
+      py36_pip_openblas_32bit:
+        PYTHON_VERSION: '3.6'
+        PYTHON_ARCH: '32'
