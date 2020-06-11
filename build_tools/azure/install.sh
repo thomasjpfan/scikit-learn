@@ -49,6 +49,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
     TO_INSTALL="$TO_INSTALL$(get_dep pyamg $PYAMG_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep Pillow $PILLOW_VERSION)"
     TO_INSTALL="$TO_INSTALL$(get_dep matplotlib $MATPLOTLIB_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep threadpoolctl $THREADPOOLCTL_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
@@ -76,7 +77,8 @@ elif [[ "$DISTRIB" == "ubuntu" ]]; then
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
     python -m pip install $(get_dep cython $CYTHON_VERSION) \
-                          $(get_dep joblib $JOBLIB_VERSION)
+                          $(get_dep joblib $JOBLIB_VERSION) \
+                          $(get_dep threadpoolctl $THREADPOOLCTL_VERSION)
 
 elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     apt-get update
@@ -84,7 +86,8 @@ elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
     python -m pip install $(get_dep cython $CYTHON_VERSION) \
-                          $(get_dep joblib $JOBLIB_VERSION)
+                          $(get_dep joblib $JOBLIB_VERSION) \
+                          $(get_dep threadpoolctl $THREADPOOLCTL_VERSION)
 
 elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
     # Since conda main channel usually lacks behind on the latest releases,
@@ -102,14 +105,14 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     echo "Installing numpy and scipy master wheels"
     dev_url=https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com
     pip install --pre --upgrade --timeout=60 -f $dev_url numpy scipy pandas cython
+    pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION)
     echo "Installing joblib master"
     pip install https://github.com/joblib/joblib/archive/master.zip
     echo "Installing pillow master"
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
 fi
 
-python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
-                      $(get_dep pytest $PYTEST_VERSION) \
+python -m pip install $(get_dep pytest $PYTEST_VERSION) \
                       $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
 
 if [[ "$COVERAGE" == "true" ]]; then
