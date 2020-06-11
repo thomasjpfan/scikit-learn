@@ -41,15 +41,14 @@ if [[ "$DISTRIB" == "conda" ]]; then
 
     TO_INSTALL="python=$PYTHON_VERSION pip blas[build=$BLAS]"
 
-    TO_INSTALL="$TO_INSTALL" \
-               "$(get_dep numpy $NUMPY_VERSION)" \
-               "$(get_dep scipy $SCIPY_VERSION)" \
-               "(get_dep cython $CYTHON_VERSION)" \
-               "$(get_dep joblib $JOBLIB_VERSION)" \
-               "$(get_dep pandas $PANDAS_VERSION)" \
-               "(get_dep pyamg $PYAMG_VERSION)" \
-               "$(get_dep pillow $PILLOW_VERSION)" \
-               "$(get_dep matplotlib $MATPLOTLIB_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep numpy $NUMPY_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep scipy $SCIPY_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep cython $CYTHON_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep joblib $JOBLIB_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep pandas $PANDAS_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep pyamg $PYAMG_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep pillow $PILLOW_VERSION)"
+    TO_INSTALL="$TO_INSTALL$(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
