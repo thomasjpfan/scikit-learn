@@ -21,19 +21,19 @@ version_ge() {
 
 
 get_dep() {
-    package=$1
-    version=$2
+    package="$1"
+    version="$2"
     if [[ "$version" == "none" ]]; then
         # do not install with none
         echo
     elif [[ "${version%%[^0-9.]*}" ]]; then
         # version number is explicity passed
-        echo "$package==$version"
+        echo " $package==$version"
     elif [[ "$version" == "*" ]]; then
         # * means latest
-        echo "$(python build_tools/get_deps.py $package)"
+        echo " $(python build_tools/get_deps.py $package)"
     elif [[ "$version" == "min" ]]; then
-        echo "$(python build_tools/get_deps.py --min-version $package)"
+        echo " $(python build_tools/get_deps.py --min-version $package)"
     fi
 }
 
@@ -41,14 +41,15 @@ if [[ "$DISTRIB" == "conda" ]]; then
 
     TO_INSTALL="python=$PYTHON_VERSION pip blas[build=$BLAS]"
 
-    TO_INSTALL="$TO_INSTALL $(get_dep numpy $NUMPY_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep scipy $SCIPY_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep cython $CYTHON_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep joblib $JOBLIB_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep pandas $PANDAS_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep pyamg $PYAMG_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep pillow $PILLOW_VERSION)"
-    TO_INSTALL="$TO_INSTALL $(get_dep matplotlib $MATPLOTLIB_VERSION)"
+    TO_INSTALL="$TO_INSTALL" \
+               "$(get_dep numpy $NUMPY_VERSION)" \
+               "$(get_dep scipy $SCIPY_VERSION)" \
+               "(get_dep cython $CYTHON_VERSION)" \
+               "$(get_dep joblib $JOBLIB_VERSION)" \
+               "$(get_dep pandas $PANDAS_VERSION)" \
+               "(get_dep pyamg $PYAMG_VERSION)" \
+               "$(get_dep pillow $PILLOW_VERSION)" \
+               "$(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then

@@ -13,4 +13,6 @@ args = parser.parse_args()
 version_spec = package_to_extras[args.package][0]
 if args.min_version:
     version_spec = version_spec.replace(">=", "==")
+
+# package==version or package>=version
 print("{}{}".format(args.package, version_spec))
