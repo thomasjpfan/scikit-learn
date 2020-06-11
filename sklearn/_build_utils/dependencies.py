@@ -46,10 +46,10 @@ dependent_packages = {
 
 
 # create inverse mapping for setuptools
-extras_to_requires: dict = defaultdict(set)
+tag_to_packages: dict = defaultdict(set)
 for package, (min_version, extras) in dependent_packages.items():
     for extra in extras.split(','):
-        extras_to_requires[extra].add("{}>={}".format(package, min_version))
+        tag_to_packages[extra].add("{}>={}".format(package, min_version))
 
 
 # Used by CI to get the min dependencies

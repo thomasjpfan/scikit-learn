@@ -67,7 +67,7 @@ if SETUPTOOLS_COMMANDS.intersection(sys.argv):
         zip_safe=False,  # the package can run out of an .egg file
         include_package_data=True,
         extras_require={
-            key: deps.extras_to_requires[key] for
+            key: deps.tag_to_packages[key] for
             key in ['examples', 'docs', 'tests', 'benchmark']
         },
     )
@@ -245,7 +245,7 @@ def setup_package():
                                  ],
                     cmdclass=cmdclass,
                     python_requires=">=3.6",
-                    install_requires=list(deps.extras_to_requires['install']),
+                    install_requires=list(deps.tag_to_packages['install']),
                     package_data={'': ['*.pxd']},
                     **extra_setuptools_args)
 
