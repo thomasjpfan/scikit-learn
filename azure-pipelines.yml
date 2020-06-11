@@ -139,7 +139,6 @@ jobs:
         # temporary pin pytest due to unknown failure with pytest 5.4 and
         # python 3.6
         PYTEST_VERSION: '5.2'
-        PYTEST_XDIST_VERSION: 'none'
         THREADPOOLCTL_VERSION: 'min'
 
 - template: build_tools/azure/posix.yml
