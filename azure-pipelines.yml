@@ -94,6 +94,7 @@ jobs:
         JOBLIB_VERSION: 'min'
         PANDAS_VERSION: 'none'
         THREADPOOLCTL_VERSION: 'min'
+        PYTEST_VERSION: 'min'
         PYTEST_XDIST_VERSION: 'none'
       # Linux + Python 3.6 build with OpenBLAS and without SITE_JOBLIB
       py36_conda_openblas:
@@ -106,6 +107,9 @@ jobs:
         # latest version of joblib available in conda for Python 3.6
         JOBLIB_VERSION: '0.13.2'
         THREADPOOLCTL_VERSION: '2.0.0'
+        # temporary pin pytest due to unknown failure with pytest 5.4 and
+        # python 3.6
+        PYTEST_VERSION: '5.2'
         PYTEST_XDIST_VERSION: 'none'
         COVERAGE: 'true'
       # Linux environment to test the latest available dependencies and MKL.
@@ -132,6 +136,9 @@ jobs:
         PYTHON_VERSION: '3.6'
         PANDAS_VERSION: 'none'
         JOBLIB_VERSION: 'min'
+        # temporary pin pytest due to unknown failure with pytest 5.4 and
+        # python 3.6
+        PYTEST_VERSION: '5.2'
         PYTEST_XDIST_VERSION: 'none'
         THREADPOOLCTL_VERSION: 'min'
 
