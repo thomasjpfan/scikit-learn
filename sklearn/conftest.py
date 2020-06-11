@@ -13,14 +13,6 @@ from threadpoolctl import threadpool_limits
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 
 
-PYTEST_MIN_VERSION = '3.3.0'
-
-if LooseVersion(pytest.__version__) < PYTEST_MIN_VERSION:
-    raise ImportError('Your version of pytest is too old, you should have '
-                      'at least pytest >= {} installed.'
-                      .format(PYTEST_MIN_VERSION))
-
-
 @pytest.fixture(scope='function')
 def pyplot():
     """Setup and teardown fixture for matplotlib.
