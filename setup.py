@@ -10,6 +10,7 @@ import platform
 import shutil
 from distutils.command.clean import clean as Clean
 from distutils.command.sdist import sdist
+from distutils.cmd import Command
 from pkg_resources import parse_version
 import traceback
 import importlib
@@ -114,7 +115,7 @@ cmdclass = {'clean': CleanCommand, 'sdist': sdist}
 try:
     from numpy.distutils.command.build_ext import build_ext  # noqa
 
-    class build_ext_subclass(build_ext):
+    class build_ext_subclass(build_ext, Command):
         def build_extensions(self):
             from sklearn._build_utils.openmp_helpers import get_openmp_flag
 
