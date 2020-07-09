@@ -6,40 +6,42 @@ set PIP_INSTALL=pip install -q
 
 @echo on
 
-IF "%PYTHON_ARCH%"=="64" (
-    @rem Deactivate any environment
-    call deactivate
-    @rem Clean up any left-over from a previous build
-    conda remove --all -q -y -n %VIRTUALENV%
-    conda create -n %VIRTUALENV% -q -y python=%PYTHON_VERSION% numpy scipy cython matplotlib wheel pillow joblib
+pip install typing-extensions
 
-    call activate %VIRTUALENV%
+REM IF "%PYTHON_ARCH%"=="64" (
+REM     @rem Deactivate any environment
+REM     call deactivate
+REM     @rem Clean up any left-over from a previous build
+REM     conda remove --all -q -y -n %VIRTUALENV%
+REM     conda create -n %VIRTUALENV% -q -y python=%PYTHON_VERSION% numpy scipy cython matplotlib wheel pillow joblib
 
-    pip install threadpoolctl
+REM     call activate %VIRTUALENV%
 
-    IF "%PYTEST_VERSION%"=="*" (
-        pip install pytest
-    ) else (
-        pip install pytest==%PYTEST_VERSION%
-    )
-) else (
-    pip install numpy scipy cython pytest wheel pillow joblib threadpoolctl
-)
+REM     pip install threadpoolctl
 
-IF "%PYTEST_XDIST%" == "true" (
-    pip install pytest-xdist
-)
+REM     IF "%PYTEST_VERSION%"=="*" (
+REM         pip install pytest
+REM     ) else (
+REM         pip install pytest==%PYTEST_VERSION%
+REM     )
+REM ) else (
+REM     pip install numpy scipy cython pytest wheel pillow joblib threadpoolctl
+REM )
 
-if "%COVERAGE%" == "true" (
-    pip install coverage codecov pytest-cov
-)
-python --version
-pip --version
+REM IF "%PYTEST_XDIST%" == "true" (
+REM     pip install pytest-xdist
+REM )
 
-@rem Install the build and runtime dependencies of the project.
-python setup.py bdist_wheel bdist_wininst -b doc\logos\scikit-learn-logo.bmp
+REM if "%COVERAGE%" == "true" (
+REM     pip install coverage codecov pytest-cov
+REM )
+REM python --version
+REM pip --version
 
-@rem Install the generated wheel package to test it
-pip install --pre --no-index --find-links dist\ scikit-learn
+REM @rem Install the build and runtime dependencies of the project.
+REM python setup.py bdist_wheel bdist_wininst -b doc\logos\scikit-learn-logo.bmp
 
-if %errorlevel% neq 0 exit /b %errorlevel%
+REM @rem Install the generated wheel package to test it
+REM pip install --pre --no-index --find-links dist\ scikit-learn
+
+REM if %errorlevel% neq 0 exit /b %errorlevel%
