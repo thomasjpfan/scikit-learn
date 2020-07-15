@@ -894,10 +894,9 @@ class CountVectorizer(_VectorizerMixin, BaseEstimator):
         out of the raw, unprocessed input.
 
         .. versionchanged:: 0.21
-
-        Since v0.21, if ``input`` is ``filename`` or ``file``, the data is
-        first read from the file and then passed to the given callable
-        analyzer.
+            Since v0.21, if ``input`` is ``filename`` or ``file``, the data is
+            first read from the file and then passed to the given callable
+            analyzer.
 
     max_df : float in range [0.0, 1.0] or int, default=1.0
         When building the vocabulary ignore terms that have a document
