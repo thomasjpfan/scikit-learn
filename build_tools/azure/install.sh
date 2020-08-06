@@ -54,7 +54,8 @@ elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
     python -m pip install $(get_dep cython $CYTHON_VERSION) \
-                          $(get_dep joblib $JOBLIB_VERSION)
+                          $(get_dep joblib $JOBLIB_VERSION) \
+                          $(get_dep pandas $PANDAS_VERSION)
 
 elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
     # Since conda main channel usually lacks behind on the latest releases,
