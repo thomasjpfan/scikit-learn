@@ -118,7 +118,7 @@ Testing
 ~~~~~~~
 
 After installation, you can launch the test suite from outside the
-source directory (you will need to have ``pytest`` >= 5.4.3 installed)::
+source directory (you will need to have ``pytest`` >= 5.3.5 installed)::
 
     pytest sklearn
 
