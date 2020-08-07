@@ -96,7 +96,7 @@ class TruncatedSVD(TransformerMixin, BaseEstimator):
     >>> print(svd.explained_variance_ratio_)
     [0.0646... 0.0633... 0.0639... 0.0535... 0.0406...]
     >>> print(svd.explained_variance_ratio_.sum())
-    0.286...
+    0.286
     >>> print(svd.singular_values_)
     [1.553... 1.512...  1.510... 1.370... 1.199...]
 

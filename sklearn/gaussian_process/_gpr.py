@@ -145,7 +145,7 @@ class GaussianProcessRegressor(MultiOutputMixin,
     >>> gpr = GaussianProcessRegressor(kernel=kernel,
     ...         random_state=0).fit(X, y)
     >>> gpr.score(X, y)
-    0.3680...
+    0.3680
     >>> gpr.predict(X[:2,:], return_std=True)
     (array([653.0..., 592.1...]), array([316.6..., 316.6...]))
 

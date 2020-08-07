@@ -32,7 +32,7 @@ Let's consider the following trained regression model::
   ...
   >>> model = Ridge(alpha=1e-2).fit(X_train, y_train)
   >>> model.score(X_val, y_val)
-  0.356...
+  0.356
 
 Its validation performance, measured via the :math:`R^2` score, is
 significantly larger than the chance level. This makes it possible to use the

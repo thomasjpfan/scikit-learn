@@ -1057,7 +1057,7 @@ shape (n_estimators, ``loss_.K``)
     >>> clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0,
     ...     max_depth=1, random_state=0).fit(X_train, y_train)
     >>> clf.score(X_test, y_test)
-    0.913...
+    0.913
     """
 
     _SUPPORTED_LOSS = ('deviance', 'exponential')
@@ -1550,7 +1550,7 @@ class GradientBoostingRegressor(RegressorMixin, BaseGradientBoosting):
     >>> reg.predict(X_test[1:2])
     array([-61...])
     >>> reg.score(X_test, y_test)
-    0.4...
+    0.4
 
     References
     ----------

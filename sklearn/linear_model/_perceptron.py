@@ -136,7 +136,7 @@ class Perceptron(BaseSGDClassifier):
     >>> clf.fit(X, y)
     Perceptron()
     >>> clf.score(X, y)
-    0.939...
+    0.939
 
     See also
     --------

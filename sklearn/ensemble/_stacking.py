@@ -386,7 +386,7 @@ class StackingClassifier(ClassifierMixin, _BaseStacking):
     ...     X, y, stratify=y, random_state=42
     ... )
     >>> clf.fit(X_train, y_train).score(X_test, y_test)
-    0.9...
+    0.9
 
     """
     @_deprecate_positional_args
@@ -634,7 +634,7 @@ class StackingRegressor(RegressorMixin, _BaseStacking):
     ...     X, y, random_state=42
     ... )
     >>> reg.fit(X_train, y_train).score(X_test, y_test)
-    0.3...
+    0.3
 
     """
     @_deprecate_positional_args

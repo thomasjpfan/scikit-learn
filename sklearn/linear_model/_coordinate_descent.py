@@ -678,7 +678,7 @@ class ElasticNet(MultiOutputMixin, RegressorMixin, LinearModel):
     >>> print(regr.coef_)
     [18.83816048 64.55968825]
     >>> print(regr.intercept_)
-    1.451...
+    1.451
     >>> print(regr.predict([[0, 0]]))
     [1.451...]
 
@@ -1001,7 +1001,7 @@ class Lasso(ElasticNet):
     >>> print(clf.coef_)
     [0.85 0.  ]
     >>> print(clf.intercept_)
-    0.15...
+    0.15
 
     See also
     --------
@@ -1484,7 +1484,7 @@ class LassoCV(RegressorMixin, LinearModelCV):
     >>> X, y = make_regression(noise=4, random_state=0)
     >>> reg = LassoCV(cv=5, random_state=0).fit(X, y)
     >>> reg.score(X, y)
-    0.9993...
+    0.9993
     >>> reg.predict(X[:1,])
     array([-78.4951...])
 
@@ -1673,9 +1673,9 @@ class ElasticNetCV(RegressorMixin, LinearModelCV):
     >>> regr.fit(X, y)
     ElasticNetCV(cv=5, random_state=0)
     >>> print(regr.alpha_)
-    0.199...
+    0.199
     >>> print(regr.intercept_)
-    0.398...
+    0.398
     >>> print(regr.predict([[0, 0]]))
     [0.398...]
 
@@ -2411,9 +2411,9 @@ class MultiTaskLassoCV(RegressorMixin, LinearModelCV):
     >>> X, y = make_regression(n_targets=2, noise=4, random_state=0)
     >>> reg = MultiTaskLassoCV(cv=5, random_state=0).fit(X, y)
     >>> r2_score(y, reg.predict(X))
-    0.9994...
+    0.9994
     >>> reg.alpha_
-    0.5713...
+    0.5713
     >>> reg.predict(X[:1,])
     array([[153.7971...,  94.9015...]])
 

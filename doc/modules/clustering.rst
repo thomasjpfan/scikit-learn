@@ -1059,21 +1059,21 @@ chance normalization**::
   >>> labels_pred = [0, 0, 1, 1, 2, 2]
 
   >>> metrics.adjusted_rand_score(labels_true, labels_pred)
-  0.24...
+  0.24
 
 One can permute 0 and 1 in the predicted labels, rename 2 to 3, and get
 the same score::
 
   >>> labels_pred = [1, 1, 0, 0, 3, 3]
   >>> metrics.adjusted_rand_score(labels_true, labels_pred)
-  0.24...
+  0.24
 
 Furthermore, :func:`adjusted_rand_score` is **symmetric**: swapping the argument
 does not change the score. It can thus be used as a **consensus
 measure**::
 
   >>> metrics.adjusted_rand_score(labels_pred, labels_true)
-  0.24...
+  0.24
 
 Perfect labeling is scored 1.0::
 
@@ -1180,21 +1180,21 @@ proposed more recently and is **normalized against chance**::
   >>> labels_pred = [0, 0, 1, 1, 2, 2]
 
   >>> metrics.adjusted_mutual_info_score(labels_true, labels_pred)  # doctest: +SKIP
-  0.22504...
+  0.22504
 
 One can permute 0 and 1 in the predicted labels, rename 2 to 3 and get
 the same score::
 
   >>> labels_pred = [1, 1, 0, 0, 3, 3]
   >>> metrics.adjusted_mutual_info_score(labels_true, labels_pred)  # doctest: +SKIP
-  0.22504...
+  0.22504
 
 All, :func:`mutual_info_score`, :func:`adjusted_mutual_info_score` and
 :func:`normalized_mutual_info_score` are symmetric: swapping the argument does
 not change the score. Thus they can be used as a **consensus measure**::
 
   >>> metrics.adjusted_mutual_info_score(labels_pred, labels_true)  # doctest: +SKIP
-  0.22504...
+  0.22504
 
 Perfect labeling is scored 1.0::
 
@@ -1208,7 +1208,7 @@ Perfect labeling is scored 1.0::
 This is not true for ``mutual_info_score``, which is therefore harder to judge::
 
   >>> metrics.mutual_info_score(labels_true, labels_pred)  # doctest: +SKIP
-  0.69...
+  0.69
 
 Bad (e.g. independent labelings) have non-positive scores::
 
@@ -1373,16 +1373,16 @@ We can turn those concept as scores :func:`homogeneity_score` and
   >>> labels_pred = [0, 0, 1, 1, 2, 2]
 
   >>> metrics.homogeneity_score(labels_true, labels_pred)
-  0.66...
+  0.66
 
   >>> metrics.completeness_score(labels_true, labels_pred)
-  0.42...
+  0.42
 
 Their harmonic mean called **V-measure** is computed by
 :func:`v_measure_score`::
 
   >>> metrics.v_measure_score(labels_true, labels_pred)
-  0.51...
+  0.51
 
 This function's formula is as follows:
 
@@ -1391,12 +1391,12 @@ This function's formula is as follows:
 `beta` defaults to a value of 1.0, but for using a value less than 1 for beta::
 
   >>> metrics.v_measure_score(labels_true, labels_pred, beta=0.6)
-  0.54...
+  0.54
 
 more weight will be attributed to homogeneity, and using a value greater than 1::
 
   >>> metrics.v_measure_score(labels_true, labels_pred, beta=1.8)
-  0.48...
+  0.48
 
 more weight will be attributed to completeness.
 
@@ -1544,7 +1544,7 @@ between two clusters.
   >>> labels_pred = [0, 0, 1, 1, 2, 2]
 
   >>> metrics.fowlkes_mallows_score(labels_true, labels_pred)
-  0.47140...
+  0.47140
 
 One can permute 0 and 1 in the predicted labels, rename 2 to 3 and get
 the same score::
@@ -1552,7 +1552,7 @@ the same score::
   >>> labels_pred = [1, 1, 0, 0, 3, 3]
 
   >>> metrics.fowlkes_mallows_score(labels_true, labels_pred)
-  0.47140...
+  0.47140
 
 Perfect labeling is scored 1.0::
 
@@ -1643,7 +1643,7 @@ cluster analysis.
   >>> kmeans_model = KMeans(n_clusters=3, random_state=1).fit(X)
   >>> labels = kmeans_model.labels_
   >>> metrics.silhouette_score(X, labels, metric='euclidean')
-  0.55...
+  0.55
 
 .. topic:: References
 
@@ -1781,7 +1781,7 @@ cluster analysis as follows:
   >>> kmeans = KMeans(n_clusters=3, random_state=1).fit(X)
   >>> labels = kmeans.labels_
   >>> davies_bouldin_score(X, labels)
-  0.6619...
+  0.6619
 
 
 Advantages

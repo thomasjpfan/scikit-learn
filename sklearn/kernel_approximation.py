@@ -304,7 +304,7 @@ class AdditiveChi2Sampler(TransformerMixin, BaseEstimator):
     >>> clf.fit(X_transformed, y)
     SGDClassifier(max_iter=5, random_state=0)
     >>> clf.score(X_transformed, y)
-    0.9499...
+    0.9499
 
     Notes
     -----
@@ -524,7 +524,7 @@ class Nystroem(TransformerMixin, BaseEstimator):
     >>> clf.fit(data_transformed, y)
     LinearSVC()
     >>> clf.score(data_transformed, y)
-    0.9987...
+    0.9987
 
     References
     ----------

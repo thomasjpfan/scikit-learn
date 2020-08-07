@@ -718,14 +718,14 @@ def jaccard_score(y_true, y_pred, *, labels=None, pos_label=1,
     In the binary case:
 
     >>> jaccard_score(y_true[0], y_pred[0])
-    0.6666...
+    0.6666
 
     In the multilabel case:
 
     >>> jaccard_score(y_true, y_pred, average='samples')
-    0.5833...
+    0.5833
     >>> jaccard_score(y_true, y_pred, average='macro')
-    0.6666...
+    0.6666
     >>> jaccard_score(y_true, y_pred, average=None)
     array([0.5, 0.5, 1. ])
 
@@ -1025,17 +1025,17 @@ def f1_score(y_true, y_pred, *, labels=None, pos_label=1, average='binary',
     >>> y_true = [0, 1, 2, 0, 1, 2]
     >>> y_pred = [0, 2, 1, 0, 0, 1]
     >>> f1_score(y_true, y_pred, average='macro')
-    0.26...
+    0.26
     >>> f1_score(y_true, y_pred, average='micro')
-    0.33...
+    0.33
     >>> f1_score(y_true, y_pred, average='weighted')
-    0.26...
+    0.26
     >>> f1_score(y_true, y_pred, average=None)
     array([0.8, 0. , 0. ])
     >>> y_true = [0, 0, 0, 0, 0, 0]
     >>> y_pred = [0, 0, 0, 0, 0, 0]
     >>> f1_score(y_true, y_pred, zero_division=1)
-    1.0...
+    1.0
 
     Notes
     -----
@@ -1153,11 +1153,11 @@ def fbeta_score(y_true, y_pred, *, beta, labels=None, pos_label=1,
     >>> y_true = [0, 1, 2, 0, 1, 2]
     >>> y_pred = [0, 2, 1, 0, 0, 1]
     >>> fbeta_score(y_true, y_pred, average='macro', beta=0.5)
-    0.23...
+    0.23
     >>> fbeta_score(y_true, y_pred, average='micro', beta=0.5)
-    0.33...
+    0.33
     >>> fbeta_score(y_true, y_pred, average='weighted', beta=0.5)
-    0.23...
+    0.23
     >>> fbeta_score(y_true, y_pred, average=None, beta=0.5)
     array([0.71..., 0.        , 0.        ])
 
@@ -1606,11 +1606,11 @@ def precision_score(y_true, y_pred, *, labels=None, pos_label=1,
     >>> y_true = [0, 1, 2, 0, 1, 2]
     >>> y_pred = [0, 2, 1, 0, 0, 1]
     >>> precision_score(y_true, y_pred, average='macro')
-    0.22...
+    0.22
     >>> precision_score(y_true, y_pred, average='micro')
-    0.33...
+    0.33
     >>> precision_score(y_true, y_pred, average='weighted')
-    0.22...
+    0.22
     >>> precision_score(y_true, y_pred, average=None)
     array([0.66..., 0.        , 0.        ])
     >>> y_pred = [0, 0, 0, 0, 0, 0]
@@ -1725,11 +1725,11 @@ def recall_score(y_true, y_pred, *, labels=None, pos_label=1, average='binary',
     >>> y_true = [0, 1, 2, 0, 1, 2]
     >>> y_pred = [0, 2, 1, 0, 0, 1]
     >>> recall_score(y_true, y_pred, average='macro')
-    0.33...
+    0.33
     >>> recall_score(y_true, y_pred, average='micro')
-    0.33...
+    0.33
     >>> recall_score(y_true, y_pred, average='weighted')
-    0.33...
+    0.33
     >>> recall_score(y_true, y_pred, average=None)
     array([1., 0., 0.])
     >>> y_true = [0, 0, 0, 0, 0, 0]
@@ -2187,7 +2187,7 @@ def log_loss(y_true, y_pred, *, eps=1e-15, normalize=True, sample_weight=None,
     >>> from sklearn.metrics import log_loss
     >>> log_loss(["spam", "ham", "ham", "spam"],
     ...          [[.1, .9], [.9, .1], [.8, .2], [.35, .65]])
-    0.21616...
+    0.21616
 
     References
     ----------
@@ -2322,7 +2322,7 @@ def hinge_loss(y_true, pred_decision, *, labels=None, sample_weight=None):
     >>> pred_decision
     array([-2.18...,  2.36...,  0.09...])
     >>> hinge_loss([-1, 1, 1], pred_decision)
-    0.30...
+    0.30
 
     In the multiclass case:
 
@@ -2336,7 +2336,7 @@ def hinge_loss(y_true, pred_decision, *, labels=None, sample_weight=None):
     >>> pred_decision = est.decision_function([[-1], [2], [3]])
     >>> y_true = [0, 2, 3]
     >>> hinge_loss(y_true, pred_decision, labels=labels)
-    0.56...
+    0.56
     """
     check_consistent_length(y_true, pred_decision, sample_weight)
     pred_decision = check_array(pred_decision, ensure_2d=False)
@@ -2431,11 +2431,11 @@ def brier_score_loss(y_true, y_prob, *, sample_weight=None, pos_label=None):
     >>> y_true_categorical = np.array(["spam", "ham", "ham", "spam"])
     >>> y_prob = np.array([0.1, 0.9, 0.8, 0.3])
     >>> brier_score_loss(y_true, y_prob)
-    0.037...
+    0.037
     >>> brier_score_loss(y_true, 1-y_prob, pos_label=0)
-    0.037...
+    0.037
     >>> brier_score_loss(y_true_categorical, y_prob, pos_label="ham")
-    0.037...
+    0.037
     >>> brier_score_loss(y_true, np.array(y_prob) > 0.5)
     0.0
 

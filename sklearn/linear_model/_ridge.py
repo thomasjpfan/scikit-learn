@@ -886,7 +886,7 @@ class RidgeClassifier(LinearClassifierMixin, _BaseRidge):
     >>> X, y = load_breast_cancer(return_X_y=True)
     >>> clf = RidgeClassifier().fit(X, y)
     >>> clf.score(X, y)
-    0.9595...
+    0.9595
     """
     @_deprecate_positional_args
     def __init__(self, alpha=1.0, *, fit_intercept=True, normalize=False,
@@ -1783,7 +1783,7 @@ class RidgeCV(MultiOutputMixin, RegressorMixin, _BaseRidgeCV):
     >>> X, y = load_diabetes(return_X_y=True)
     >>> clf = RidgeCV(alphas=[1e-3, 1e-2, 1e-1, 1]).fit(X, y)
     >>> clf.score(X, y)
-    0.5166...
+    0.5166
 
     See also
     --------
@@ -1893,7 +1893,7 @@ class RidgeClassifierCV(LinearClassifierMixin, _BaseRidgeCV):
     >>> X, y = load_breast_cancer(return_X_y=True)
     >>> clf = RidgeClassifierCV(alphas=[1e-3, 1e-2, 1e-1, 1]).fit(X, y)
     >>> clf.score(X, y)
-    0.9630...
+    0.9630
 
     See also
     --------

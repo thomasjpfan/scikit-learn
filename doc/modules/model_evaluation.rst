@@ -198,7 +198,7 @@ Here is an example of building custom scorers, and of using the
     >>> clf = DummyClassifier(strategy='most_frequent', random_state=0)
     >>> clf = clf.fit(X, y)
     >>> my_custom_loss_func(clf.predict(X), y)
-    0.69...
+    0.69
     >>> score(clf, X, y)
     -0.69...
 
@@ -843,13 +843,13 @@ Here are some small examples in binary classification::
   >>> metrics.recall_score(y_true, y_pred)
   0.5
   >>> metrics.f1_score(y_true, y_pred)
-  0.66...
+  0.66
   >>> metrics.fbeta_score(y_true, y_pred, beta=0.5)
-  0.83...
+  0.83
   >>> metrics.fbeta_score(y_true, y_pred, beta=1)
-  0.66...
+  0.66
   >>> metrics.fbeta_score(y_true, y_pred, beta=2)
-  0.55...
+  0.55
   >>> metrics.precision_recall_fscore_support(y_true, y_pred, beta=0.5)
   (array([0.66..., 1.        ]), array([1. , 0.5]), array([0.71..., 0.83...]), array([2, 2]))
 
@@ -867,7 +867,7 @@ Here are some small examples in binary classification::
   >>> threshold
   array([0.35, 0.4 , 0.8 ])
   >>> average_precision_score(y_true, y_scores)
-  0.83...
+  0.83
 
 
 
@@ -923,13 +923,13 @@ Then the metrics are defined as:
   >>> y_true = [0, 1, 2, 0, 1, 2]
   >>> y_pred = [0, 2, 1, 0, 0, 1]
   >>> metrics.precision_score(y_true, y_pred, average='macro')
-  0.22...
+  0.22
   >>> metrics.recall_score(y_true, y_pred, average='micro')
-  0.33...
+  0.33
   >>> metrics.f1_score(y_true, y_pred, average='weighted')
-  0.26...
+  0.26
   >>> metrics.fbeta_score(y_true, y_pred, average='macro', beta=0.5)
-  0.23...
+  0.23
   >>> metrics.precision_recall_fscore_support(y_true, y_pred, beta=0.5, average=None)
   (array([0.66..., 0.        , 0.        ]), array([1., 0., 0.]), array([0.71..., 0.        , 0.        ]), array([2, 2, 2]...))
 
@@ -942,7 +942,7 @@ For multiclass classification with a "negative class", it is possible to exclude
 Similarly, labels not present in the data sample may be accounted for in macro-averaging.
 
   >>> metrics.precision_score(y_true, y_pred, labels=[0, 1, 2, 3], average='macro')
-  0.166...
+  0.166
 
 .. _jaccard_similarity_score:
 
@@ -975,14 +975,14 @@ In the binary case: ::
   >>> y_pred = np.array([[1, 1, 1],
   ...                    [1, 0, 0]])
   >>> jaccard_score(y_true[0], y_pred[0])
-  0.6666...
+  0.6666
 
 In the multilabel case with binary label indicators: ::
 
   >>> jaccard_score(y_true, y_pred, average='samples')
-  0.5833...
+  0.5833
   >>> jaccard_score(y_true, y_pred, average='macro')
-  0.6666...
+  0.6666
   >>> jaccard_score(y_true, y_pred, average=None)
   array([0.5, 0.5, 1. ])
 
@@ -994,9 +994,9 @@ multilabel problem: ::
   >>> jaccard_score(y_true, y_pred, average=None)
   array([1. , 0. , 0.33...])
   >>> jaccard_score(y_true, y_pred, average='macro')
-  0.44...
+  0.44
   >>> jaccard_score(y_true, y_pred, average='micro')
-  0.33...
+  0.33
 
 .. _hinge_loss:
 
@@ -1045,7 +1045,7 @@ with a svm classifier in a binary class problem::
   >>> pred_decision
   array([-2.18...,  2.36...,  0.09...])
   >>> hinge_loss([-1, 1, 1], pred_decision)
-  0.3...
+  0.3
 
 Here is an example demonstrating the use of the :func:`hinge_loss` function
 with a svm classifier in a multiclass problem::
@@ -1059,7 +1059,7 @@ with a svm classifier in a multiclass problem::
   >>> pred_decision = est.decision_function([[-1], [2], [3]])
   >>> y_true = [0, 2, 3]
   >>> hinge_loss(y_true, pred_decision, labels)
-  0.56...
+  0.56
 
 .. _log_loss:
 
@@ -1109,7 +1109,7 @@ method.
     >>> y_true = [0, 0, 1, 1]
     >>> y_pred = [[.9, .1], [.8, .2], [.3, .7], [.01, .99]]
     >>> log_loss(y_true, y_pred)
-    0.1738...
+    0.1738
 
 The first ``[.9, .1]`` in ``y_pred`` denotes 90% probability that the first
 sample has label 0.  The log loss is non-negative.
@@ -1645,7 +1645,7 @@ Here is a small example of usage of this function::
     >>> y_true = np.array([[1, 0, 0], [0, 0, 1]])
     >>> y_score = np.array([[0.75, 0.5, 1], [1, 0.2, 0.1]])
     >>> label_ranking_average_precision_score(y_true, y_score)
-    0.416...
+    0.416
 
 .. _label_ranking_loss:
 
@@ -1680,7 +1680,7 @@ Here is a small example of usage of this function::
     >>> y_true = np.array([[1, 0, 0], [0, 0, 1]])
     >>> y_score = np.array([[0.75, 0.5, 1], [1, 0.2, 0.1]])
     >>> label_ranking_loss(y_true, y_score)
-    0.75...
+    0.75
     >>> # With the following prediction, we have perfect and minimal loss
     >>> y_score = np.array([[1.0, 0.1, 0.2], [0.1, 0.2, 0.9]])
     >>> label_ranking_loss(y_true, y_score)
@@ -1814,13 +1814,13 @@ function::
     >>> y_true = [3, -0.5, 2, 7]
     >>> y_pred = [2.5, 0.0, 2, 8]
     >>> explained_variance_score(y_true, y_pred)
-    0.957...
+    0.957
     >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
     >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
     >>> explained_variance_score(y_true, y_pred, multioutput='raw_values')
     array([0.967..., 1.        ])
     >>> explained_variance_score(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.990...
+    0.990
 
 .. _max_error:
 
@@ -1886,7 +1886,7 @@ Here is a small example of usage of the :func:`mean_absolute_error` function::
   >>> mean_absolute_error(y_true, y_pred, multioutput='raw_values')
   array([0.5, 1. ])
   >>> mean_absolute_error(y_true, y_pred, multioutput=[0.3, 0.7])
-  0.85...
+  0.85
 
 .. _mean_squared_error:
 
@@ -1917,7 +1917,7 @@ function::
   >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
   >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
   >>> mean_squared_error(y_true, y_pred)
-  0.7083...
+  0.7083
 
 .. topic:: Examples:
 
@@ -1956,11 +1956,11 @@ function::
   >>> y_true = [3, 5, 2.5, 7]
   >>> y_pred = [2.5, 5, 4, 8]
   >>> mean_squared_log_error(y_true, y_pred)
-  0.039...
+  0.039
   >>> y_true = [[0.5, 1], [1, 2], [7, 6]]
   >>> y_pred = [[0.5, 2], [1, 2.5], [8, 8]]
   >>> mean_squared_log_error(y_true, y_pred)
-  0.044...
+  0.044
 
 .. _mean_absolute_percentage_error:
 
@@ -1991,7 +1991,7 @@ function::
   >>> y_true = [1, 10, 1e6]
   >>> y_pred = [0.9, 15, 1.2e6]
   >>> mean_absolute_percentage_error(y_true, y_pred)
-  0.2666...
+  0.2666
 
 In above example, if we had used `mean_absolute_error`, it would have ignored
 the small magnitude values and only reflected the error in prediction of highest
@@ -2065,19 +2065,19 @@ Here is a small example of usage of the :func:`r2_score` function::
   >>> y_true = [3, -0.5, 2, 7]
   >>> y_pred = [2.5, 0.0, 2, 8]
   >>> r2_score(y_true, y_pred)
-  0.948...
+  0.948
   >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
   >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
   >>> r2_score(y_true, y_pred, multioutput='variance_weighted')
-  0.938...
+  0.938
   >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
   >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
   >>> r2_score(y_true, y_pred, multioutput='uniform_average')
-  0.936...
+  0.936
   >>> r2_score(y_true, y_pred, multioutput='raw_values')
   array([0.965..., 0.908...])
   >>> r2_score(y_true, y_pred, multioutput=[0.3, 0.7])
-  0.925...
+  0.925
 
 
 .. topic:: Example:
@@ -2144,16 +2144,16 @@ prediction difference of the second point,::
 If we increase ``power`` to 1,::
 
     >>> mean_tweedie_deviance([1.0], [1.5], power=1)
-    0.18...
+    0.18
     >>> mean_tweedie_deviance([100.], [150.], power=1)
     18.9...
 
 the difference in errors decreases. Finally, by setting, ``power=2``::
 
     >>> mean_tweedie_deviance([1.0], [1.5], power=2)
-    0.14...
+    0.14
     >>> mean_tweedie_deviance([100.], [150.], power=2)
-    0.14...
+    0.14
 
 we would get identical errors. The deviance when ``power=2`` is thus only
 sensitive to relative errors.
@@ -2211,19 +2211,19 @@ Next, let's compare the accuracy of ``SVC`` and ``most_frequent``::
   >>> from sklearn.svm import SVC
   >>> clf = SVC(kernel='linear', C=1).fit(X_train, y_train)
   >>> clf.score(X_test, y_test)
-  0.63...
+  0.63
   >>> clf = DummyClassifier(strategy='most_frequent', random_state=0)
   >>> clf.fit(X_train, y_train)
   DummyClassifier(random_state=0, strategy='most_frequent')
   >>> clf.score(X_test, y_test)
-  0.57...
+  0.57
 
 We see that ``SVC`` doesn't do much better than a dummy classifier. Now, let's
 change the kernel::
 
   >>> clf = SVC(kernel='rbf', C=1).fit(X_train, y_train)
   >>> clf.score(X_test, y_test)
-  0.94...
+  0.94
 
 We see that the accuracy was boosted to almost 100%.  A cross validation
 strategy is recommended for a better estimate of the accuracy, if it

@@ -919,7 +919,7 @@ class HistGradientBoostingRegressor(RegressorMixin, BaseHistGradientBoosting):
     >>> X, y = load_diabetes(return_X_y=True)
     >>> est = HistGradientBoostingRegressor().fit(X, y)
     >>> est.score(X, y)
-    0.92...
+    0.92
     """
 
     _VALID_LOSSES = ('least_squares', 'least_absolute_deviation',

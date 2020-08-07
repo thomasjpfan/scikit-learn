@@ -680,7 +680,7 @@ classes:
     >>> nca_pipe.fit(X_train, y_train)
     Pipeline(...)
     >>> print(nca_pipe.score(X_test, y_test))
-    0.96190476...
+    0.96190476
 
 .. |nca_classification_1| image:: ../auto_examples/neighbors/images/sphx_glr_plot_nca_classification_001.png
    :target: ../auto_examples/neighbors/plot_nca_classification.html

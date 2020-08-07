@@ -345,7 +345,7 @@ Evaluating the predictive accuracy of the model is equally easy::
   >>> docs_test = twenty_test.data
   >>> predicted = text_clf.predict(docs_test)
   >>> np.mean(predicted == twenty_test.target)
-  0.8348...
+  0.8348
 
 We achieved 83.5% accuracy. Let's see if we can do better with a
 linear :ref:`support vector machine (SVM) <svm>`,
@@ -367,7 +367,7 @@ classifier object into our pipeline::
   Pipeline(...)
   >>> predicted = text_clf.predict(docs_test)
   >>> np.mean(predicted == twenty_test.target)
-  0.9101...
+  0.9101
 
 We achieved 91.3% accuracy using the SVM. ``scikit-learn`` provides further
 utilities for more detailed performance analysis of the results::
@@ -463,7 +463,7 @@ The object's ``best_score_`` and ``best_params_`` attributes store the best
 mean score and the parameters setting corresponding to that score::
 
   >>> gs_clf.best_score_
-  0.9...
+  0.9
   >>> for param_name in sorted(parameters.keys()):
   ...     print("%s: %r" % (param_name, gs_clf.best_params_[param_name]))
   ...

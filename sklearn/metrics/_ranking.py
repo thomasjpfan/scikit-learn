@@ -185,7 +185,7 @@ def average_precision_score(y_true, y_score, *, average="macro", pos_label=1,
     >>> y_true = np.array([0, 0, 1, 1])
     >>> y_scores = np.array([0.1, 0.4, 0.35, 0.8])
     >>> average_precision_score(y_true, y_scores)
-    0.83...
+    0.83
 
     Notes
     -----
@@ -869,7 +869,7 @@ def label_ranking_average_precision_score(y_true, y_score, *,
     >>> y_true = np.array([[1, 0, 0], [0, 0, 1]])
     >>> y_score = np.array([[0.75, 0.5, 1], [1, 0.2, 0.1]])
     >>> label_ranking_average_precision_score(y_true, y_score)
-    0.416...
+    0.416
 
     """
     check_consistent_length(y_true, y_score, sample_weight)
@@ -1260,10 +1260,10 @@ def dcg_score(y_true, y_score, *, k=None,
     >>> # we predict scores for the answers
     >>> scores = np.asarray([[.1, .2, .3, 4, 70]])
     >>> dcg_score(true_relevance, scores)
-    9.49...
+    9.49
     >>> # we can set k to truncate the sum; only top k answers contribute
     >>> dcg_score(true_relevance, scores, k=2)
-    5.63...
+    5.63
     >>> # now we have some ties in our prediction
     >>> scores = np.asarray([[1, 0, 0, 0, 1]])
     >>> # by default ties are averaged, so here we get the average true
@@ -1410,13 +1410,13 @@ def ndcg_score(y_true, y_score, *, k=None, sample_weight=None,
     >>> # we predict some scores (relevance) for the answers
     >>> scores = np.asarray([[.1, .2, .3, 4, 70]])
     >>> ndcg_score(true_relevance, scores)
-    0.69...
+    0.69
     >>> scores = np.asarray([[.05, 1.1, 1., .5, .0]])
     >>> ndcg_score(true_relevance, scores)
-    0.49...
+    0.49
     >>> # we can set k to truncate the sum; only top k answers contribute.
     >>> ndcg_score(true_relevance, scores, k=4)
-    0.35...
+    0.35
     >>> # the normalization takes k into account so a perfect answer
     >>> # would still get 1.0
     >>> ndcg_score(true_relevance, true_relevance, k=4)

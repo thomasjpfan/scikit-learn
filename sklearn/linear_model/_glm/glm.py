@@ -440,11 +440,11 @@ class PoissonRegressor(GeneralizedLinearRegressor):
     >>> clf.fit(X, y)
     PoissonRegressor()
     >>> clf.score(X, y)
-    0.990...
+    0.990
     >>> clf.coef_
     array([0.121..., 0.158...])
     >>> clf.intercept_
-    2.088...
+    2.088
     >>> clf.predict([[1, 1], [3, 4]])
     array([10.676..., 21.875...])
     """
@@ -520,11 +520,11 @@ class GammaRegressor(GeneralizedLinearRegressor):
     >>> clf.fit(X, y)
     GammaRegressor()
     >>> clf.score(X, y)
-    0.773...
+    0.773
     >>> clf.coef_
     array([0.072..., 0.066...])
     >>> clf.intercept_
-    2.896...
+    2.896
     >>> clf.predict([[1, 0], [2, 8]])
     array([19.483..., 35.795...])
     """
@@ -631,11 +631,11 @@ class TweedieRegressor(GeneralizedLinearRegressor):
     >>> clf.fit(X, y)
     TweedieRegressor()
     >>> clf.score(X, y)
-    0.839...
+    0.839
     >>> clf.coef_
     array([0.599..., 0.299...])
     >>> clf.intercept_
-    1.600...
+    1.600
     >>> clf.predict([[1, 1], [3, 4]])
     array([2.500..., 4.599...])
     """

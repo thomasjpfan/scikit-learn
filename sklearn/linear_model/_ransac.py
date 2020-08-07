@@ -194,7 +194,7 @@ class RANSACRegressor(MetaEstimatorMixin, RegressorMixin,
     ...     n_samples=200, n_features=2, noise=4.0, random_state=0)
     >>> reg = RANSACRegressor(random_state=0).fit(X, y)
     >>> reg.score(X, y)
-    0.9885...
+    0.9885
     >>> reg.predict(X[:1,])
     array([-31.9417...])
 

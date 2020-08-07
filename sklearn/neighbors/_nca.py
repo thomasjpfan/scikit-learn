@@ -144,11 +144,11 @@ class NeighborhoodComponentsAnalysis(TransformerMixin, BaseEstimator):
     >>> knn.fit(X_train, y_train)
     KNeighborsClassifier(...)
     >>> print(knn.score(X_test, y_test))
-    0.933333...
+    0.933333
     >>> knn.fit(nca.transform(X_train), y_train)
     KNeighborsClassifier(...)
     >>> print(knn.score(nca.transform(X_test), y_test))
-    0.961904...
+    0.961904
 
     References
     ----------

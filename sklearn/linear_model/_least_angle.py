@@ -1363,9 +1363,9 @@ class LarsCV(Lars):
     >>> X, y = make_regression(n_samples=200, noise=4.0, random_state=0)
     >>> reg = LarsCV(cv=5).fit(X, y)
     >>> reg.score(X, y)
-    0.9996...
+    0.9996
     >>> reg.alpha_
-    0.0254...
+    0.0254
     >>> reg.predict(X[:1,])
     array([154.0842...])
 
@@ -1596,9 +1596,9 @@ class LassoLarsCV(LarsCV):
     >>> X, y = make_regression(noise=4.0, random_state=0)
     >>> reg = LassoLarsCV(cv=5).fit(X, y)
     >>> reg.score(X, y)
-    0.9992...
+    0.9992
     >>> reg.alpha_
-    0.0484...
+    0.0484
     >>> reg.predict(X[:1,])
     array([-77.8723...])
 

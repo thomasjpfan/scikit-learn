@@ -176,13 +176,13 @@ in bias::
     ...     random_state=0)
     >>> scores = cross_val_score(clf, X, y, cv=5)
     >>> scores.mean()
-    0.98...
+    0.98
 
     >>> clf = RandomForestClassifier(n_estimators=10, max_depth=None,
     ...     min_samples_split=2, random_state=0)
     >>> scores = cross_val_score(clf, X, y, cv=5)
     >>> scores.mean()
-    0.999...
+    0.999
 
     >>> clf = ExtraTreesClassifier(n_estimators=10, max_depth=None,
     ...     min_samples_split=2, random_state=0)
@@ -408,7 +408,7 @@ learners::
     >>> clf = AdaBoostClassifier(n_estimators=100)
     >>> scores = cross_val_score(clf, X, y, cv=5)
     >>> scores.mean()
-    0.9...
+    0.9
 
 The number of weak learners is controlled by the parameter ``n_estimators``. The
 ``learning_rate`` parameter controls the contribution of the weak learners in
@@ -511,7 +511,7 @@ with 100 decision stumps as weak learners::
     >>> clf = GradientBoostingClassifier(n_estimators=100, learning_rate=1.0,
     ...     max_depth=1, random_state=0).fit(X_train, y_train)
     >>> clf.score(X_test, y_test)
-    0.913...
+    0.913
 
 The number of weak learners (i.e. regression trees) is controlled by the
 parameter ``n_estimators``; :ref:`The size of each tree
@@ -552,7 +552,7 @@ for regression which can be specified via the argument
     >>> est = GradientBoostingRegressor(n_estimators=100, learning_rate=0.1,
     ...     max_depth=1, random_state=0, loss='ls').fit(X_train, y_train)
     >>> mean_squared_error(y_test, est.predict(X_test))
-    5.00...
+    5.00
 
 The figure below shows the results of applying :class:`GradientBoostingRegressor`
 with least squares loss and 500 base learners to the diabetes dataset
@@ -589,7 +589,7 @@ fitted model.
   >>> _ = est.set_params(n_estimators=200, warm_start=True)  # set warm_start and new nr of trees
   >>> _ = est.fit(X_train, y_train) # fit additional 100 trees to est
   >>> mean_squared_error(y_test, est.predict(X_test))
-  3.84...
+  3.84
 
 .. _gradient_boosting_tree_size:
 
@@ -1041,7 +1041,7 @@ zero sample weights:
     >>> gb.predict([[1, 0]])
     array([1])
     >>> gb.predict_proba([[1, 0]])[0, 1]
-    0.99...
+    0.99
 
 As you can see, the `[1, 0]` is comfortably classified as `1` since the first
 two samples are ignored due to their sample weights.

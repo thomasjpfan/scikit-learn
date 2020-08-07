@@ -101,7 +101,7 @@ class SparsePCA(TransformerMixin, BaseEstimator):
     (200, 5)
     >>> # most values in the components_ are zero (sparsity)
     >>> np.mean(transformer.components_ == 0)
-    0.9666...
+    0.9666
 
     See also
     --------

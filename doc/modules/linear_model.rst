@@ -126,7 +126,7 @@ its ``coef_`` member::
     >>> reg.coef_
     array([0.34545455, 0.34545455])
     >>> reg.intercept_
-    0.13636...
+    0.13636
 
 
 Classification

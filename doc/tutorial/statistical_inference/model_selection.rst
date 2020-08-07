@@ -218,13 +218,13 @@ estimator during the construction and exposes an estimator API::
     >>> clf.fit(X_digits[:1000], y_digits[:1000])        # doctest: +SKIP
     GridSearchCV(cv=None,...
     >>> clf.best_score_                                  # doctest: +SKIP
-    0.925...
+    0.925
     >>> clf.best_estimator_.C                            # doctest: +SKIP
-    0.0077...
+    0.0077
 
     >>> # Prediction performance on test set is not as good as on train set
     >>> clf.score(X_digits[1000:], y_digits[1000:])      # doctest: +SKIP
-    0.943...
+    0.943
 
 
 By default, the :class:`GridSearchCV` uses a 5-fold cross-validation. However,
@@ -266,7 +266,7 @@ parameter automatically by cross-validation::
     LassoCV()
     >>> # The estimator chose automatically its lambda:
     >>> lasso.alpha_
-    0.00375...
+    0.00375
 
 These estimators are called similarly to their counterparts, with 'CV'
 appended to their name.

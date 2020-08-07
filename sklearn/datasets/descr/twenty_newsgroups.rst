@@ -145,7 +145,7 @@ which is fast to train and achieves a decent F-score::
 
   >>> pred = clf.predict(vectors_test)
   >>> metrics.f1_score(newsgroups_test.target, pred, average='macro')
-  0.88213...
+  0.88213
 
 (The example :ref:`sphx_glr_auto_examples_text_plot_document_classification_20newsgroups.py` shuffles
 the training and test data, instead of segmenting by time, and in that case
@@ -196,7 +196,7 @@ blocks, and quotation blocks respectively.
   >>> vectors_test = vectorizer.transform(newsgroups_test.data)
   >>> pred = clf.predict(vectors_test)
   >>> metrics.f1_score(pred, newsgroups_test.target, average='macro')
-  0.77310...
+  0.77310
 
 This classifier lost over a lot of its F-score, just because we removed
 metadata that has little to do with topic classification.
@@ -213,7 +213,7 @@ It loses even more if we also strip this metadata from the training data:
   >>> vectors_test = vectorizer.transform(newsgroups_test.data)
   >>> pred = clf.predict(vectors_test)
   >>> metrics.f1_score(newsgroups_test.target, pred, average='macro')
-  0.76995...
+  0.76995
 
 Some other classifiers cope better with this harder version of the task. Try
 running :ref:`sphx_glr_auto_examples_model_selection_grid_search_text_feature_extraction.py` with and without

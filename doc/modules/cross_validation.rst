@@ -55,7 +55,7 @@ data for testing (evaluating) our classifier::
 
   >>> clf = svm.SVC(kernel='linear', C=1).fit(X_train, y_train)
   >>> clf.score(X_test, y_test)
-  0.96...
+  0.96
 
 When evaluating different settings ("hyperparameters") for estimators,
 such as the ``C`` setting that must be manually set for an SVM,
@@ -184,7 +184,7 @@ indices, for example::
       >>> clf = svm.SVC(C=1).fit(X_train_transformed, y_train)
       >>> X_test_transformed = scaler.transform(X_test)
       >>> clf.score(X_test_transformed, y_test)
-      0.9333...
+      0.9333
 
     A :class:`Pipeline <sklearn.pipeline.Pipeline>` makes it easier to compose
     estimators, providing this behavior under cross-validation::

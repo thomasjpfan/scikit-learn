@@ -588,7 +588,7 @@ class GaussianProcessClassifier(ClassifierMixin, BaseEstimator):
     >>> gpc = GaussianProcessClassifier(kernel=kernel,
     ...         random_state=0).fit(X, y)
     >>> gpc.score(X, y)
-    0.9866...
+    0.9866
     >>> gpc.predict_proba(X[:2,:])
     array([[0.83548752, 0.03228706, 0.13222543],
            [0.79064206, 0.06525643, 0.14410151]])

@@ -115,7 +115,7 @@ the test data::
                   ('logisticregression', LogisticRegression())])
   >>> # we can now use it like any other estimator
   >>> accuracy_score(pipe.predict(X_test), y_test)
-  0.97...
+  0.97
 
 Model evaluation
 ----------------
@@ -194,7 +194,7 @@ the best set of parameters. Read more in the :ref:`User Guide
   >>> # the search object now acts like a normal random forest estimator
   >>> # with max_depth=9 and n_estimators=4
   >>> search.score(X_test, y_test)
-  0.73...
+  0.73
 
 .. note::
 

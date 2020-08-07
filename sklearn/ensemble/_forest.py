@@ -2030,7 +2030,7 @@ class ExtraTreesRegressor(ForestRegressor):
     >>> reg = ExtraTreesRegressor(n_estimators=100, random_state=0).fit(
     ...    X_train, y_train)
     >>> reg.score(X_test, y_test)
-    0.2708...
+    0.2708
     """
     @_deprecate_positional_args
     def __init__(self,

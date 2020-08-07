@@ -397,7 +397,7 @@ class AdaBoostClassifier(ClassifierMixin, BaseWeightBoosting):
     >>> clf.predict([[0, 0, 0, 0]])
     array([1])
     >>> clf.score(X, y)
-    0.983...
+    0.983
     """
     @_deprecate_positional_args
     def __init__(self,
@@ -948,7 +948,7 @@ class AdaBoostRegressor(RegressorMixin, BaseWeightBoosting):
     >>> regr.predict([[0, 0, 0, 0]])
     array([4.7972...])
     >>> regr.score(X, y)
-    0.9771...
+    0.9771
 
     See also
     --------

@@ -915,7 +915,7 @@ class MLPClassifier(ClassifierMixin, BaseMultilayerPerceptron):
     >>> clf.predict(X_test[:5, :])
     array([1, 0, 1, 0, 1])
     >>> clf.score(X_test, y_test)
-    0.8...
+    0.8
 
     Notes
     -----
@@ -1338,7 +1338,7 @@ class MLPRegressor(RegressorMixin, BaseMultilayerPerceptron):
     >>> regr.predict(X_test[:2])
     array([-0.9..., -7.1...])
     >>> regr.score(X_test, y_test)
-    0.4...
+    0.4
 
     Notes
     -----

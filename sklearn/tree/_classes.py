@@ -1160,7 +1160,7 @@ class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
     ...                    # doctest: +SKIP
     ...
     array([-0.39..., -0.46...,  0.02...,  0.06..., -0.50...,
-           0.16...,  0.11..., -0.73..., -0.30..., -0.00...])
+           0.16,  0.11..., -0.73..., -0.30..., -0.00...])
     """
     @_deprecate_positional_args
     def __init__(self, *,
@@ -1472,7 +1472,7 @@ class ExtraTreeClassifier(DecisionTreeClassifier):
     >>> cls = BaggingClassifier(extra_tree, random_state=0).fit(
     ...    X_train, y_train)
     >>> cls.score(X_test, y_test)
-    0.8947...
+    0.8947
     """
     @_deprecate_positional_args
     def __init__(self, *,
@@ -1690,7 +1690,7 @@ class ExtraTreeRegressor(DecisionTreeRegressor):
     >>> reg = BaggingRegressor(extra_tree, random_state=0).fit(
     ...     X_train, y_train)
     >>> reg.score(X_test, y_test)
-    0.33...
+    0.33
     """
     @_deprecate_positional_args
     def __init__(self, *,

@@ -177,7 +177,7 @@ def mean_absolute_error(y_true, y_pred, *,
     >>> mean_absolute_error(y_true, y_pred, multioutput='raw_values')
     array([0.5, 1. ])
     >>> mean_absolute_error(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.85...
+    0.85
     """
     y_type, y_true, y_pred, multioutput = _check_reg_targets(
         y_true, y_pred, multioutput)
@@ -244,13 +244,13 @@ def mean_absolute_percentage_error(y_true, y_pred,
     >>> y_true = [3, -0.5, 2, 7]
     >>> y_pred = [2.5, 0.0, 2, 8]
     >>> mean_absolute_percentage_error(y_true, y_pred)
-    0.3273...
+    0.3273
     >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
     >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
     >>> mean_absolute_percentage_error(y_true, y_pred)
-    0.5515...
+    0.5515
     >>> mean_absolute_percentage_error(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.6198...
+    0.6198
     """
     y_type, y_true, y_pred, multioutput = _check_reg_targets(
         y_true, y_pred, multioutput)
@@ -318,17 +318,17 @@ def mean_squared_error(y_true, y_pred, *,
     >>> y_true = [3, -0.5, 2, 7]
     >>> y_pred = [2.5, 0.0, 2, 8]
     >>> mean_squared_error(y_true, y_pred, squared=False)
-    0.612...
+    0.612
     >>> y_true = [[0.5, 1],[-1, 1],[7, -6]]
     >>> y_pred = [[0, 2],[-1, 2],[8, -5]]
     >>> mean_squared_error(y_true, y_pred)
-    0.708...
+    0.708
     >>> mean_squared_error(y_true, y_pred, squared=False)
-    0.822...
+    0.822
     >>> mean_squared_error(y_true, y_pred, multioutput='raw_values')
     array([0.41666667, 1.        ])
     >>> mean_squared_error(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.825...
+    0.825
 
     """
     y_type, y_true, y_pred, multioutput = _check_reg_targets(
@@ -394,15 +394,15 @@ def mean_squared_log_error(y_true, y_pred, *,
     >>> y_true = [3, 5, 2.5, 7]
     >>> y_pred = [2.5, 5, 4, 8]
     >>> mean_squared_log_error(y_true, y_pred)
-    0.039...
+    0.039
     >>> y_true = [[0.5, 1], [1, 2], [7, 6]]
     >>> y_pred = [[0.5, 2], [1, 2.5], [8, 8]]
     >>> mean_squared_log_error(y_true, y_pred)
-    0.044...
+    0.044
     >>> mean_squared_log_error(y_true, y_pred, multioutput='raw_values')
     array([0.00462428, 0.08377444])
     >>> mean_squared_log_error(y_true, y_pred, multioutput=[0.3, 0.7])
-    0.060...
+    0.060
 
     """
     y_type, y_true, y_pred, multioutput = _check_reg_targets(
@@ -544,11 +544,11 @@ def explained_variance_score(y_true, y_pred, *,
     >>> y_true = [3, -0.5, 2, 7]
     >>> y_pred = [2.5, 0.0, 2, 8]
     >>> explained_variance_score(y_true, y_pred)
-    0.957...
+    0.957
     >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
     >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
     >>> explained_variance_score(y_true, y_pred, multioutput='uniform_average')
-    0.983...
+    0.983
 
     """
     y_type, y_true, y_pred, multioutput = _check_reg_targets(
@@ -656,12 +656,12 @@ def r2_score(y_true, y_pred, *, sample_weight=None,
     >>> y_true = [3, -0.5, 2, 7]
     >>> y_pred = [2.5, 0.0, 2, 8]
     >>> r2_score(y_true, y_pred)
-    0.948...
+    0.948
     >>> y_true = [[0.5, 1], [-1, 1], [7, -6]]
     >>> y_pred = [[0, 2], [-1, 2], [8, -5]]
     >>> r2_score(y_true, y_pred,
     ...          multioutput='variance_weighted')
-    0.938...
+    0.938
     >>> y_true = [1, 2, 3]
     >>> y_pred = [1, 2, 3]
     >>> r2_score(y_true, y_pred)
@@ -805,7 +805,7 @@ def mean_tweedie_deviance(y_true, y_pred, *, sample_weight=None, power=0):
     >>> y_true = [2, 0, 1, 4]
     >>> y_pred = [0.5, 0.5, 2., 2.]
     >>> mean_tweedie_deviance(y_true, y_pred, power=1)
-    1.4260...
+    1.4260
     """
     y_type, y_true, y_pred, _ = _check_reg_targets(
         y_true, y_pred, None, dtype=[np.float64, np.float32])
@@ -854,7 +854,7 @@ def mean_poisson_deviance(y_true, y_pred, *, sample_weight=None):
     >>> y_true = [2, 0, 1, 4]
     >>> y_pred = [0.5, 0.5, 2., 2.]
     >>> mean_poisson_deviance(y_true, y_pred)
-    1.4260...
+    1.4260
     """
     return mean_tweedie_deviance(
         y_true, y_pred, sample_weight=sample_weight, power=1
@@ -893,7 +893,7 @@ def mean_gamma_deviance(y_true, y_pred, *, sample_weight=None):
     >>> y_true = [2, 0.5, 1, 4]
     >>> y_pred = [0.5, 0.5, 2., 2.]
     >>> mean_gamma_deviance(y_true, y_pred)
-    1.0568...
+    1.0568
     """
     return mean_tweedie_deviance(
         y_true, y_pred, sample_weight=sample_weight, power=2

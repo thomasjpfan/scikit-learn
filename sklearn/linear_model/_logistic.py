@@ -1248,7 +1248,7 @@ class LogisticRegression(LinearClassifierMixin,
     array([[9.8...e-01, 1.8...e-02, 1.4...e-08],
            [9.7...e-01, 2.8...e-02, ...e-08]])
     >>> clf.score(X, y)
-    0.97...
+    0.97
     """
     @_deprecate_positional_args
     def __init__(self, penalty='l2', *, dual=False, tol=1e-4, C=1.0,
@@ -1735,7 +1735,7 @@ class LogisticRegressionCV(LogisticRegression,
     >>> clf.predict_proba(X[:2, :]).shape
     (2, 3)
     >>> clf.score(X, y)
-    0.98...
+    0.98
 
     See also
     --------

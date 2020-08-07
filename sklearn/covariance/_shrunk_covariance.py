@@ -557,7 +557,7 @@ class OAS(EmpiricalCovariance):
     array([[ 1.7833..., -1.2431... ],
            [-1.2431...,  3.3889...]])
     >>> oas.shrinkage_
-    0.0195...
+    0.0195
 
     Notes
     -----

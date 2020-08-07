@@ -598,7 +598,7 @@ class SparseRandomProjection(BaseRandomProjection):
     (100, 3947)
     >>> # very few components are non-zero
     >>> np.mean(transformer.components_ != 0)
-    0.0100...
+    0.0100
 
     See Also
     --------
