@@ -42,5 +42,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-$TEST_CMD --pyargs sklearn.tests.test_common -v
+$TEST_CMD --pyargs sklearn
 set +x
