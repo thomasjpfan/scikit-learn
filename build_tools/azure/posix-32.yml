@@ -45,6 +45,7 @@ jobs:
         -w /io
         --detach
         --name skcontainer
+        --cpus=2
         -e DISTRIB=ubuntu-32
         -e TEST_DIR=/temp_dir
         -e JUNITXML=$JUNITXML
