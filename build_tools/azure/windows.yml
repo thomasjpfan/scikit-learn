@@ -17,7 +17,9 @@ jobs:
     JUNITXML: 'test-data.xml'
     SKLEARN_SKIP_NETWORK_TESTS: '1'
     PYTEST_VERSION: '5.2.1'
-    PYTEST_XDIST: 'true'
+    # pin pytest-xdist because 2.0.0 can fail sometimes
+    # https://github.com/pytest-dev/pytest-xdist/issues/580
+    PYTEST_XDIST_VERSION: '1.34.0'
     TMP_FOLDER: '$(Agent.WorkFolder)\tmp_folder'
   strategy:
     matrix:

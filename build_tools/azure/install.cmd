@@ -26,8 +26,12 @@ IF "%PYTHON_ARCH%"=="64" (
     pip install numpy scipy cython pytest wheel pillow joblib threadpoolctl
 )
 
-IF "%PYTEST_XDIST%" == "true" (
-    pip install pytest-xdist
+IF NOT "%PYTEST_XDIST_VERSION%" == "none" (
+    IF "%PYTEST_XDIST_VERSION%" == "latest" (
+        pip install pytest-xdist
+    ) ELSE (
+        pip install pytest-xdist=="%PYTEST_XDIST_VERSION%"
+    )
 )
 
 if "%COVERAGE%" == "true" (

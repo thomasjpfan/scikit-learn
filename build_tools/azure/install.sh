@@ -81,15 +81,18 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
-                      $(get_dep pytest $PYTEST_VERSION) \
-                      $(get_dep pytest-xdist $PYTEST_XDIST_VERSION)
+                      $(get_dep pytest $PYTEST_VERSION)
 
 if [[ "$COVERAGE" == "true" ]]; then
     python -m pip install codecov pytest-cov
 fi
 
 if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
-    python -m pip install pytest-xdist
+    if [[ "$PYTEST_XDIST_VERSION" == "latest" ]]; then
+        python -m pip install pytest-xdist
+    else
+        python -m pip install pytest-xdist==$PYTEST_XDIST_VERSION
+    fi
 fi
 
 if [[ "$TEST_DOCSTRINGS" == "true" ]]; then
