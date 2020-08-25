@@ -79,6 +79,12 @@ jobs:
         testRunTitle: ${{ format('{0}-$(Agent.JobName)', parameters.name) }}
       displayName: 'Publish Test Results'
       condition: succeededOrFailed()
+    - script: |
+        docker exec skcontainer ./build_tools/azure/upload_codecov.sh
+      condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+      displayName: 'Upload To Codecov'
+      env:
+        CODECOV_TOKEN: $(CODECOV_TOKEN)
     - script: >
         docker container stop skcontainer
       displayName: 'Stop container'
