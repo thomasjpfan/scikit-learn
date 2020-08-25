@@ -47,7 +47,7 @@ jobs:
         --name skcontainer
         -e DISTRIB=ubuntu-32
         -e TEST_DIR=/temp_dir
-        -e JUNITXML=$JUNITXML
+        -e JUNITXML=/temp_dir/$JUNITXML
         -e VIRTUALENV=testvenv
         -e NUMPY_VERSION=$NUMPY_VERSION
         -e SCIPY_VERSION=$SCIPY_VERSION

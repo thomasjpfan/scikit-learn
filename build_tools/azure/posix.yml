@@ -14,7 +14,7 @@ jobs:
   variables:
     TEST_DIR: '$(Agent.WorkFolder)/tmp_folder'
     VIRTUALENV: 'testvenv'
-    JUNITXML: 'test-data.xml'
+    JUNITXML: '$(Agent.WorkFolder)/tmp_folder/test-data.xml'
     OMP_NUM_THREADS: '2'
     OPENBLAS_NUM_THREADS: '2'
     SKLEARN_SKIP_NETWORK_TESTS: '1'
@@ -57,7 +57,7 @@ jobs:
       condition: eq(variables['CHECK_PYTEST_SOFT_DEPENDENCY'], 'true')
     - task: PublishTestResults@2
       inputs:
-        testResultsFiles: '$(TEST_DIR)/$(JUNITXML)'
+        testResultsFiles: '$(JUNITXML)'
         testRunTitle: ${{ format('{0}-$(Agent.JobName)', parameters.name) }}
       displayName: 'Publish Test Results'
       condition: succeededOrFailed()
