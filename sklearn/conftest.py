@@ -27,7 +27,7 @@ def pyplot():
 
 
 def pytest_runtest_setup(item):
-    """Set the number of openmp threads based on the number of workers
+    """Set the number of openmp and blas threads based on the number of workers
     xdist is using to prevent oversubscription.
 
     Parameters
@@ -43,4 +43,5 @@ def pytest_runtest_setup(item):
 
     openmp_threads = _openmp_effective_n_threads()
     threads_per_worker = max(openmp_threads // xdist_worker_count, 1)
-    threadpool_limits(threads_per_worker, user_api='openmp')
+    threadpool_limits(limits={'openmp': threads_per_worker,
+                              'blas': threads_per_worker})
