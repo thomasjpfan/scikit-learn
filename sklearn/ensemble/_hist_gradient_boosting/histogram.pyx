@@ -105,7 +105,8 @@ cdef class HistogramBuilder:
 
     def compute_histograms_brute(
             HistogramBuilder self,
-            const unsigned int [::1] sample_indices):  # IN
+            const unsigned int [::1] sample_indices,  # IN
+            hist_struct [:, ::1] histograms):  # OUT
         """Compute the histograms of the node by scanning through all the data.
 
         For a given feature, the complexity is O(n_samples)
@@ -115,10 +116,8 @@ cdef class HistogramBuilder:
         sample_indices : array of int, shape (n_samples_at_node,)
             The indices of the samples at the node to split.
 
-        Returns
-        -------
         histograms : ndarray of HISTOGRAM_DTYPE, shape (n_features, n_bins)
-            The computed histograms of the current node.
+            Where the histograms of the current node will be stored.
         """
         cdef:
             int n_samples
@@ -132,11 +131,6 @@ cdef class HistogramBuilder:
             G_H_DTYPE_C [::1] gradients = self.gradients
             G_H_DTYPE_C [::1] ordered_hessians = self.ordered_hessians
             G_H_DTYPE_C [::1] hessians = self.hessians
-            # Histograms will be initialized to zero later within a prange
-            hist_struct [:, ::1] histograms = np.empty(
-                shape=(self.n_features, self.n_bins),
-                dtype=HISTOGRAM_DTYPE
-            )
 
         with nogil:
             n_samples = sample_indices.shape[0]
@@ -158,8 +152,6 @@ cdef class HistogramBuilder:
                 self._compute_histogram_brute_single_feature(
                     feature_idx, sample_indices, histograms)
 
-        return histograms
-
     cdef void _compute_histogram_brute_single_feature(
             HistogramBuilder self,
             const int feature_idx,
@@ -179,7 +171,13 @@ cdef class HistogramBuilder:
             unsigned char hessians_are_constant = \
                 self.hessians_are_constant
             unsigned int bin_idx = 0
-        
+
+        # Initialize histograms to 0 here as we might recycle a previously
+        # allocated histogram via the histogram_pool of the grower for
+        # memory efficiency purpose.
+        # Also this delayed zero init happens in the openmp parallel
+        # section for each feature which yields a small additional
+        # performance improvement.
         for bin_idx in range(self.n_bins):
             histograms[feature_idx, bin_idx].sum_gradients = 0.
             histograms[feature_idx, bin_idx].sum_hessians = 0.
@@ -207,7 +205,8 @@ cdef class HistogramBuilder:
     def compute_histograms_subtraction(
             HistogramBuilder self,
             hist_struct [:, ::1] parent_histograms,  # IN
-            hist_struct [:, ::1] sibling_histograms):  # IN
+            hist_struct [:, ::1] sibling_histograms,  # IN
+            hist_struct [:, ::1] histograms):  # OUT
         """Compute the histograms of the node using the subtraction trick.
 
         hist(parent) = hist(left_child) + hist(right_child)
@@ -224,20 +223,13 @@ cdef class HistogramBuilder:
         sibling_histograms : ndarray of HISTOGRAM_DTYPE, \
                 shape (n_features, n_bins)
             The histograms of the sibling.
-
-        Returns
-        -------
         histograms : ndarray of HISTOGRAM_DTYPE, shape(n_features, n_bins)
-            The computed histograms of the current node.
+            Where the histograms of the current node will be stored.
         """
 
         cdef:
             int feature_idx
             int n_features = self.n_features
-            hist_struct [:, ::1] histograms = np.empty(
-                shape=(self.n_features, self.n_bins),
-                dtype=HISTOGRAM_DTYPE
-            )
 
         for feature_idx in prange(n_features, schedule='static', nogil=True):
             # Compute histogram of each feature
@@ -246,7 +238,6 @@ cdef class HistogramBuilder:
                                  parent_histograms,
                                  sibling_histograms,
                                  histograms)
-        return histograms
 
 
 cpdef void _build_histogram_naive(

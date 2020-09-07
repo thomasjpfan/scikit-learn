@@ -192,8 +192,14 @@ Changelog
   :class:`ensemble.HistGradientBoostingRegressor` and
   :class:`ensemble.HistGradientBoostingClassifier` to allow for the timely
   garbage collection of large intermediate datastructures and to improve memory
-  usage in `fit`. :pr:`18334` by `Olivier Grisel`_ `Nicolas Hug`_, `Thomas
+  usage in `fit`. :pr:`18334` by `Olivier Grisel`_, `Nicolas Hug`_, `Thomas
   Fan`_ and `Andreas Müller`_.
+
+- |Efficiency| :class:`ensemble.HistGradientBoostingRegressor` and
+  :class:`ensemble.HistGradientBoostingClassifier` have been futhermore
+  improved to have a low and stable memory usage (on macOS in particular) by
+  recycling previously allocated histogram datastructures instead of relying on
+  the Python GC. :pr:`18242` by `Thomas Fan`_ `Olivier Grisel`_, `Nicolas Hug`_.
 
 - |Efficiency| Histogram initialization is now done in parallel in
   :class:`ensemble.HistGradientBoostingRegressor` and

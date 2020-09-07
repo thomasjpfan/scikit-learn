@@ -18,6 +18,7 @@ from .utils import sum_parallel
 from .common import PREDICTOR_RECORD_DTYPE
 from .common import Y_DTYPE
 from .common import MonotonicConstraint
+from ._histogram_pool import HistogramPool
 
 
 EPS = np.finfo(Y_DTYPE).eps  # to avoid zero division errors
@@ -135,6 +136,9 @@ class TreeGrower:
     hessians : ndarray of shape (n_samples,)
         The hessians of each training sample. Those are the hessians of the
         loss w.r.t the predictions, evaluated at iteration ``i - 1``.
+    histogram_pool : HistogramPool, default=None
+        A cache to hold the created histograms between growers. If None, a
+        new pool cache is created.
     max_leaf_nodes : int, default=None
         The maximum number of leaves for each tree. If None, there is no
         maximum limit.
@@ -175,7 +179,8 @@ class TreeGrower:
         learning rate.
     """
 
-    def __init__(self, X_binned, gradients, hessians, max_leaf_nodes=None,
+    def __init__(self, X_binned, gradients, hessians, histogram_pool=None,
+                 max_leaf_nodes=None,
                  max_depth=None, min_samples_leaf=20, min_gain_to_split=0.,
                  n_bins=256, n_bins_non_missing=None, has_missing_values=False,
                  monotonic_cst=None, l2_regularization=0.,
@@ -247,6 +252,14 @@ class TreeGrower:
         self.total_find_split_time = 0.  # time spent finding the best splits
         self.total_compute_hist_time = 0.  # time spent computing histograms
         self.total_apply_split_time = 0.  # time spent splitting nodes
+
+        if histogram_pool is None:
+            self.histogram_pool = HistogramPool(n_features=self.n_features,
+                                                n_bins=n_bins)
+        else:
+            self.histogram_pool = histogram_pool
+
+        self.histogram_pool.reset()
         self._intilialize_root(gradients, hessians, hessians_are_constant)
         self.n_nodes = 1
 
@@ -330,8 +343,9 @@ class TreeGrower:
             self._finalize_leaf(self.root)
             return
 
-        self.root.histograms = self.histogram_builder.compute_histograms_brute(
-            self.root.sample_indices)
+        self.root.histograms = self.histogram_pool.get()
+        self.histogram_builder.compute_histograms_brute(
+            self.root.sample_indices, self.root.histograms)
         self._compute_best_split_and_push(self.root)
 
     def _compute_best_split_and_push(self, node):
@@ -466,12 +480,14 @@ class TreeGrower:
             # smallest number of samples, and the subtraction trick O(n_bins)
             # on the other one.
             tic = time()
-            smallest_child.histograms = \
-                self.histogram_builder.compute_histograms_brute(
-                    smallest_child.sample_indices)
-            largest_child.histograms = \
-                self.histogram_builder.compute_histograms_subtraction(
-                    node.histograms, smallest_child.histograms)
+            smallest_child.histograms = self.histogram_pool.get()
+            self.histogram_builder.compute_histograms_brute(
+                smallest_child.sample_indices, smallest_child.histograms)
+
+            largest_child.histograms = self.histogram_pool.get()
+            self.histogram_builder.compute_histograms_subtraction(
+                node.histograms, smallest_child.histograms,
+                largest_child.histograms)
             self.total_compute_hist_time += time() - tic
 
             tic = time()
@@ -485,11 +501,13 @@ class TreeGrower:
             # for leaf nodes since they won't be split.
             for child in (left_child_node, right_child_node):
                 if child.is_leaf:
-                    del child.histograms
+                    self.histogram_pool.release(child.histograms)
+                    child.histograms = None
 
         # Release memory used by histograms as they are no longer needed for
         # internal nodes once children histograms have been computed.
-        del node.histograms
+        self.histogram_pool.release(node.histograms)
+        node.histograms = None
 
         return left_child_node, right_child_node
 
