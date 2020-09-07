@@ -485,10 +485,12 @@ class TreeGrower:
             # for leaf nodes since they won't be split.
             for child in (left_child_node, right_child_node):
                 if child.is_leaf:
+                    self.histogram_builder.release(child.histograms)
                     del child.histograms
 
         # Release memory used by histograms as they are no longer needed for
         # internal nodes once children histograms have been computed.
+        self.histogram_builder.release(node.histograms)
         del node.histograms
 
         return left_child_node, right_child_node

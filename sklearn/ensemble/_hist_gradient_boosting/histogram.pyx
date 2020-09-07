@@ -85,6 +85,7 @@ cdef class HistogramBuilder:
         G_H_DTYPE_C [::1] ordered_gradients
         G_H_DTYPE_C [::1] ordered_hessians
         unsigned char hessians_are_constant
+        list available_histograms
 
     def __init__(self, const X_BINNED_DTYPE_C [::1, :] X_binned,
                  unsigned int n_bins, G_H_DTYPE_C [::1] gradients,
@@ -102,6 +103,26 @@ cdef class HistogramBuilder:
         self.ordered_gradients = gradients.copy()
         self.ordered_hessians = hessians.copy()
         self.hessians_are_constant = hessians_are_constant
+
+        # list of histograms that can be re-used for other nodes.
+        self.available_histograms = []
+
+    def allocate_or_reuse_hists(HistogramBuilder self):
+        """Return a non-initialized histograms array.
+
+        The array is allocated only if needed.
+        """
+        if self.available_histograms:
+            return self.available_histograms.pop()
+        else:
+            return np.empty(
+                shape=(self.n_features, self.n_bins),
+                dtype=HISTOGRAM_DTYPE
+            )
+
+    def release(HistogramBuilder self, histograms):
+        """Mark a histograms array as available so it can be reused by other nodes"""
+        self.available_histograms.append(histograms)
 
     def compute_histograms_brute(
             HistogramBuilder self,
@@ -133,10 +154,7 @@ cdef class HistogramBuilder:
             G_H_DTYPE_C [::1] ordered_hessians = self.ordered_hessians
             G_H_DTYPE_C [::1] hessians = self.hessians
             # Histograms will be initialized to zero later within a prange
-            hist_struct [:, ::1] histograms = np.empty(
-                shape=(self.n_features, self.n_bins),
-                dtype=HISTOGRAM_DTYPE
-            )
+            hist_struct [:, ::1] histograms = self.allocate_or_reuse_hists()
 
         with nogil:
             n_samples = sample_indices.shape[0]
@@ -234,10 +252,7 @@ cdef class HistogramBuilder:
         cdef:
             int feature_idx
             int n_features = self.n_features
-            hist_struct [:, ::1] histograms = np.empty(
-                shape=(self.n_features, self.n_bins),
-                dtype=HISTOGRAM_DTYPE
-            )
+            hist_struct [:, ::1] histograms = self.allocate_or_reuse_hists()
 
         for feature_idx in prange(n_features, schedule='static', nogil=True):
             # Compute histogram of each feature
