@@ -37,10 +37,13 @@ if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
     TEST_CMD="$TEST_CMD -n2"
 fi
 
-mkdir -p $TEST_DIR
-cp setup.cfg $TEST_DIR
-cd $TEST_DIR
+python -m pip install memory_profiler
 
-set -x
-$TEST_CMD --pyargs sklearn
-set +x
+# mkdir -p $TEST_DIR
+# cp setup.cfg $TEST_DIR
+# cd $TEST_DIR
+
+# set -x
+# $TEST_CMD --pyargs sklearn
+# set +x
+python bench_it.py
