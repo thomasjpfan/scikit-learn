@@ -9,7 +9,7 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'sync')
     steps:
       - uses: actions/checkout@v2
-      - runs: |
+      - run: |
           git branch
           echo git remote add pr_remote ${{ github.event.pull_request.head.html_url }}
           echo git fetch pr_remote ${{ github.event.pull_request.head.ref }}
