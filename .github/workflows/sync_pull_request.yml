@@ -5,6 +5,7 @@ on:
 
 jobs:
   sync_pull_request:
+    if: contains(github.event.issue.labels.*.name, 'sync')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
