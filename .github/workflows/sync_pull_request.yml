@@ -9,14 +9,14 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'sync')
     steps:
       - uses: actions/checkout@v2
+        fetch-depth: 0
       - name: Sync with master
         run: |
           set -x
-          git fetch origin ${{ github.event.pull_request.base.sha }}
           git remote add pr_remote ${{ github.event.pull_request.head.repo.html_url }}
           git fetch pr_remote ${{ github.event.pull_request.head.ref }}
           git checkout pr_remote/${{ github.event.pull_request.head.ref }}
-          git merge master
+          git merge origin/master
           echo git push pr_remote HEAD:${{ github.event.pull_request.head.ref }}
       - name: Remove label
         run: |
