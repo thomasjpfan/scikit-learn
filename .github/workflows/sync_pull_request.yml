@@ -15,4 +15,5 @@ jobs:
           echo git remote add pr_remote ${{ github.event.pull_request.head.repo.html_url }}
           echo git fetch pr_remote ${{ github.event.pull_request.head.ref }}
           echo git checkout pr_remote/${{ github.event.pull_request.head.ref }}
+          echo git merge master
           echo git push pr_remote HEAD:${{ github.event.pull_request.head.ref }}
