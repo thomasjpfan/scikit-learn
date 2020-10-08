@@ -11,3 +11,7 @@ jobs:
       - uses: actions/checkout@v2
       - runs: |
           git branch
+          echo git remote add pr_remote ${{ github.event.pull_request.head.html_url }}
+          echo git fetch pr_remote ${{ github.event.pull_request.head.ref }}
+          echo git checkout pr_remote/${{ github.event.pull_request.head.ref }}
+          echo git push pr_remote HEAD:${{ github.event.pull_request.head.ref }}
