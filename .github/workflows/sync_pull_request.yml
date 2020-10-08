@@ -9,3 +9,5 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'sync')
     steps:
       - uses: actions/checkout@v2
+      - run: |
+          git branch
