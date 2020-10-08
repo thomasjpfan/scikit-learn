@@ -1,7 +1,7 @@
 name: Sync Pull Request
 on:
   pull_request_target:
-    - types: [labeled]
+    types: [labeled]
 
 jobs:
   sync_pull_request:
