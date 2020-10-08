@@ -12,6 +12,7 @@ jobs:
       - name: Sync with master
         run: |
           set -x
+          git fetch origin ${{ github.event.pull_request.base.sha }}
           git remote add pr_remote ${{ github.event.pull_request.head.repo.html_url }}
           git fetch pr_remote ${{ github.event.pull_request.head.ref }}
           git checkout pr_remote/${{ github.event.pull_request.head.ref }}
