@@ -1,4 +1,4 @@
-"""Base classes for all estimators."""
+"""Base classes for all estimators. This is a fancy change."""
 
 # Author: Gael Varoquaux <gael.varoquaux@normalesup.org>
 # License: BSD 3 clause
