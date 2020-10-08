@@ -1,0 +1,12 @@
+name: Sync Pull Request
+on:
+  pull_request_target:
+    - types: [labeled]
+
+jobs:
+  sync_pull_request:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - runs: |
+          git branch
