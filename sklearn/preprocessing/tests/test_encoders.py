@@ -16,6 +16,9 @@ from sklearn.preprocessing import OrdinalEncoder
 
 def test_one_hot_encoder_sparse_dense():
     # check that sparse and dense will give the same results
+    # adds some more comments v2
+    # adds some more comments v3
+    # adds some more comments v5
 
     X = np.array([[3, 2, 1], [0, 1, 1]])
     enc_sparse = OneHotEncoder()
