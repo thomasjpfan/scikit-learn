@@ -946,7 +946,7 @@ class AgglomerativeClustering(ClusterMixin, BaseEstimator):
         return super().fit_predict(X, y)
 
 
-class FeatureAgglomeration(AgglomerativeClustering, AgglomerationTransform):
+class FeatureAgglomeration(AgglomerationTransform, AgglomerativeClustering):
     """Agglomerate features.
 
     Similar to AgglomerativeClustering, but recursively merges features

@@ -27,7 +27,7 @@ from .metrics.pairwise import pairwise_kernels, KERNEL_PARAMS
 from .utils.validation import check_non_negative, _deprecate_positional_args
 
 
-class PolynomialCountSketch(BaseEstimator, TransformerMixin):
+class PolynomialCountSketch(TransformerMixin, BaseEstimator):
     """Polynomial kernel approximation via Tensor Sketch.
 
     Implements Tensor Sketch, which approximates the feature map

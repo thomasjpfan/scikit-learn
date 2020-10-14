@@ -26,7 +26,7 @@ from .loss import _LOSSES
 from .loss import BaseLoss
 
 
-class BaseHistGradientBoosting(BaseEstimator, ABC):
+class BaseHistGradientBoosting(ABC, BaseEstimator):
     """Base class for histogram-based gradient boosting estimators."""
 
     @abstractmethod

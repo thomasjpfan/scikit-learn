@@ -24,6 +24,7 @@ from sklearn.utils.estimator_checks import check_estimator
 
 import sklearn
 from sklearn.base import BiclusterMixin
+from sklearn.base import BaseEstimator
 
 from sklearn.decomposition import NMF
 from sklearn.utils.validation import check_non_negative, check_array
@@ -270,3 +271,10 @@ def test_strict_mode_check_estimator():
 def test_strict_mode_parametrize_with_checks(estimator, check):
     # Ideally we should assert that the strict checks are Xfailed...
     check(estimator)
+
+
+@pytest.mark.parametrize("name, estimator", all_estimators(),
+                         ids=_get_check_estimator_ids)
+def test_mro_order(name, estimator):
+    """Checks that BaseEstimator is at the end of the mro."""
+    assert estimator.mro()[-2:] == [BaseEstimator, object]
