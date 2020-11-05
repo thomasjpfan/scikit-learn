@@ -443,7 +443,6 @@ def test_scale_and_stability_2821(Est):
     assert_array_almost_equal(X_s_score, X_score)
     assert_array_almost_equal(Y_s_score, Y_score)
 
-
 @pytest.mark.parametrize('Est', (PLSSVD, PLSCanonical, CCA))
 @pytest.mark.parametrize('n_components', (0, 4))
 def test_n_components_bounds(Est, n_components):

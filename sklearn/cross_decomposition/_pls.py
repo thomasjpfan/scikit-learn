@@ -45,8 +45,8 @@ def _get_first_singular_vectors_power_method(X, Y, mode="A", max_iter=500,
         # As a result, and as detailed in the Wegelin's review, CCA (i.e. mode
         # B) will be unstable if n_features > n_samples or n_targets >
         # n_samples
-        X_pinv = pinv2(X, check_finite=False, cond=10*eps)
-        Y_pinv = pinv2(Y, check_finite=False, cond=10*eps)
+        X_pinv = pinv2(X, check_finite=False)
+        Y_pinv = pinv2(Y, check_finite=False)
 
     for i in range(max_iter):
         if mode == "B":
@@ -229,15 +229,10 @@ class _PLS(TransformerMixin, RegressorMixin, MultiOutputMixin, BaseEstimator,
         # This whole thing corresponds to the algorithm in section 4.1 of the
         # review from Wegelin. See above for a notation mapping from code to
         # paper.
-        Y_eps = np.finfo(Yk.dtype).eps
         for k in range(n_components):
             # Find first left and right singular vectors of the X.T.dot(Y)
             # cross-covariance matrix.
             if self.algorithm == "nipals":
-                # Replace columns that are all close to zero with zeros
-                Yk_mask = np.all(np.abs(Yk) < 10 * Y_eps, axis=0)
-                Yk[:, Yk_mask] = 0.0
-
                 x_weights, y_weights, n_iter_ = \
                     _get_first_singular_vectors_power_method(
                         Xk, Yk, mode=self.mode, max_iter=self.max_iter,
