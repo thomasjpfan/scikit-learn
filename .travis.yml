@@ -105,7 +105,6 @@ after_success:
       fi
 
       pip install git+https://github.com/Anaconda-Server/anaconda-client;
-
       anaconda -t $ANACONDA_TOKEN upload --force -u $ANACONDA_ORG dist/*;
     else
       source build_tools/travis/after_success.sh
