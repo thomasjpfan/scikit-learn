@@ -11,5 +11,6 @@ requires = [
     "numpy==1.16.0; python_version=='3.6' and platform_system=='AIX'",
     "numpy==1.16.0; python_version=='3.7' and platform_system=='AIX'",
     "numpy==1.17.3; python_version>='3.8' and platform_system=='AIX'",
+    "numpy==1.19.0; platform_machine=='aarch64'",
     "scipy>=0.19.1",
 ]

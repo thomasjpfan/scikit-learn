@@ -49,10 +49,11 @@ matrix:
         - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
         - CIBW_BUILD_VERBOSITY="1"
         - CIBW_BUILD=cp36-manylinux_aarch64
+      python: 3.8
       os: linux
       arch: arm64
       services: docker
-      if: commit_message =~ /\[cd\ build\]/
+      if: type = cron OR commit_message =~ /\[cd\ build\]/
     - env:
         - CI_CPU_COUNT="8"
         - BUILD_WHEEL="true"
@@ -60,6 +61,7 @@ matrix:
         - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
         - CIBW_BUILD_VERBOSITY="1"
         - CIBW_BUILD=cp37-manylinux_aarch64
+      python: 3.8
       os: linux
       arch: arm64
       services: docker
@@ -71,10 +73,11 @@ matrix:
         - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
         - CIBW_BUILD_VERBOSITY="1"
         - CIBW_BUILD=cp38-manylinux_aarch64
+      python: 3.8
       os: linux
       arch: arm64
       services: docker
-      if: commit_message =~ /\[cd\ build\]/
+      if: type = cron OR commit_message =~ /\[cd\ build\]/
 
 install:
   - if [ $BUILD_WHEEL == "true" ]; then
@@ -90,10 +93,11 @@ script:
       bash build_tools/travis/test_docs.sh || travis_terminate 1;
       bash build_tools/travis/test_pytest_soft_dependency.sh || travis_terminate 1;
     fi
+
 after_success:
-    - if [ $BUILD_WHEEL != "true" ]; then
-        source build_tools/travis/after_success.sh
-      fi
+  - if [ "$BUILD_WHEEL" != "true" ]; then
+      source build_tools/travis/after_success.sh
+    fi
 notifications:
   webhooks:
     urls:
