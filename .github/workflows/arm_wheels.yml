@@ -1,0 +1,17 @@
+name: Build Arm Wheels
+
+on: [push]
+
+jobs:
+  qemu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1.0.1
+        with:
+          image: tonistiigi/binfmt:latest
+          platforms: arm64
+      - name: Check arm64
+        run: docker run --rm -t arm64v8/ubuntu uname -m
