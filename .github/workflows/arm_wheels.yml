@@ -15,8 +15,6 @@ jobs:
           platforms: arm64
       - name: Check arm64
         run: |
+          set -xe
           docker info
-          echo "Inside container privileged"
           docker run --rm -t --privileged amd64/docker:dind docker info
-          echo "Inside container no privileged"
-          docker run --rm -t amd64/docker:dind docker info
