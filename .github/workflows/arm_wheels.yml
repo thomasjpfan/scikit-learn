@@ -17,7 +17,7 @@ jobs:
         run: docker run -it --privileged --name arm-docker -d amd64/docker:dind
       - name: Check arm64
         run: |
-          docker exec -it arm-docker docker version
+          docker exec arm-docker docker version
 
       - name: Stop arm-container
         run: docker stop arm-docker
