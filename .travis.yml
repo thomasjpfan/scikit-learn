@@ -95,7 +95,8 @@ script:
     fi
 
 after_success:
-  - if [ "$BUILD_WHEEL" != "true" ]; then
+  - if [ "$BUILD_WHEEL" == "true" ]; then
+    else
       source build_tools/travis/after_success.sh
     fi
 notifications:
