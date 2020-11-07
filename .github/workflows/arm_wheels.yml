@@ -8,14 +8,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1.0.1
         with:
           image: tonistiigi/binfmt:latest
           platforms: arm64
-      - name: Start arm64 service
-        container:
-          image: arm64v8/ubuntu
+
+      - name: Start arm service
         run: |
-          uname -m
-          ls
+          docker run --privileged --name arm-docker -d \
+            -p 2375:2375 \
+            -e DOCKER_TLS_CERTDIR= \
+            arm64v8/docker:dind
+      - name: Docker client
+        run: docker run arm-docker docker version
+        # env:
+        #   DOCKER_HOST: tcp://localhost:2375
+
+      - name: Stop arm container
+        run: docker stop arm-docker
+        if: ${{ always() }}
