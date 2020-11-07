@@ -14,11 +14,12 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: arm64
       - name: Start arm64 service
-        run: docker run -it --privileged --name arm-docker -d amd64/docker:dind
+        run: docker run -it --privileged --name arm-docker -d -p 2375:2375 arm64v8/docker:dind
       - name: Check arm64
         run: |
-          docker exec arm-docker uname -m
-
+          docker version
+        env:
+          DOCKER_HOST: tcp://localhost:2375
       - name: Stop arm-container
         run: docker stop arm-docker
         if: ${{ always() }}
