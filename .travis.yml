@@ -96,6 +96,8 @@ script:
 
 after_success:
   - if [ "$BUILD_WHEEL" == "true" ]; then
+
+      anaconda -t $ANACONDA_TOKEN upload --force -u $ANACONDA_ORG dist/*;
     else
       source build_tools/travis/after_success.sh
     fi
