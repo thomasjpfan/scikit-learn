@@ -14,7 +14,12 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: arm64
       - name: Start arm64 service
-        run: docker run -it --privileged --name arm-docker -d -p 2375:2375 arm64v8/docker:dind
+        run: >-
+          docker run -it --privileged
+          --name arm-docker -d
+          -e DOCKER_TLS_CERTDIR=
+          -p 2375:2375
+          arm64v8/docker:dind
       - name: Check arm64
         run: |
           docker version
