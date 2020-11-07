@@ -53,19 +53,22 @@ matrix:
 
 install:
   - if [ $BUILD_WHEEL == "true" ]; then
-      python3 -m pip install cibuildwheel==1.6.4
+      python3 -m pip install cibuildwheel==1.6.4;
     else
-      source build_tools/travis/install.sh
+      source build_tools/travis/install.sh;
     fi
 script:
   - if [ $BUILD_WHEEL == "true" ]; then
-      bash build_tools/travis/test_script.sh || travis_terminate 1
-      bash build_tools/travis/test_docs.sh || travis_terminate 1
-      bash build_tools/travis/test_pytest_soft_dependency.sh || travis_terminate 1
+      python3 -m cibuildwheel --output-dir wheelhouse;
     else
-      python3 -m cibuildwheel --output-dir wheelhouse
+      bash build_tools/travis/test_script.sh || travis_terminate 1;
+      bash build_tools/travis/test_docs.sh || travis_terminate 1;
+      bash build_tools/travis/test_pytest_soft_dependency.sh || travis_terminate 1;
     fi
-after_success: source build_tools/travis/after_success.sh
+after_success:
+    - if [ $BUILD_WHEEL != "true" ]; then
+        source build_tools/travis/after_success.sh
+      fi
 notifications:
   webhooks:
     urls:
