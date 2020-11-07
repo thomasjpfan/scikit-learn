@@ -19,9 +19,10 @@ jobs:
         run: |
           docker run --rm --name arm-docker --privileged -d arm64v8/ubuntu sleep 100000
       - name: Install docker client
+        shell: sh -e docker exec -u root arm-docker {0}
         run: |
-          docker exec -u root arm-docker apt-get update
-          docker exec -u root arm-docker apt-get install curl -y
+          apt-get update
+          apt-get install curl -y
 
       - name: Stop arm container
         run: docker stop arm-docker
