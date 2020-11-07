@@ -15,14 +15,4 @@ jobs:
           platforms: arm64
       - name: Start arm64 service
         run: >-
-          docker run -it --privileged
-          --name arm-docker -d
-          -e DOCKER_TLS_CERTDIR=
-          -p 2375:2375
-          arm64v8/docker:dind
-      - name: Check arm64
-        run: |
-          docker exec arm-docker docker version
-      - name: Stop arm-container
-        run: docker stop arm-docker
-        if: ${{ always() }}
+          docker run --rm -t arm64v8/ubuntu uname -m
