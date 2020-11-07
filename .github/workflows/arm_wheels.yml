@@ -17,7 +17,7 @@ jobs:
 
       - name: Start arm service
         run: |
-          docker run --rm --name arm-docker --privileged -d -p 2375:2375 arm64v8/ubuntu sleep 100000
+          docker run --rm --name arm-docker -d -p 2375:2375 arm64v8/ubuntu sleep 100000
       - name: Install docker client
         run: |
           set -ex
