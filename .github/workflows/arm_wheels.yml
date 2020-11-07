@@ -25,7 +25,7 @@ jobs:
           $RUN apt-get install curl -y
           $RUN curl -fsSL https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz -o docker-19.03.13.tgz
           $RUN tar xzvf docker-19.03.13.tgz
-          $RUN "cp docker/* /usr/bin/"
+          $RUN find docker -type f -exec cp {} /usr/bin \;
           docker exec -d -u root arm-docker sudo dockerd -H tcp://0.0.0.0:2375 &
           $RUN docker version
 
