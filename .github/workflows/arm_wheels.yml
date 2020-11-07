@@ -20,9 +20,10 @@ jobs:
           docker run --rm --name arm-docker --privileged -d -p 2375:2375 arm64v8/ubuntu sleep 100000
       - name: Install docker client
         run: |
+          set -ex
           RUN="docker exec -u root arm-docker"
           $RUN apt-get update
-          $RUN apt-get install curl -y
+          $RUN apt-get install curl sudo -y
           $RUN curl -fsSL https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz -o docker-19.03.13.tgz
           $RUN tar xzvf docker-19.03.13.tgz
           $RUN find docker -type f -exec cp {} /usr/bin \;
