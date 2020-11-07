@@ -96,6 +96,13 @@ script:
 
 after_success:
   - if [ "$BUILD_WHEEL" == "true" ]; then
+      if [ "$TRAVIS_EVENT_TYPE" == "cron" ]; then
+          ANACONDA_ORG="scipy-wheels-nightly";
+          ANACONDA_TOKEN="$SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN";
+      else
+          ANACONDA_ORG="scikit-learn-wheels-staging";
+          ANACONDA_TOKEN="$SCIKIT_LEARN_STAGING_UPLOAD_TOKEN";
+      fi
 
       pip install git+https://github.com/Anaconda-Server/anaconda-client;
 
