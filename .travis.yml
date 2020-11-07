@@ -42,12 +42,29 @@ matrix:
       os: linux
       arch: arm64
       if: type = cron OR commit_message =~ /\[arm64\]/
+    - python: 3.7
+      env:
+        - CI_CPU_COUNT="8"
+        - BUILD_WHEEL="true"
+      os: linux
+      arch: arm64
+      services: docker
+      # if: commit_message =~ /\[cd\ build\]/
 
-install: source build_tools/travis/install.sh
+install:
+  - if [ $BUILD_WHEEL == "true" ]; then
+      python3 -m pip install cibuildwheel==1.6.4
+    else
+      source build_tools/travis/install.sh
+    fi
 script:
-  - bash build_tools/travis/test_script.sh || travis_terminate 1
-  - bash build_tools/travis/test_docs.sh || travis_terminate 1
-  - bash build_tools/travis/test_pytest_soft_dependency.sh || travis_terminate 1
+  - if [ $BUILD_WHEEL == "true" ]; then
+      bash build_tools/travis/test_script.sh || travis_terminate 1
+      bash build_tools/travis/test_docs.sh || travis_terminate 1
+      bash build_tools/travis/test_pytest_soft_dependency.sh || travis_terminate 1
+    else
+      python3 -m cibuildwheel --output-dir wheelhouse
+    fi
 after_success: source build_tools/travis/after_success.sh
 notifications:
   webhooks:
