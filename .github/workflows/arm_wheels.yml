@@ -19,7 +19,7 @@ jobs:
         run: |
           docker version
         env:
-          DOCKER_HOST: tcp://localhost:2375
+          DOCKER_HOST: tcp://127.0.0.1:2375
       - name: Stop arm-container
         run: docker stop arm-docker
         if: ${{ always() }}
