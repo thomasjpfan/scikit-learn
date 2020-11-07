@@ -16,5 +16,8 @@ jobs:
       - name: Check arm64
         run: |
           set -xe
-          docker run --it --privileged --name arm-docker -d amd64/docker:dind
+          docker run -it --privileged --name arm-docker -d amd64/docker:dind
           docker run -it --rm --link arm-docker:docker docker version
+
+      - name: Stop arm-container
+        run: docker stop arm-docker
