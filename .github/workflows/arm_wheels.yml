@@ -19,7 +19,7 @@ jobs:
         run: |
           docker run --rm --name arm-docker --privileged -d arm64v8/ubuntu sleep 100000
       - name: Install docker client
-        run:
+        run: |
           docker exec arm-docker apt update && apt install curl -y
           docker exec arm-docker curl -fsSL https://get.docker.com -o get-docker.sh
           docker exec arm-docker sh get-docker.sh
