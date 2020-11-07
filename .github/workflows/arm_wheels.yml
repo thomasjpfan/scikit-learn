@@ -22,7 +22,7 @@ jobs:
             -e DOCKER_TLS_CERTDIR= \
             arm64v8/docker:dind
       - name: Docker client
-        run: docker run arm-docker docker version
+        run: docker exec arm-docker docker version
         # env:
         #   DOCKER_HOST: tcp://localhost:2375
 
