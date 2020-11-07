@@ -17,4 +17,4 @@ jobs:
         run: |
           set -xe
           docker info
-          docker run --rm -t --privileged amd64/docker:dind docker info
+          docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock amd64/docker:dind docker info
