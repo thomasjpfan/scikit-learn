@@ -22,9 +22,7 @@ jobs:
           arm64v8/docker:dind
       - name: Check arm64
         run: |
-          docker version
-        env:
-          DOCKER_HOST: tcp://0.0.0.0:2375
+          docker exec arm-docker docker version
       - name: Stop arm-container
         run: docker stop arm-docker
         if: ${{ always() }}
