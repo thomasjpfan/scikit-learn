@@ -17,12 +17,17 @@ jobs:
 
       - name: Start arm service
         run: |
-          docker run --rm --name arm-docker --privileged -d arm64v8/ubuntu sleep 100000
+          docker run --rm --name arm-docker --privileged -d -p 2375:2375 arm64v8/ubuntu sleep 100000
       - name: Install docker client
         run: |
           RUN="docker exec -u root arm-docker"
           $RUN apt-get update
           $RUN apt-get install curl -y
+          $RUN curl -fsSL https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz -o docker-19.03.13.tgz
+          $RUN tar xzvf docker-19.03.13.tgz
+          $RUN cp docker/* /usr/bin/
+          docker exec -d -u root arm-docker sudo dockerd -H tcp://0.0.0.0:2375 &
+          $RUN docker version
 
       - name: Stop arm container
         run: docker stop arm-docker
