@@ -47,6 +47,7 @@ matrix:
         - CIBW_TEST_REQUIRES="pytest"
         - CIBW_TEST_COMMAND="pytest --pyargs sklearn"
         - CIBW_BUILD=cp36-manylinux_aarch64
+        - CIBW_BUILD_VERBOSITY="1"
       python: 3.8
       os: linux
       arch: arm64
@@ -57,6 +58,7 @@ matrix:
         - CIBW_TEST_REQUIRES="pytest"
         - CIBW_TEST_COMMAND="pytest --pyargs sklearn"
         - CIBW_BUILD=cp37-manylinux_aarch64
+        - CIBW_BUILD_VERBOSITY="1"
       python: 3.8
       os: linux
       arch: arm64
@@ -67,6 +69,7 @@ matrix:
         - CIBW_TEST_REQUIRES="pytest"
         - CIBW_TEST_COMMAND="pytest --pyargs sklearn"
         - CIBW_BUILD=cp38-manylinux_aarch64
+        - CIBW_BUILD_VERBOSITY="1"
       python: 3.8
       os: linux
       arch: arm64
