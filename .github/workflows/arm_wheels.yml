@@ -16,5 +16,5 @@ jobs:
       - name: Check arm64
         run: |
           set -xe
-          docker info
-          docker run --rm -t -v /var/run/docker.sock:/var/run/docker.sock amd64/docker:dind docker info
+          docker run --it --privileged --name arm-docker -d amd64/docker:dind
+          docker run -it --rm --link arm-docker:docker docker version
