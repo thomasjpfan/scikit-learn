@@ -20,12 +20,8 @@ jobs:
           docker run --rm --name arm-docker --privileged -d arm64v8/ubuntu sleep 100000
       - name: Install docker client
         run: |
-          docker exec arm-docker apt-get update && apt-get install curl -y
-          docker exec arm-docker curl -fsSL https://get.docker.com -o get-docker.sh
-          docker exec arm-docker sh get-docker.sh
-          docker exec arm-docker usermod -aG docker $USER
-          docker exec -d arm-docker dockerd --host=unix:///var/run/docker.sock
-          docker exec arm-docker docker version
+          docker exec arm-docker sudo apt-get update
+          docker exec arm-docker sudo apt-get install curl -y
 
       - name: Stop arm container
         run: docker stop arm-docker
