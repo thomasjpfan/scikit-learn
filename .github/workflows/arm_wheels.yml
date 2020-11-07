@@ -14,5 +14,8 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: arm64
       - name: Start arm64 service
-        run: >-
-          docker run --rm -t arm64v8/ubuntu uname -m
+        container:
+          image: arm64v8/ubuntu
+        run: |
+          uname -m
+          ls
