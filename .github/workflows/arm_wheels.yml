@@ -22,19 +22,12 @@ jobs:
         run: |
           set -ex
           RUN="docker exec -u root arm-docker"
-          $RUN apt-get update
-          $RUN apt-get install curl sudo -y
-          $RUN curl -fsSL https://download.docker.com/linux/static/stable/aarch64/docker-19.03.13.tgz -o docker-19.03.13.tgz
-          $RUN tar xzvf docker-19.03.13.tgz
-          $RUN find docker -type f -exec cp {} /usr/bin \;
-          docker exec -d -u root arm-docker sudo dockerd -H tcp://0.0.0.0:2375 &
-          $RUN docker version
-
-      - name: Check docker client from host machine
-        run:
-          docker version
-        env:
-          DOCKER_HOST: tcp://0.0.0.0:2375
+          $RUN cat /proc/cpuinfo
+      # - name: Check docker client from host machine
+      #   run:
+      #     docker version
+      #   env:
+      #     DOCKER_HOST: tcp://0.0.0.0:2375
 
       - name: Stop arm container
         run: docker stop arm-docker
