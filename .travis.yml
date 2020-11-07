@@ -46,6 +46,9 @@ matrix:
       env:
         - CI_CPU_COUNT="8"
         - BUILD_WHEEL="true"
+        - CIBW_TEST_REQUIRES="pytest pytest-xdist"
+        - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
+        - CIBW_BUILD_VERBOSITY="1"
       os: linux
       arch: arm64
       services: docker
