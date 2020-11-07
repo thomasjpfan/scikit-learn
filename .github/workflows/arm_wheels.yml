@@ -14,4 +14,9 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: arm64
       - name: Check arm64
-        run: docker run --rm -t arm64v8/ubuntu uname -m
+        run: |
+          docker info
+          echo "Inside container privileged"
+          docker run --rm -t --privileged amd64/docker:dind docker info
+          echo "Inside container no privileged"
+          docker run --rm -t amd64/docker:dind docker info
