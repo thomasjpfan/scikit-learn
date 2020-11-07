@@ -49,8 +49,7 @@ matrix:
         - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
         - CIBW_BUILD=cp36-manylinux_aarch64
         - CIBW_BUILD_VERBOSITY="1"
-        - OMP_NUM_THREADS=1
-        - OPENBLAS_NUM_THREADS=1
+        - CIBW_BEFORE_TEST="OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1"
       python: 3.8
       os: linux
       arch: arm64
@@ -62,9 +61,8 @@ matrix:
         - CIBW_TEST_REQUIRES="pytest pytest-xdist"
         - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
         - CIBW_BUILD=cp37-manylinux_aarch64
-        - OMP_NUM_THREADS=1
-        - OPENBLAS_NUM_THREADS=1
         - CIBW_BUILD_VERBOSITY="1"
+        - CIBW_BEFORE_TEST="OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1"
       python: 3.8
       os: linux
       arch: arm64
@@ -72,12 +70,11 @@ matrix:
       # if: commit_message =~ /\[cd\ build\]/
     - env:
         - BUILD_WHEEL="true"
-        - CIBW_TEST_REQUIRES="pytest pytest-xdist"
-        - CIBW_TEST_COMMAND="pytest -n 8 --pyargs sklearn"
+        - CIBW_TEST_REQUIRES="pytest"
+        - CIBW_TEST_COMMAND="pytest --pyargs sklearn"
         - CIBW_BUILD=cp38-manylinux_aarch64
         - CIBW_BUILD_VERBOSITY="1"
-        - OMP_NUM_THREADS=1
-        - OPENBLAS_NUM_THREADS=1
+        - CIBW_BEFORE_TEST="OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1"
       python: 3.8
       os: linux
       arch: arm64
