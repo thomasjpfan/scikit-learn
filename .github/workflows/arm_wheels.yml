@@ -15,20 +15,31 @@ jobs:
           image: tonistiigi/binfmt:latest
           platforms: arm64
 
-      - name: Start arm service
-        run: |
-          docker run --rm --name arm-docker -d -p 2375:2375 arm64v8/ubuntu sleep 100000
-      - name: Install docker client
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Build wheels
         run: |
           set -ex
-          RUN="docker exec -u root arm-docker"
-          $RUN cat /proc/cpuinfo
+          python -m pip install cibuildwheel
+          python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: cp37-manylinux_aarch64
+
+      # - name: Start arm service
+      #   run: |
+      #     docker run --rm --name arm-docker -d -p 2375:2375 arm64v8/ubuntu sleep 100000
+      # - name: Install docker client
+      #   run: |
+      #     set -ex
+      #     RUN="docker exec -u root arm-docker"
+      #     $RUN cat /proc/cpuinfo
       # - name: Check docker client from host machine
       #   run:
       #     docker version
       #   env:
       #     DOCKER_HOST: tcp://0.0.0.0:2375
 
-      - name: Stop arm container
-        run: docker stop arm-docker
-        if: ${{ always() }}
+      # - name: Stop arm container
+      #   run: docker stop arm-docker
+      #   if: ${{ always() }}
