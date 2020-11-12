@@ -1,7 +1,7 @@
 # Workflow to build and test wheels
 name: Wheel builder
 
-on: [push]
+on: [push, pull_request]
 
 env:
   SCIKIT_LEARN_VERSION: 0.24.dev0
