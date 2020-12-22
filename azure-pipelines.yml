@@ -59,8 +59,15 @@ jobs:
         else
           echo "##vso[task.setvariable variable=runScipyDev;isOutput=true]false"
         fi
+
+        if [[ "$COMMIT_MESSAGE" =~ "[icc-build]" ]] || [[ $BUILD_REASON == "Schedule" ]]; then
+          echo "Running scipy-dev"
+          echo "##vso[task.setvariable variable=runIccBuild;isOutput=true]true"
+        else
+          echo "##vso[task.setvariable variable=runIccBuild;isOutput=true]false"
+        fi
       name: gitCommitMessage
-      displayName: Determine to run scipy-dev
+      displayName: Determine to run scipy-dev and/or icc-build
 
 - template: build_tools/azure/posix.yml
   parameters:
@@ -75,6 +82,21 @@ jobs:
         CHECK_WARNINGS: 'true'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         TEST_DOCSTRINGS: 'true'
+        # Tests that require large downloads over the networks are skipped in CI.
+        # Here we make sure, that they are still run on a regular basis.
+        SKLEARN_SKIP_NETWORK_TESTS: '0'
+
+- template: build_tools/azure/posix.yml
+  parameters:
+    name: Linux_Nightly
+    vmImage: ubuntu-18.04
+    dependsOn: [linting]
+    condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runIccBuild'], 'true')
+    matrix:
+      pylatest_pip_scipy_dev:
+        DISTRIB: 'conda-pip-icc-build'
+        PYTHON_VERSION: '*'
+        CHECK_WARNINGS: 'true'
         # Tests that require large downloads over the networks are skipped in CI.
         # Here we make sure, that they are still run on a regular basis.
         SKLEARN_SKIP_NETWORK_TESTS: '0'
