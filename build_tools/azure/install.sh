@@ -108,12 +108,11 @@ elif [[ "$DISTRIB" == "conda-pip-icc-build" ]]; then
 
     wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
 
-    # apt-key output can not be piped to another process
-    sh -c "sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB"
+    sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
     rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
     sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
     sudo apt-get update
-    sudo apt-get install intel-oneapi-icc
+    sudo apt-get install intel-oneapi-dpcpp-cpp-compiler
     source /opt/intel/oneapi/setvars.sh
 fi
 
