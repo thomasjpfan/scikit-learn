@@ -93,7 +93,7 @@ jobs:
     dependsOn: [linting]
     condition: eq(dependencies['linting']['outputs']['gitCommitMessage.runIccBuild'], 'true')
     matrix:
-      pylatest_pip_scipy_dev:
+      pylatest_icc:
         DISTRIB: 'conda-pip-icc-build'
         PYTHON_VERSION: '*'
         CHECK_WARNINGS: 'true'
