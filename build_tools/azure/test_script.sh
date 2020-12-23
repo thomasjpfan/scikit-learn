@@ -8,6 +8,10 @@ elif [[ "$DISTRIB" == "ubuntu" ]] || [[ "$DISTRIB" == "ubuntu-32" ]]; then
     source $VIRTUALENV/bin/activate
 fi
 
+if [[ "$DISTRIB" == "conda-pip-icc-build" ]]; then
+    source /opt/intel/oneapi/compiler/latest/env/vars.sh
+fi
+
 python --version
 python -c "import numpy; print('numpy %s' % numpy.__version__)"
 python -c "import scipy; print('scipy %s' % scipy.__version__)"
