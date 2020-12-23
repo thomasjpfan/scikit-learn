@@ -113,7 +113,7 @@ elif [[ "$DISTRIB" == "conda-pip-icc-build" ]]; then
     sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
     sudo apt-get update
     sudo apt-get install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
-    source /opt/intel/oneapi/setvars.sh
+    source /opt/intel/oneapi/compiler/latest/env/vars.sh
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
