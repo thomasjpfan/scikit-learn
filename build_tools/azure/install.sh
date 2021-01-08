@@ -116,7 +116,7 @@ elif [[ "$DISTRIB" == "conda-pip-icc-build" ]]; then
     rm GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
     sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
     sudo apt-get update
-    sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+    sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-mkl-devel intel-oneapi-openmp
     source /opt/intel/oneapi/compiler/latest/env/vars.sh
 fi
 
