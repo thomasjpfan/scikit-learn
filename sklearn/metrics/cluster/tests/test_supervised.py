@@ -282,7 +282,7 @@ def test_contingency_matrix_sparse():
 
 @ignore_warnings(category=FutureWarning)
 @pytest.mark.parametrize("i", np.logspace(1, 4, 4).astype(int))
-@pytest.mark.parametrize("method", ["min", "geometric", "arithmetic", "max"])
+@pytest.mark.parametrize("method", ["min", "geometric"])
 def test_exactly_zero_info_score(i, method):
     # Check numerical stability when information is exactly zero
     # for i in np.logspace(1, 4, 4).astype(int):
