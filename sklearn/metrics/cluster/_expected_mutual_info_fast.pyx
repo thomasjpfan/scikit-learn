@@ -41,6 +41,7 @@ def expected_mutual_information(contingency, int n_samples):
     # term2 uses the outer product
     log_a = np.log(a, dtype=np.float64)
     log_b = np.log(b, dtype=np.float64)
+    print(log_a, log_b)
     log_Nnij = np.log(N * nijs)
     # term3 is large, and involved many factorials. Calculate these in log
     # space to stop overflows.
@@ -61,6 +62,7 @@ def expected_mutual_information(contingency, int n_samples):
         for j in range(C):
             for nij in range(start[i,j], end[i,j]):
                 term2 = log_Nnij[nij] - (log_a[i] + log_b[j])
+                print(log_Nnij[nij], log_a[i], log_b[j])
                 # Numerators are positive, denominators are negative.
                 gln = (gln_a[i] + gln_b[j] + gln_Na[i] + gln_Nb[j]
                      - gln_N - gln_nij[nij] - lgamma(a[i] - nij + 1)
