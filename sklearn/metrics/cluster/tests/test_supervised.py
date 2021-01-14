@@ -299,6 +299,7 @@ def test_exactly_zero_info_score(i, method):
         # for method in ["min", "geometric", "arithmetic", "max"]:
     assert adjusted_mutual_info_score(
         labels_a, labels_b,  method) == pytest.approx(0.0)
+    assert False
     assert normalized_mutual_info_score(
         labels_a, labels_b, method) == pytest.approx(0.0)
 

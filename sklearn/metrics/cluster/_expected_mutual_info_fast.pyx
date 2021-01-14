@@ -62,7 +62,6 @@ def expected_mutual_information(contingency, int n_samples):
         for j in range(C):
             for nij in range(start[i,j], end[i,j]):
                 term2 = log_N + log_Nnij[nij] - log_a[i] - log_b[j]
-                print(term2, log_N, log_Nnij[nij], log_a[i], log_b[j])
                 # Numerators are positive, denominators are negative.
                 gln = (gln_a[i] + gln_b[j] + gln_Na[i] + gln_Nb[j]
                      - gln_N - gln_nij[nij] - lgamma(a[i] - nij + 1)
@@ -70,4 +69,5 @@ def expected_mutual_information(contingency, int n_samples):
                      - lgamma(N - a[i] - b[j] + nij + 1))
                 term3 = exp(gln)
                 emi += (term1[nij] * term2 * term3)
+                print(emi)
     return emi
