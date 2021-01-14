@@ -22,7 +22,8 @@ def expected_mutual_information(contingency, int n_samples):
     cdef DOUBLE N, gln_N, emi, term2, term3, gln
     cdef np.ndarray[DOUBLE] gln_a, gln_b, gln_Na, gln_Nb, gln_nij, log_Nnij
     cdef np.ndarray[DOUBLE] nijs, term1
-    cdef np.ndarray[DOUBLE, ndim=2] log_ab_outer
+    # cdef np.ndarray[DOUBLE, ndim=2] log_ab_outer
+    cdef np.ndarray[DOUBLE] log_a, log_b
     cdef np.ndarray[np.int32_t] a, b
     #cdef np.ndarray[int, ndim=2] start, end
     R, C = contingency.shape
@@ -32,14 +33,14 @@ def expected_mutual_information(contingency, int n_samples):
     # There are three major terms to the EMI equation, which are multiplied to
     # and then summed over varying nij values.
     # While nijs[0] will never be used, having it simplifies the indexing.
-    nijs = np.arange(0, max(np.max(a), np.max(b)) + 1, dtype='float')
+    nijs = np.arange(0, max(np.max(a), np.max(b)) + 1, dtype=np.float64)
     nijs[0] = 1  # Stops divide by zero warnings. As its not used, no issue.
     # term1 is nij / N
     term1 = nijs / N
     # term2 is log((N*nij) / (a * b)) == log(N * nij) - log(a * b)
     # term2 uses the outer product
-    log_ab_outer = np.log(a)[:, np.newaxis] + np.log(b)
-    # term2 uses N * nij
+    log_a = np.log(a, dtype=np.float64)
+    log_b = np.log(b, dtype=np.float64)
     log_Nnij = np.log(N * nijs)
     # term3 is large, and involved many factorials. Calculate these in log
     # space to stop overflows.
@@ -59,8 +60,7 @@ def expected_mutual_information(contingency, int n_samples):
     for i in range(R):
         for j in range(C):
             for nij in range(start[i,j], end[i,j]):
-                term2 = log_Nnij[nij] - log_ab_outer[i,j]
-                print(log_Nnij[nij], log_ab_outer[i, j])
+                term2 = log_Nnij[nij] - (log_a[i] + log_b[j])
                 # Numerators are positive, denominators are negative.
                 gln = (gln_a[i] + gln_b[j] + gln_Na[i] + gln_Nb[j]
                      - gln_N - gln_nij[nij] - lgamma(a[i] - nij + 1)
