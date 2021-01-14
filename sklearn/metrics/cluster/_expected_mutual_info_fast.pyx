@@ -22,7 +22,6 @@ def expected_mutual_information(contingency, int n_samples):
     cdef DOUBLE N, gln_N, emi, term2, term3, gln, log_N
     cdef np.ndarray[DOUBLE] gln_a, gln_b, gln_Na, gln_Nb, gln_nij, log_nij
     cdef np.ndarray[DOUBLE] nijs, term1
-    # cdef np.ndarray[DOUBLE, ndim=2] log_ab_outer
     cdef np.ndarray[DOUBLE] log_a, log_b
     cdef np.ndarray[np.int32_t] a, b
     #cdef np.ndarray[int, ndim=2] start, end
@@ -62,6 +61,7 @@ def expected_mutual_information(contingency, int n_samples):
         for j in range(C):
             for nij in range(start[i,j], end[i,j]):
                 term2 = log_N + log_nij[nij] - log_a[i] - log_b[j]
+                print(log_N, log_nij[nij], log_a[i], log_b[j])
                 # Numerators are positive, denominators are negative.
                 gln = (gln_a[i] + gln_b[j] + gln_Na[i] + gln_Nb[j]
                      - gln_N - gln_nij[nij] - lgamma(a[i] - nij + 1)
