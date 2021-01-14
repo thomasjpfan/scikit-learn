@@ -56,7 +56,7 @@ def expected_mutual_information(contingency, int n_samples):
     start = np.maximum(start, 1)
     end = np.minimum(np.resize(a, (C, R)).T, np.resize(b, (R, C))) + 1
     # emi itself is a summation over the various values.
-    emi = 0
+    emi = 0.0
     cdef Py_ssize_t i, j, nij
     for i in range(R):
         for j in range(C):
@@ -69,5 +69,6 @@ def expected_mutual_information(contingency, int n_samples):
                      - lgamma(N - a[i] - b[j] + nij + 1))
                 term3 = exp(gln)
                 emi += (term1[nij] * term2 * term3)
-                print(emi)
+            print(i, j, emi)
+    print("final", emi)
     return emi
