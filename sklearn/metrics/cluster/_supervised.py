@@ -793,6 +793,7 @@ def mutual_info_score(labels_true, labels_pred, *, contingency=None):
     outer = (pi.take(nzx).astype(np.int64, copy=False)
              * pj.take(nzy).astype(np.int64, copy=False))
     log_outer = -np.log(outer) + log(pi.sum()) + log(pj.sum())
+    print(contingency_nm, log_contingency_nm, log(contingency_sum), log_outer)
     mi = (contingency_nm * (log_contingency_nm - log(contingency_sum)) +
           contingency_nm * log_outer)
     return np.clip(mi.sum(), 0.0, None)
