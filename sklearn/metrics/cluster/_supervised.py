@@ -908,6 +908,7 @@ def adjusted_mutual_info_score(labels_true, labels_pred, *,
     normalizer = _generalized_average(h_true, h_pred, average_method)
     print(normalizer, emi)
     denominator = normalizer - emi
+    print(denominator)
     # Avoid 0.0 / 0.0 when expectation equals maximum, i.e a perfect match.
     # normalizer should always be >= emi, but because of floating-point
     # representation, sometimes emi is slightly larger. Correct this
