@@ -47,5 +47,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-$TEST_CMD --pyargs sklearn.metrics.cluster.tests.test_supervised -k test_exactly_zero_info_score
+$TEST_CMD --pyargs sklearn
 set +x
