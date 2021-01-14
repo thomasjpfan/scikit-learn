@@ -19,7 +19,7 @@ ctypedef np.float64_t DOUBLE
 def expected_mutual_information(contingency, int n_samples):
     """Calculate the expected mutual information for two labelings."""
     cdef int R, C
-    cdef DOUBLE N, gln_N, emi, term2, term3, gln
+    cdef DOUBLE N, gln_N, emi, term2, term3, gln, log_N
     cdef np.ndarray[DOUBLE] gln_a, gln_b, gln_Na, gln_Nb, gln_nij, log_Nnij
     cdef np.ndarray[DOUBLE] nijs, term1
     # cdef np.ndarray[DOUBLE, ndim=2] log_ab_outer
@@ -41,7 +41,8 @@ def expected_mutual_information(contingency, int n_samples):
     # term2 uses the outer product
     log_a = np.log(a, dtype=np.float64)
     log_b = np.log(b, dtype=np.float64)
-    log_Nnij = np.log(nijs, dtype=np.float64) + np.log(N, dtype=np.float64)
+    log_Nnij = np.log(nijs, dtype=np.float64)
+    log_N = np.log(N, dtype=np.float64)
     # term3 is large, and involved many factorials. Calculate these in log
     # space to stop overflows.
     gln_a = gammaln(a + 1)
@@ -60,7 +61,7 @@ def expected_mutual_information(contingency, int n_samples):
     for i in range(R):
         for j in range(C):
             for nij in range(start[i,j], end[i,j]):
-                term2 = log_Nnij[nij] - log_a[i] - log_b[j]
+                term2 = log_N + log_Nnij[nij] - log_a[i] - log_b[j]
                 # Numerators are positive, denominators are negative.
                 gln = (gln_a[i] + gln_b[j] + gln_Na[i] + gln_Nb[j]
                      - gln_N - gln_nij[nij] - lgamma(a[i] - nij + 1)
