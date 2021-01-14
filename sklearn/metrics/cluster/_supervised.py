@@ -895,14 +895,14 @@ def adjusted_mutual_info_score(labels_true, labels_pred, *,
     if (classes.shape[0] == clusters.shape[0] == 1 or
             classes.shape[0] == clusters.shape[0] == 0):
         return 1.0
-    contingency = contingency_matrix(labels_true, labels_pred, sparse=True)
-    contingency = contingency.astype(np.float64,
-                                     **_astype_copy_false(contingency))
+    contingency_int = contingency_matrix(labels_true, labels_pred, sparse=True)
+    contingency = contingency_int.astype(
+        np.float64, **_astype_copy_false(contingency_int))
     # Calculate the MI for the two clusterings
     mi = mutual_info_score(labels_true, labels_pred,
                            contingency=contingency)
     # Calculate the expected value for the mutual information
-    emi = expected_mutual_information(contingency, n_samples)
+    emi = expected_mutual_information(contingency_int, n_samples)
     # Calculate entropy for each labeling
     h_true, h_pred = entropy(labels_true), entropy(labels_pred)
     normalizer = _generalized_average(h_true, h_pred, average_method)
