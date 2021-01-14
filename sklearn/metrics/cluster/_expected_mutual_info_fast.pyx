@@ -32,7 +32,7 @@ def expected_mutual_information(contingency, int n_samples):
     # There are three major terms to the EMI equation, which are multiplied to
     # and then summed over varying nij values.
     # While nijs[0] will never be used, having it simplifies the indexing.
-    nijs = np.arange(0, max(np.max(a), np.max(b)) + 1, dtype=np.float64)
+    nijs = np.arange(0, max(np.max(a), np.max(b)) + 1, dtype='float')
     nijs[0] = 1  # Stops divide by zero warnings. As its not used, no issue.
     # term1 is nij / N
     term1 = nijs / N
@@ -50,7 +50,7 @@ def expected_mutual_information(contingency, int n_samples):
     gln_N = gammaln(N + 1)
     gln_nij = gammaln(nijs + 1)
     # start and end values for nij terms for each summation.
-    start = np.array([[v - N + w for w in b] for v in a], dtype=np.int32)
+    start = np.array([[v - N + w for w in b] for v in a], dtype='int')
     start = np.maximum(start, 1)
     end = np.minimum(np.resize(a, (C, R)).T, np.resize(b, (R, C))) + 1
     # emi itself is a summation over the various values.
@@ -66,4 +66,5 @@ def expected_mutual_information(contingency, int n_samples):
                      - lgamma(b[j] - nij + 1)
                      - lgamma(N - a[i] - b[j] + nij + 1))
                 term3 = exp(gln)
+                emi += (term1[nij] * term2 * term3)
     return emi
