@@ -67,4 +67,5 @@ def expected_mutual_information(contingency, int n_samples):
                      - lgamma(N - a[i] - b[j] + nij + 1))
                 term3 = exp(gln)
                 emi += (term1[nij] * term2 * term3)
+                print(emi, term2, term3)
     return emi
