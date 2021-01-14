@@ -915,6 +915,7 @@ def adjusted_mutual_info_score(labels_true, labels_pred, *,
         denominator = min(denominator, -np.finfo('float64').eps)
     else:
         denominator = max(denominator, np.finfo('float64').eps)
+    print(mi - emi, denominator)
     ami = (mi - emi) / denominator
     return ami
 
