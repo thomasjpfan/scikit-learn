@@ -791,7 +791,12 @@ def mutual_info_score(labels_true, labels_pred, *, contingency=None):
     contingency_nm = nz_val / contingency_sum
     # Don't need to calculate the full outer product, just for non-zeroes
     outer = pi.take(nzx) * pj.take(nzy)
-    log_outer = -np.log(outer) + np.log(pi.sum()) + np.log(pj.sum())
+    pi_sum = pi.sum()
+    pj_sum = pj.sum()
+    print(f"{outer=}")
+    print(f"{pi_sum=}")
+    print(f"{pj_sum=}")
+    log_outer = -np.log(outer) + np.log(pi_sum) + np.log(pj_sum)
     print(f"{log_contingency_nm=}")
     print(f"{contingency_sum=}")
     print(f"{log_outer=}")
