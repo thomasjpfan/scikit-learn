@@ -900,6 +900,7 @@ def adjusted_mutual_info_score(labels_true, labels_pred, *,
     # Calculate the MI for the two clusterings
     mi = mutual_info_score(labels_true, labels_pred,
                            contingency=contingency)
+    print(mi)
     # Calculate the expected value for the mutual information
     emi = expected_mutual_information(contingency, n_samples)
     # Calculate entropy for each labeling
