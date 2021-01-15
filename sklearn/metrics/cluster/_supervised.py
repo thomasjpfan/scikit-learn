@@ -801,6 +801,7 @@ def mutual_info_score(labels_true, labels_pred, *, contingency=None):
     print(f"{contingency_sum=}")
     print(f"{log_outer=}")
     mi = log_contingency_nm - np.log(contingency_sum) + log_outer
+    mi = np.where(mi < np.finfo(mi.dtype).eps, 0.0, mi)
     print(f"before: {mi=}")
     mi *= contingency_nm
     print(f"after: {mi=}")
