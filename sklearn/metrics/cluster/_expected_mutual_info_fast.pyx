@@ -40,8 +40,7 @@ def expected_mutual_information(contingency, int n_samples):
     # term2 uses the outer product
     log_a = np.log(a.astype(np.float64))
     log_b = np.log(b.astype(np.float64))
-    log_nij = np.log(nijs)
-    log_N = np.log(N)
+    log_nij = np.log(nijs) + np.log(N)
     # term3 is large, and involved many factorials. Calculate these in log
     # space to stop overflows.
     gln_a = gammaln(a + 1)
