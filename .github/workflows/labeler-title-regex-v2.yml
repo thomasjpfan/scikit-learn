@@ -1,5 +1,7 @@
-name: Pull Request Regex Title Labeler Round 2
-on: [push, pull_request]
+name: Pull Request Regex Title Labeler
+on:
+  pull_request:
+    types: [opened, pushed]
 
 jobs:
 
