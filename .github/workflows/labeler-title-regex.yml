@@ -1,7 +1,7 @@
 name: Pull Request Regex Title Labeler Round 2
 on:
   pull_request:
-    types: [opened]
+    types: [opened, push]
 
 jobs:
 
@@ -14,7 +14,7 @@ jobs:
         python-version: '3.9'
     - name: Install ghapi
       run: pip install -Uq ghapi
-    - name: Label pull requests
+    - name: Label pull request
       run: python .github/scripts/label_title_regex.py
       env:
         CONTEXT_GITHUB: ${{ toJson(github) }}
