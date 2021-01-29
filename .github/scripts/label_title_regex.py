@@ -9,6 +9,7 @@ import re
 owner, repo = user_repo()
 pull_request = context_github.event.pull_request
 title = pull_request.title
+pr_number = pull_request.number
 
 regex_to_labels = [
     (r"\bDOC\b", "Documentation"),
@@ -20,5 +21,6 @@ labels_to_add = [
     if re.search(regex, title)
 ]
 
-api = GhApi(owner=owner, repo=repo, token=github_token())
-print(labels_to_add)
+if labels_to_add:
+    api = GhApi(owner=owner, repo=repo, token=github_token())
+    api.issues.add_labels(pull_request.number, labels_to_add)
