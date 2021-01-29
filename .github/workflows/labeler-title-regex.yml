@@ -1,6 +1,6 @@
 name: Pull Request Regex Title Labeler
 on:
-  pull_request_target:
+  pull_request:
     types: [opened]
 
 jobs:
@@ -8,9 +8,12 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
-    - name: Check Labels
-      id: labeler
-      continue-on-error: true
-      uses: jimschubert/labeler-action@v2
+    - uses: actions/setup-python@v2
       with:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        python-version: '3.9'
+    - name: Install ghapi
+      run: pip install -Uq ghapi
+    - name: Label pull requests
+      run: python .github/scripts/label_title_regex.py
+      env:
+        CONTEXT_GITHUB: ${{ toJson(github) }}
