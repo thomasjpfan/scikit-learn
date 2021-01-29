@@ -1,7 +1,7 @@
 name: Pull Request Regex Title Labeler
 on:
   pull_request:
-    types: [opened, pushed]
+    types: [opened, pushed, synchronize]
 
 jobs:
 
