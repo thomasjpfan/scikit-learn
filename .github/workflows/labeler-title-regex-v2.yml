@@ -1,4 +1,4 @@
-name: Pull Request Regex Title Labeler
+name: Pull Request Regex Title Labeler Round 2
 on:
   pull_request:
     types: [opened, pushed, synchronize]
