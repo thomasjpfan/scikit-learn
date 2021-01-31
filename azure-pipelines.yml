@@ -12,6 +12,11 @@ jobs:
   displayName: Get Git Commit
   pool:
     vmImage: ubuntu-18.04
+  # Disable Percent encoding when echoing ##vso
+  # https://github.com/microsoft/azure-pipelines-agent/blob/master/docs/design/percentEncoding.md
+  variables:
+  - name: DECODE_PERCENTS
+    value: false
   steps:
     - bash: |
         set -ex
