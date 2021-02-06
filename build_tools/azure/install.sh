@@ -70,7 +70,7 @@ elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     apt-get update
     apt-get install -y python3-dev libatlas3-base libatlas-base-dev python3-virtualenv ccache
 
-    python3 -m virtualenv --python=python3 $VIRTUALENV
+    python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
     setup_ccache
     python -m pip install numpy scipy pandas matplotlib
