@@ -51,5 +51,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-$TEST_CMD --pyargs sklearn
+$TEST_CMD --pyargs sklearn.inspection.tests.test_partial_dependence -k test_partial_dependence_dataframe
 set +x
