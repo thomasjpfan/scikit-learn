@@ -68,11 +68,12 @@ elif [[ "$DISTRIB" == "ubuntu" ]]; then
 
 elif [[ "$DISTRIB" == "ubuntu-32" ]]; then
     apt-get update
-    apt-get install -y python3-dev python3-virtualenv
+    apt-get install -y python3-dev libatlas3-base libatlas-base-dev python3-virtualenv ccache
 
-    python3 -m virtualenv --system-site-packages --python=python3 $VIRTUALENV
+    python3 -m virtualenv --python=python3 $VIRTUALENV
     source $VIRTUALENV/bin/activate
-    python -m pip install scipy numpy pandas matplotlib
+    setup_ccache
+    python -m pip install numpy scipy pandas matplotlib
     python -m pip install $(get_dep cython $CYTHON_VERSION) \
                           $(get_dep joblib $JOBLIB_VERSION)
 
@@ -166,4 +167,4 @@ else
     # current environment.
     python setup.py develop
 fi
-type ccache >/dev/null && ccache -s
+ccache -s
