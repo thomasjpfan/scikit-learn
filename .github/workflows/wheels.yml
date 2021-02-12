@@ -22,7 +22,7 @@ jobs:
   check_build_trigger:
     name: Check build trigger
     runs-on: ubuntu-latest
-    if: github.repository == 'scikit-learn/scikit-learn'
+    # if: github.repository == 'scikit-learn/scikit-learn'
     outputs:
       build: ${{ steps.check_build_trigger.outputs.build }}
 
@@ -41,7 +41,7 @@ jobs:
     name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
     needs: check_build_trigger
-    if: needs.check_build_trigger.outputs.build
+    # if: needs.check_build_trigger.outputs.build
 
     strategy:
       # Ensure that a wheel builder finishes even if another fails
@@ -105,66 +105,66 @@ jobs:
 
         run: bash build_tools/github/build_wheels.sh
 
-      - name: Store artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          path: wheelhouse/*.whl
+      # - name: Store artifacts
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     path: wheelhouse/*.whl
 
   # Build the source distribution under Linux
-  build_sdist:
-    name: Source distribution
-    runs-on: ubuntu-latest
-    needs: check_build_trigger
-    if: needs.check_build_trigger.outputs.build
+  # build_sdist:
+  #   name: Source distribution
+  #   runs-on: ubuntu-latest
+  #   needs: check_build_trigger
+  #   if: needs.check_build_trigger.outputs.build
 
-    steps:
-      - name: Checkout scikit-learn
-        uses: actions/checkout@v1
+  #   steps:
+  #     - name: Checkout scikit-learn
+  #       uses: actions/checkout@v1
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v2
 
-      - name: Build source distribution
-        run: bash build_tools/github/build_source.sh
-        env:
-          SKLEARN_BUILD_PARALLEL: 3
+  #     - name: Build source distribution
+  #       run: bash build_tools/github/build_source.sh
+  #       env:
+  #         SKLEARN_BUILD_PARALLEL: 3
 
-      - name: Test source distribution
-        run: bash build_tools/github/test_source.sh
-        env:
-          OMP_NUM_THREADS: 2
-          OPENBLAS_NUM_THREADS: 2
-          SKLEARN_SKIP_NETWORK_TESTS: 1
+  #     - name: Test source distribution
+  #       run: bash build_tools/github/test_source.sh
+  #       env:
+  #         OMP_NUM_THREADS: 2
+  #         OPENBLAS_NUM_THREADS: 2
+  #         SKLEARN_SKIP_NETWORK_TESTS: 1
 
-      - name: Store artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          path: dist/*.tar.gz
+  #     - name: Store artifacts
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         path: dist/*.tar.gz
 
-  # Upload the wheels and the source distribution
-  upload_anaconda:
-    name: Upload to Anaconda
-    runs-on: ubuntu-latest
-    needs: [build_wheels, build_sdist]
-    # The artifacts cannot be uploaded on PRs
-    if: github.event_name != 'pull_request'
+  # # Upload the wheels and the source distribution
+  # upload_anaconda:
+  #   name: Upload to Anaconda
+  #   runs-on: ubuntu-latest
+  #   needs: [build_wheels, build_sdist]
+  #   # The artifacts cannot be uploaded on PRs
+  #   if: github.event_name != 'pull_request'
 
-    steps:
-      - name: Checkout scikit-learn
-        uses: actions/checkout@v1
+  #   steps:
+  #     - name: Checkout scikit-learn
+  #       uses: actions/checkout@v1
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v2
-        with:
-          path: dist
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v2
+  #       with:
+  #         path: dist
 
-      - name: Setup Python
-        uses: actions/setup-python@v2
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v2
 
-      - name: Upload artifacts
-        env:
-          # Secret variables need to be mapped to environment variables explicitly
-          SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN: ${{ secrets.SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN }}
-          SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ${{ secrets.SCIKIT_LEARN_STAGING_UPLOAD_TOKEN }}
-        # Force a replacement if the remote file already exists
-        run: bash build_tools/github/upload_anaconda.sh
+  #     - name: Upload artifacts
+  #       env:
+  #         # Secret variables need to be mapped to environment variables explicitly
+  #         SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN: ${{ secrets.SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN }}
+  #         SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ${{ secrets.SCIKIT_LEARN_STAGING_UPLOAD_TOKEN }}
+  #       # Force a replacement if the remote file already exists
+  #       run: bash build_tools/github/upload_anaconda.sh
