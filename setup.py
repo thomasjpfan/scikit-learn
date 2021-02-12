@@ -56,26 +56,6 @@ import sklearn._min_dependencies as min_deps  # noqa
 VERSION = sklearn.__version__
 
 
-# For some commands, use setuptools
-SETUPTOOLS_COMMANDS = {
-    'develop', 'release', 'bdist_egg', 'bdist_rpm',
-    'bdist_wininst', 'install_egg_info', 'build_sphinx',
-    'egg_info', 'easy_install', 'upload', 'bdist_wheel',
-    '--single-version-externally-managed',
-}
-if SETUPTOOLS_COMMANDS.intersection(sys.argv):
-    extra_setuptools_args = dict(
-        zip_safe=False,  # the package can run out of an .egg file
-        include_package_data=True,
-        extras_require={
-            key: min_deps.tag_to_packages[key] for
-            key in ['examples', 'docs', 'tests', 'benchmark']
-        },
-    )
-else:
-    extra_setuptools_args = dict()
-
-
 # Custom clean command to remove build artifacts
 
 class CleanCommand(Clean):
@@ -264,7 +244,12 @@ def setup_package():
                     python_requires=">=3.6",
                     install_requires=min_deps.tag_to_packages['install'],
                     package_data={'': ['*.pxd']},
-                    **extra_setuptools_args)
+                    zip_safe=False,  # the package can run out of an .egg file
+                    include_package_data=True,
+                    extras_require={
+                        key: min_deps.tag_to_packages[key] for
+                        key in ['examples', 'docs', 'tests', 'benchmark']
+                    })
 
     if len(sys.argv) == 1 or (
             len(sys.argv) >= 2 and ('--help' in sys.argv[1:] or
@@ -280,8 +265,6 @@ def setup_package():
 
         # These commands use setup from setuptools
         from setuptools import setup
-
-        metadata['version'] = VERSION
     else:
         if sys.version_info < (3, 6):
             raise RuntimeError(
