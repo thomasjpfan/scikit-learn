@@ -3,7 +3,9 @@ name: Check Milestone (when failing needs Triage intervention)
 # To bypass this check, label the PR with "Long Term".
 on:
   pull_request:
-    types: [opened, edited, labeled, unlabeled]
+    types: [opened, edited, labeled, unlabeled, synchronize]
+  issues:
+    types: [milestoned, demilestoned]
 
 jobs:
   check:
