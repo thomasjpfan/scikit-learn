@@ -2,13 +2,13 @@ name: Check Milestone (when failing needs Triage intervention)
 # This check makes sure that the milestone is properly set.
 # To bypass this check, label the PR with "Long Term".
 on:
-  pull_request:
-    types: [opened, edited, labeled, unlabeled, synchronize]
+  issues:
+    types: [opened, edited, labeled, unlabeled, milestoned, demilestoned]
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'Long Term') == 0 }}
+    if: "github.event.pull_request && !contains(github.event.pull_request.labels.*.name, 'Long Term')"
     steps:
       - name: Check the milestone
         run: |
@@ -18,4 +18,3 @@ jobs:
               echo "No milestone has been set."
               exit 1
           fi
-
