@@ -560,7 +560,7 @@ class _MPLTreeExporter(_BaseTreeExporter):
         if self.rounded:
             self.bbox_args['boxstyle'] = "round"
 
-        self.arrow_args = dict(arrowstyle="<-")
+        self.arrow_args = dict(mutation_scale=14)
 
     def _make_tree(self, node_id, et, criterion, depth=0):
         # traverses _tree.Tree recursively, builds intermediate
@@ -653,6 +653,10 @@ class _MPLTreeExporter(_BaseTreeExporter):
             else:
                 xy_parent = ((node.parent.x + .5) * scale_x,
                              height - (node.parent.y + .5) * scale_y)
+                if xy_parent >= xy:
+                    kwargs['arrowprops']["arrowstyle"] = "<-"
+                else:
+                    kwargs['arrowprops']["arrowstyle"] = "<|-"
                 ax.annotate(node.tree.label, xy_parent, xy, **kwargs)
             for child in node.children:
                 self.recurse(child, tree, ax, scale_x, scale_y, height,
