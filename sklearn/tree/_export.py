@@ -93,6 +93,11 @@ def plot_tree(decision_tree, *, max_depth=None, feature_names=None,
     Use the ``figsize`` or ``dpi`` arguments of ``plt.figure``  to control
     the size of the rendering.
 
+    When the decision criteria is `True`, the sample moves to the right child
+    node and vice versa. In the visualization, the solid arrow denotes the
+    path for a `True` decision criteria and the dashed arrow denotes the
+    path for a `False` decision criteria.
+
     Read more in the :ref:`User Guide <tree>`.
 
     .. versionadded:: 0.21
@@ -560,7 +565,7 @@ class _MPLTreeExporter(_BaseTreeExporter):
         if self.rounded:
             self.bbox_args['boxstyle'] = "round"
 
-        self.arrow_args = dict(mutation_scale=14)
+        self.arrow_args = dict(mutation_scale=18)
 
     def _make_tree(self, node_id, et, criterion, depth=0):
         # traverses _tree.Tree recursively, builds intermediate
@@ -633,6 +638,7 @@ class _MPLTreeExporter(_BaseTreeExporter):
                       zorder=100 - 10 * depth, xycoords='axes pixels',
                       arrowprops=self.arrow_args.copy())
         kwargs['arrowprops']['edgecolor'] = plt.rcParams['text.color']
+        kwargs['arrowprops']['facecolor'] = plt.rcParams['text.color']
 
         if self.fontsize is not None:
             kwargs['fontsize'] = self.fontsize
@@ -653,8 +659,10 @@ class _MPLTreeExporter(_BaseTreeExporter):
             else:
                 xy_parent = ((node.parent.x + .5) * scale_x,
                              height - (node.parent.y + .5) * scale_y)
+
                 if xy_parent >= xy:
                     kwargs['arrowprops']["arrowstyle"] = "<-"
+                    kwargs['arrowprops']["linestyle"] = "--"
                 else:
                     kwargs['arrowprops']["arrowstyle"] = "<|-"
                 ax.annotate(node.tree.label, xy_parent, xy, **kwargs)
