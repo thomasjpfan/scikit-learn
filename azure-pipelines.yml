@@ -207,9 +207,8 @@ jobs:
         BLAS: 'mkl'
         CONDA_CHANNEL: 'conda-forge'
       pylatest_conda_mkl_no_openmp:
-        DISTRIB: 'conda'
+        DISTRIB: 'conda-pip-latest'
         BLAS: 'mkl'
-        SKLEARN_TEST_NO_OPENMP: 'true'
         SKLEARN_SKIP_OPENMP_TEST: 'true'
 
 # - template: build_tools/azure/windows.yml
