@@ -45,6 +45,7 @@ if [[ "$DISTRIB" == "conda" ]]; then
     TO_INSTALL="$TO_INSTALL $(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
+        clang --version
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
             # on macOS, install an OpenMP-enabled clang/llvm from conda-forge.
             # TODO: Remove !=1.1.0 when the following is fixed:
@@ -107,8 +108,6 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install https://github.com/joblib/joblib/archive/master.zip
     echo "Installing pillow master"
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
-elif [[ "$UNAMESTR" == "Darwin" ]]; then
-    clang --version
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
