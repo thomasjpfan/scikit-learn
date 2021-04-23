@@ -79,116 +79,116 @@ jobs:
         SKLEARN_SKIP_NETWORK_TESTS: '0'
 
 # Check compilation with intel C++ compiler (ICC)
-- template: build_tools/azure/posix.yml
-  parameters:
-    name: Linux_Nightly_ICC
-    vmImage: ubuntu-18.04
-    dependsOn: [git_commit, linting]
-    condition: |
-      and(
-        succeeded(),
-        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
-        or(eq(variables['Build.Reason'], 'Schedule'),
-           contains(dependencies['git_commit']['outputs']['commit.message'], '[icc-build]')
-        )
-      )
-    matrix:
-      pylatest_conda_mkl:
-        DISTRIB: 'conda'
-        PYTHON_VERSION: '*'
-        BLAS: 'mkl'
-        COVERAGE: 'false'
-        BUILD_WITH_ICC: 'true'
+# - template: build_tools/azure/posix.yml
+#   parameters:
+#     name: Linux_Nightly_ICC
+#     vmImage: ubuntu-18.04
+#     dependsOn: [git_commit, linting]
+#     condition: |
+#       and(
+#         succeeded(),
+#         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
+#         or(eq(variables['Build.Reason'], 'Schedule'),
+#            contains(dependencies['git_commit']['outputs']['commit.message'], '[icc-build]')
+#         )
+#       )
+#     matrix:
+#       pylatest_conda_mkl:
+#         DISTRIB: 'conda'
+#         PYTHON_VERSION: '*'
+#         BLAS: 'mkl'
+#         COVERAGE: 'false'
+#         BUILD_WITH_ICC: 'true'
 
-# Will run all the time regardless of linting outcome.
-- template: build_tools/azure/posix.yml
-  parameters:
-    name: Linux_Runs
-    vmImage: ubuntu-18.04
-    dependsOn: [git_commit]
-    condition: |
-      and(
-        succeeded(),
-        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]'))
-      )
-    matrix:
-      pylatest_conda_mkl:
-        DISTRIB: 'conda'
-        PYTHON_VERSION: '*'
-        BLAS: 'mkl'
-        COVERAGE: 'true'
+# # Will run all the time regardless of linting outcome.
+# - template: build_tools/azure/posix.yml
+#   parameters:
+#     name: Linux_Runs
+#     vmImage: ubuntu-18.04
+#     dependsOn: [git_commit]
+#     condition: |
+#       and(
+#         succeeded(),
+#         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]'))
+#       )
+#     matrix:
+#       pylatest_conda_mkl:
+#         DISTRIB: 'conda'
+#         PYTHON_VERSION: '*'
+#         BLAS: 'mkl'
+#         COVERAGE: 'true'
 
-- template: build_tools/azure/posix.yml
-  parameters:
-    name: Linux
-    vmImage: ubuntu-18.04
-    dependsOn: [linting, git_commit]
-    condition: |
-      and(
-        succeeded(),
-        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
-        ne(variables['Build.Reason'], 'Schedule')
-      )
-    matrix:
-      # Linux environment to test that scikit-learn can be built against
-      # versions of numpy, scipy with ATLAS that comes with Ubuntu Bionic 18.04
-      # i.e. numpy 1.13.3 and scipy 0.19
-      py36_ubuntu_atlas:
-        DISTRIB: 'ubuntu'
-        PYTHON_VERSION: '3.6'
-        JOBLIB_VERSION: 'min'
-        PANDAS_VERSION: 'none'
-        THREADPOOLCTL_VERSION: 'min'
-        PYTEST_VERSION: 'min'
-        PYTEST_XDIST_VERSION: 'none'
-        COVERAGE: 'false'
-      # Linux + Python 3.6 build with OpenBLAS and without SITE_JOBLIB
-      py36_conda_openblas:
-        DISTRIB: 'conda'
-        PYTHON_VERSION: '3.6'
-        BLAS: 'openblas'
-        NUMPY_VERSION: 'min'
-        SCIPY_VERSION: 'min'
-        MATPLOTLIB_VERSION: 'min'
-        # latest version of joblib available in conda for Python 3.6
-        JOBLIB_VERSION: '0.13.2'
-        THREADPOOLCTL_VERSION: '2.0.0'
-        # temporary pin pytest due to unknown failure with pytest 5.4 and
-        # python 3.6
-        PYTEST_VERSION: 'min'
-        PYTEST_XDIST_VERSION: 'none'
-      # Linux environment to test the latest available dependencies and MKL.
-      # It runs tests requiring lightgbm, pandas and PyAMG.
-      pylatest_pip_openblas_pandas:
-        DISTRIB: 'conda-pip-latest'
-        PYTHON_VERSION: '3.9'
-        PANDAS_VERSION: 'none'
-        CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
-        TEST_DOCSTRINGS: 'true'
-        CHECK_WARNINGS: 'true'
+# - template: build_tools/azure/posix.yml
+#   parameters:
+#     name: Linux
+#     vmImage: ubuntu-18.04
+#     dependsOn: [linting, git_commit]
+#     condition: |
+#       and(
+#         succeeded(),
+#         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
+#         ne(variables['Build.Reason'], 'Schedule')
+#       )
+#     matrix:
+#       # Linux environment to test that scikit-learn can be built against
+#       # versions of numpy, scipy with ATLAS that comes with Ubuntu Bionic 18.04
+#       # i.e. numpy 1.13.3 and scipy 0.19
+#       py36_ubuntu_atlas:
+#         DISTRIB: 'ubuntu'
+#         PYTHON_VERSION: '3.6'
+#         JOBLIB_VERSION: 'min'
+#         PANDAS_VERSION: 'none'
+#         THREADPOOLCTL_VERSION: 'min'
+#         PYTEST_VERSION: 'min'
+#         PYTEST_XDIST_VERSION: 'none'
+#         COVERAGE: 'false'
+#       # Linux + Python 3.6 build with OpenBLAS and without SITE_JOBLIB
+#       py36_conda_openblas:
+#         DISTRIB: 'conda'
+#         PYTHON_VERSION: '3.6'
+#         BLAS: 'openblas'
+#         NUMPY_VERSION: 'min'
+#         SCIPY_VERSION: 'min'
+#         MATPLOTLIB_VERSION: 'min'
+#         # latest version of joblib available in conda for Python 3.6
+#         JOBLIB_VERSION: '0.13.2'
+#         THREADPOOLCTL_VERSION: '2.0.0'
+#         # temporary pin pytest due to unknown failure with pytest 5.4 and
+#         # python 3.6
+#         PYTEST_VERSION: 'min'
+#         PYTEST_XDIST_VERSION: 'none'
+#       # Linux environment to test the latest available dependencies and MKL.
+#       # It runs tests requiring lightgbm, pandas and PyAMG.
+#       pylatest_pip_openblas_pandas:
+#         DISTRIB: 'conda-pip-latest'
+#         PYTHON_VERSION: '3.9'
+#         PANDAS_VERSION: 'none'
+#         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
+#         TEST_DOCSTRINGS: 'true'
+#         CHECK_WARNINGS: 'true'
 
-- template: build_tools/azure/posix-32.yml
-  parameters:
-    name: Linux32
-    vmImage: ubuntu-18.04
-    dependsOn: [linting, git_commit]
-    condition: |
-      and(
-        succeeded(),
-        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
-        ne(variables['Build.Reason'], 'Schedule')
-      )
-    matrix:
-      py36_ubuntu_atlas_32bit:
-        DISTRIB: 'ubuntu-32'
-        PYTHON_VERSION: '3.6'
-        JOBLIB_VERSION: 'min'
-        # disable pytest xdist due to unknown bug with 32-bit container
-        PYTEST_XDIST_VERSION: 'none'
-        # temporary pin pytest due to unknown failure with pytest 5.4 and
-        # python 3.6
-        PYTEST_VERSION: 'min'
-        THREADPOOLCTL_VERSION: 'min'
+# - template: build_tools/azure/posix-32.yml
+#   parameters:
+#     name: Linux32
+#     vmImage: ubuntu-18.04
+#     dependsOn: [linting, git_commit]
+#     condition: |
+#       and(
+#         succeeded(),
+#         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
+#         ne(variables['Build.Reason'], 'Schedule')
+#       )
+#     matrix:
+#       py36_ubuntu_atlas_32bit:
+#         DISTRIB: 'ubuntu-32'
+#         PYTHON_VERSION: '3.6'
+#         JOBLIB_VERSION: 'min'
+#         # disable pytest xdist due to unknown bug with 32-bit container
+#         PYTEST_XDIST_VERSION: 'none'
+#         # temporary pin pytest due to unknown failure with pytest 5.4 and
+#         # python 3.6
+#         PYTEST_VERSION: 'min'
+#         THREADPOOLCTL_VERSION: 'min'
 
 - template: build_tools/azure/posix.yml
   parameters:
@@ -212,24 +212,24 @@ jobs:
         SKLEARN_TEST_NO_OPENMP: 'true'
         SKLEARN_SKIP_OPENMP_TEST: 'true'
 
-- template: build_tools/azure/windows.yml
-  parameters:
-    name: Windows
-    vmImage: vs2017-win2016
-    dependsOn: [linting, git_commit]
-    condition: |
-      and(
-        succeeded(),
-        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
-        ne(variables['Build.Reason'], 'Schedule')
-      )
-    matrix:
-      py37_conda_mkl:
-        PYTHON_VERSION: '3.7'
-        CHECK_WARNINGS: 'true'
-        PYTHON_ARCH: '64'
-        PYTEST_VERSION: '*'
-        COVERAGE: 'true'
-      py36_pip_openblas_32bit:
-        PYTHON_VERSION: '3.6'
-        PYTHON_ARCH: '32'
+# - template: build_tools/azure/windows.yml
+#   parameters:
+#     name: Windows
+#     vmImage: vs2017-win2016
+#     dependsOn: [linting, git_commit]
+#     condition: |
+#       and(
+#         succeeded(),
+#         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
+#         ne(variables['Build.Reason'], 'Schedule')
+#       )
+#     matrix:
+#       py37_conda_mkl:
+#         PYTHON_VERSION: '3.7'
+#         CHECK_WARNINGS: 'true'
+#         PYTHON_ARCH: '64'
+#         PYTEST_VERSION: '*'
+#         COVERAGE: 'true'
+#       py36_pip_openblas_32bit:
+#         PYTHON_VERSION: '3.6'
+#         PYTHON_ARCH: '32'
