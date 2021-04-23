@@ -45,14 +45,12 @@ if [[ "$DISTRIB" == "conda" ]]; then
     TO_INSTALL="$TO_INSTALL $(get_dep matplotlib $MATPLOTLIB_VERSION)"
 
     if [[ "$UNAMESTR" == "Darwin" ]]; then
-        # on macOS, install an OpenMP-enabled clang/llvm from conda-forge.
-        # TODO: Remove !=1.1.0 when the following is fixed:
-        # sklearn/svm/_libsvm.cpython-38-darwin.so,
-        # 2): Symbol not found: _svm_check_parameter error
-        TO_INSTALL="$TO_INSTALL compilers>=1.0.4,!=1.1.0"
-
         if [[ "$SKLEARN_TEST_NO_OPENMP" != "true" ]]; then
-            TO_INSTALL="$TO_INSTALL llvm-openmp"
+            # on macOS, install an OpenMP-enabled clang/llvm from conda-forge.
+            # TODO: Remove !=1.1.0 when the following is fixed:
+            # sklearn/svm/_libsvm.cpython-38-darwin.so,
+            # 2): Symbol not found: _svm_check_parameter error
+            TO_INSTALL="$TO_INSTALL compilers>=1.0.4,!=1.1.0 llvm-openmp"
         fi
     fi
 	make_conda $TO_INSTALL
@@ -109,6 +107,8 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install https://github.com/joblib/joblib/archive/master.zip
     echo "Installing pillow master"
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
+elif [[ "$UNAMESTR" == "Darwin" ]]; then
+    clang --version
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
