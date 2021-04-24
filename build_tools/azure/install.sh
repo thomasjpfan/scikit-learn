@@ -110,6 +110,8 @@ elif [[ "$DISTRIB" == "conda-darwin" ]]; then
     make_conda "ccache python=$PYTHON_VERSION"
     setup_ccache
     python -m pip install -U pip
+
+    python -m pip install numpy scipy cython
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
