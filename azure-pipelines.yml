@@ -208,7 +208,7 @@ jobs:
         # CONDA_CHANNEL: 'conda-forge'
       pylatest_conda_pip_no_openmp:
         DISTRIB: 'conda'
-        BLAS: 'mkl'
+        BLAS: 'openblas'
         # DISTRIB: 'conda-pip-latest'
         SKLEARN_SKIP_OPENMP_TEST: 'true'
 
