@@ -202,13 +202,13 @@ jobs:
         ne(variables['Build.Reason'], 'Schedule')
       )
     matrix:
-      pylatest_conda_forge_mkl:
+      # pylatest_conda_forge_mkl:
+        # DISTRIB: 'conda'
+        # BLAS: 'mkl'
+        # CONDA_CHANNEL: 'conda-forge'
+      pylatest_conda_pip_no_openmp:
         DISTRIB: 'conda'
-        BLAS: 'mkl'
-        CONDA_CHANNEL: 'conda-forge'
-      pylatest_conda_mkl_no_openmp:
-        DISTRIB: 'conda-pip-latest'
-        BLAS: 'mkl'
+        # DISTRIB: 'conda-pip-latest'
         SKLEARN_SKIP_OPENMP_TEST: 'true'
 
 # - template: build_tools/azure/windows.yml
