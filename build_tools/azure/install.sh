@@ -110,7 +110,7 @@ elif [[ "$DISTRIB" == "conda-darwin" ]]; then
     make_conda "ccache python=$PYTHON_VERSION"
     setup_ccache
     python -m pip install -U pip
-
+    export AR=/usr/bin/ar
     python -m pip install numpy scipy cython
 fi
 
