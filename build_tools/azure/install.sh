@@ -106,6 +106,10 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install https://github.com/joblib/joblib/archive/master.zip
     echo "Installing pillow master"
     pip install https://github.com/python-pillow/Pillow/archive/master.zip
+elif [[ "$DISTRIB" == "conda-darwin" ]]; then
+    make_conda "ccache python=$PYTHON_VERSION"
+    setup_ccache
+    python -m pip install -U pip
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
