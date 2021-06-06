@@ -38,9 +38,10 @@ class PolynomialFeatures(TransformerMixin, BaseEstimator):
         The degree of the polynomial features.
 
     interaction_only : bool, default=False
-        If true, only interaction features are produced: features that are
-        products of at most ``degree`` *distinct* input features (so not
-        ``x[1] ** 2``, ``x[0] * x[2] ** 3``, etc.).
+        If true, interaction features are produced along with the
+        non-interaction features. Interaction features are products of at most
+        `degree` *distinct* input features (so not
+        ``x[1] ** 2``, ``x[0] * x[2] ** 3``, etc. when `degree=2`).
 
     include_bias : bool, default=True
         If True (default), then include a bias column, the feature in which
