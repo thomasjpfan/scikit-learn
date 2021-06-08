@@ -8,7 +8,7 @@ import re
 context_dict = json.loads(os.getenv("CONTEXT_GITHUB"))
 
 repo = context_dict["repository"]
-g = Github(os.getenv("TF_GITHUB_TOKEN"))
+g = Github(os.getenv("GITHUB_TOKEN"))
 repo = g.get_repo(repo)
 pr_number = context_dict["event"]["number"]
 issue = repo.get_issue(number=pr_number)

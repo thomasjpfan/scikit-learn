@@ -20,4 +20,3 @@ jobs:
       run: python .github/scripts/label_title_regex.py
       env:
         CONTEXT_GITHUB: ${{ toJson(github) }}
-        TF_GITHUB_TOKEN: ${{ secrets.TF_GITHUB_TOKEN }}
