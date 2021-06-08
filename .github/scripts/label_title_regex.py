@@ -3,8 +3,8 @@ pull_request_target event."""
 from ghapi.all import context_github
 from ghapi.all import GhApi
 from ghapi.all import user_repo
-import re
 import os
+import re
 
 owner, repo = user_repo()
 pull_request = context_github.event.pull_request
@@ -19,6 +19,9 @@ labels_to_add = [
     label for regex, label in regex_to_labels
     if re.search(regex, title)
 ]
+
+token = os.getenv("GITHUB_TOKEN")
+assert token
 
 if labels_to_add:
     api = GhApi(owner=owner, repo=repo, token=os.getenv("GITHUB_TOKEN"))
