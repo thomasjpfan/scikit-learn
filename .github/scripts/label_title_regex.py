@@ -20,9 +20,9 @@ labels_to_add = [
     if re.search(regex, title)
 ]
 
-token = os.getenv("GITHUB_TOKEN")
+token = os.getenv("TF_GITHUB_TOKEN")
 assert token
 
 if labels_to_add:
-    api = GhApi(owner=owner, repo=repo, token=os.getenv("GITHUB_TOKEN"))
+    api = GhApi(owner=owner, repo=repo, token=os.getenv("TF_GITHUB_TOKEN"))
     api.issues.add_labels(pull_request.number, labels=labels_to_add)
