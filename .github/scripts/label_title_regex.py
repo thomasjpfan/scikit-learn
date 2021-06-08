@@ -1,19 +1,14 @@
 """Labels PRs based on title. Must be run in a github action with the
 pull_request_target event."""
-from github import Github
-import os
-import json
+from ghapi.all import context_github
+from ghapi.all import GhApi
+from ghapi.all import user_repo
+from ghapi.all import github_token
 import re
 
-context_dict = json.loads(os.getenv("CONTEXT_GITHUB"))
-
-repo = context_dict["repository"]
-g = Github(context_dict["token"])
-repo = g.get_repo(repo)
-pr_number = context_dict["event"]["number"]
-issue = repo.get_issue(number=pr_number)
-title = issue.title
-
+owner, repo = user_repo()
+pull_request = context_github.event.pull_request
+title = pull_request.title
 
 regex_to_labels = [
     (r"\bDOC\b", "Documentation"),
@@ -26,4 +21,5 @@ labels_to_add = [
 ]
 
 if labels_to_add:
-    issue.add_to_labels(*labels_to_add)
+    api = GhApi(owner=owner, repo=repo, token=github_token())
+    api.issues.add_labels(pull_request.number, labels=labels_to_add)
