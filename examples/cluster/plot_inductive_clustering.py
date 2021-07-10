@@ -47,28 +47,26 @@ class InductiveClusterer(BaseEstimator):
         self.classifier_.fit(X, y)
         return self
 
-    @if_delegate_has_method(delegate='classifier_')
+    @if_delegate_has_method(delegate="classifier_")
     def predict(self, X):
         return self.classifier_.predict(X)
 
-    @if_delegate_has_method(delegate='classifier_')
+    @if_delegate_has_method(delegate="classifier_")
     def decision_function(self, X):
         return self.classifier_.decision_function(X)
 
 
-def plot_scatter(X,  color, alpha=0.5):
-    return plt.scatter(X[:, 0],
-                       X[:, 1],
-                       c=color,
-                       alpha=alpha,
-                       edgecolor='k')
+def plot_scatter(X, color, alpha=0.5):
+    return plt.scatter(X[:, 0], X[:, 1], c=color, alpha=alpha, edgecolor="k")
 
 
 # Generate some training data from clustering
-X, y = make_blobs(n_samples=N_SAMPLES,
-                  cluster_std=[1.0, 1.0, 0.5],
-                  centers=[(-5, -5), (0, 0), (5, 5)],
-                  random_state=RANDOM_STATE)
+X, y = make_blobs(
+    n_samples=N_SAMPLES,
+    cluster_std=[1.0, 1.0, 0.5],
+    centers=[(-5, -5), (0, 0), (5, 5)],
+    random_state=RANDOM_STATE,
+)
 
 
 # Train a clustering algorithm on the training data and get the cluster labels
@@ -83,13 +81,13 @@ plt.title("Ward Linkage")
 
 
 # Generate new samples and plot them along with the original dataset
-X_new, y_new = make_blobs(n_samples=10,
-                          centers=[(-7, -1), (-2, 4), (3, 6)],
-                          random_state=RANDOM_STATE)
+X_new, y_new = make_blobs(
+    n_samples=10, centers=[(-7, -1), (-2, 4), (3, 6)], random_state=RANDOM_STATE
+)
 
 plt.subplot(132)
 plot_scatter(X, cluster_labels)
-plot_scatter(X_new, 'black', 1)
+plot_scatter(X_new, "black", 1)
 plt.title("Unknown instances")
 
 
@@ -108,8 +106,7 @@ plot_scatter(X_new, probable_clusters)
 # Plotting decision regions
 x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
 y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1),
-                     np.arange(y_min, y_max, 0.1))
+xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.1), np.arange(y_min, y_max, 0.1))
 
 Z = inductive_learner.predict(np.c_[xx.ravel(), yy.ravel()])
 Z = Z.reshape(xx.shape)
