@@ -363,8 +363,10 @@ def load_gzip_compressed_csv_data(
         Only returned if `descr_file_name` is not None.
     """
     with resources.open_binary(data_module, data_file_name) as compressed_file:
-        compressed_file = gzip.open(compressed_file, mode="rt", encoding=encoding)
-        data = np.loadtxt(compressed_file, **kwargs)
+        with gzip.open(
+            compressed_file, mode="rt", encoding=encoding
+        ) as uncompressed_file:
+            data = np.loadtxt(uncompressed_file, **kwargs)
 
     if descr_file_name is None:
         return data
