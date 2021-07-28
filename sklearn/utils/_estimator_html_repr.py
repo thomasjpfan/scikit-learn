@@ -1,5 +1,4 @@
 from contextlib import closing
-from contextlib import suppress
 from io import StringIO
 from string import Template
 import uuid
@@ -86,7 +85,9 @@ def _write_label_html(
 
 def _get_visual_block(estimator):
     """Generate information about how to display an estimator."""
-    with suppress(AttributeError):
+    if hasattr(estimator, "_sk_visual_block_") and callable(
+        estimator._sk_visual_block_
+    ):
         return estimator._sk_visual_block_()
 
     if isinstance(estimator, str):

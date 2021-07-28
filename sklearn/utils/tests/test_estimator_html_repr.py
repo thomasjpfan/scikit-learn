@@ -278,3 +278,16 @@ def test_one_estimator_print_change_only(print_changed_only):
         pca_repr = str(pca)
         html_output = estimator_html_repr(pca)
         assert pca_repr in html_output
+
+
+def test_custom_estimator_not_subclass_of_baseestimator():
+    """Check that custom estimator that is not a base estimator works
+    when `_sk_visual_block_` is not a callable."""
+
+    class CustomEstimator:
+        def __init__(self):
+            self._sk_visual_block_ = "not-callable"
+
+    est = CustomEstimator()
+    html_output = estimator_html_repr(est)
+    assert str(est) in html_output
