@@ -76,9 +76,17 @@ class DummyClassifier(MultiOutputMixin, ClassifierMixin, BaseEstimator):
         Number of outputs.
 
     n_features_in_ : int
-        Number of features seen during :term:`fit`.
+        Number of features seen during :term:`fit`. `n_features_in_` is not
+        validated in non-fit methods.
 
         .. versionadded:: 0.24
+
+    feature_names_in_ : ndarray of shape (`n_features_in_`,)
+        Names of features seen during :term:`fit`. Defined only when `X`
+        has feature names that are all strings. `feature_names_in_` is not
+        validated in non-fit methods.
+
+        .. versionadded:: 1.0
 
     sparse_output_ : bool
         True if the array returned from predict is to be in sparse CSC format.
@@ -164,7 +172,8 @@ class DummyClassifier(MultiOutputMixin, ClassifierMixin, BaseEstimator):
 
         self.n_outputs_ = y.shape[1]
 
-        self.n_features_in_ = None  # No input validation is done for X
+        self._check_n_features(X, reset=True)
+        self._check_feature_names(X, reset=True)
 
         check_consistent_length(X, y)
 
@@ -460,9 +469,17 @@ class DummyRegressor(MultiOutputMixin, RegressorMixin, BaseEstimator):
         given by the user.
 
     n_features_in_ : int
-        Number of features seen during :term:`fit`.
+        Number of features seen during :term:`fit`. `n_features_in_` is not
+        validated in non-fit methods.
 
         .. versionadded:: 0.24
+
+    feature_names_in_ : ndarray of shape (`n_features_in_`,)
+        Names of features seen during :term:`fit`. Defined only when `X`
+        has feature names that are all strings. `feature_names_in_` is not
+        validated in non-fit methods.
+
+        .. versionadded:: 1.0
 
     n_outputs_ : int
         Number of outputs.
@@ -518,7 +535,9 @@ class DummyRegressor(MultiOutputMixin, RegressorMixin, BaseEstimator):
             )
 
         y = check_array(y, ensure_2d=False)
-        self.n_features_in_ = None  # No input validation is done for X
+        self._check_n_features(X, reset=True)
+        self._check_feature_names(X, reset=True)
+
         if len(y) == 0:
             raise ValueError("y must not be empty.")
 

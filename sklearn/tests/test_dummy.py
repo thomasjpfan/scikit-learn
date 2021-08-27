@@ -733,4 +733,16 @@ def test_n_features_in_(Dummy):
     d = Dummy()
     assert not hasattr(d, "n_features_in_")
     d.fit(X, y)
-    assert d.n_features_in_ is None
+    assert d.n_features_in_ == 2
+
+
+@pytest.mark.parametrize("Dummy", (DummyRegressor, DummyClassifier))
+def test_feature_names_in_(Dummy):
+    """Feature names are stored in DummyRegressor and DummyClassifier."""
+    pd = pytest.importorskip("pandas")
+    feature_names = ["b", "a"]
+    df = pd.DataFrame([[1, 2]], columns=feature_names)
+    y = [0]
+
+    d = Dummy().fit(df, y)
+    assert_array_equal(d.feature_names_in_, feature_names)
