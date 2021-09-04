@@ -96,40 +96,12 @@ NODE_DTYPE = np.dtype({
 cdef class ObliqueTreeBuilder:
     """Interface for different tree building strategies."""
 
-    cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
+    cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None,
                 np.ndarray X_idx_sorted=None):
         """Build a decision tree from the training set (X, y)."""
         pass
 
-    cdef inline _check_input(self, object X, np.ndarray y,
-                             np.ndarray sample_weight):
-        """Check input dtype, layout and format"""
-        if issparse(X):
-            X = X.tocsc()
-            X.sort_indices()
-
-            if X.data.dtype != DTYPE:
-                X.data = np.ascontiguousarray(X.data, dtype=DTYPE)
-
-            if X.indices.dtype != np.int32 or X.indptr.dtype != np.int32:
-                raise ValueError("No support for np.int64 index based "
-                                 "sparse matrices")
-
-        elif X.dtype != DTYPE:
-            # since we have to copy we will make it fortran for efficiency
-            X = np.asfortranarray(X, dtype=DTYPE)
-
-        if y.dtype != DOUBLE or not y.flags.contiguous:
-            y = np.ascontiguousarray(y, dtype=DOUBLE)
-
-        if (sample_weight is not None and
-            (sample_weight.dtype != DOUBLE or
-            not sample_weight.flags.contiguous)):
-                sample_weight = np.asarray(sample_weight, dtype=DOUBLE,
-                                           order="C")
-
-        return X, y, sample_weight
 
 # Depth first builder ---------------------------------------------------------
 
@@ -140,7 +112,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
                   SIZE_t min_samples_leaf, double min_weight_leaf,
                   SIZE_t max_depth, double min_impurity_decrease,
                   double min_impurity_split):
-        self.splitter = splitter
+        self.oblique_splitter = splitter
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.min_weight_leaf = min_weight_leaf
@@ -148,7 +120,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
         self.min_impurity_decrease = min_impurity_decrease
         self.min_impurity_split = min_impurity_split
 
-    cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
+    cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None,
                 np.ndarray X_idx_sorted=None):
         """Build a decision tree from the training set (X, y)."""
@@ -174,7 +146,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
         # print('finished resizing...')
 
         # Parameters
-        cdef ObliqueSplitter splitter = self.splitter
+        cdef ObliqueSplitter splitter = self.oblique_splitter
         cdef SIZE_t max_depth = self.max_depth
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
         cdef double min_weight_leaf = self.min_weight_leaf

@@ -18,7 +18,7 @@ from ._tree cimport DOUBLE_t         # Type of y, sample_weight
 from ._tree cimport SIZE_t           # Type for indices and counters
 from ._tree cimport INT32_t          # Signed 32 bit integer
 from ._tree cimport UINT32_t         # Unsigned 32 bit integer
-from ._tree cimport Tree, Node
+from ._tree cimport Tree, Node, TreeBuilder
 from ._oblique_splitter cimport ObliqueSplitter
 from ._oblique_splitter cimport ObliqueSplitRecord
 
@@ -29,7 +29,6 @@ cdef class ObliqueTree(Tree):
     # feature importances.
 
     # oblique forests
-    # cdef Node* oblique_nodes               # Array of "oblique" nodes
     cdef vector[vector[DTYPE_t]] proj_vec_weights # (capacity, n_features) array of projection vectors
     cdef vector[vector[SIZE_t]] proj_vec_indices  # (capacity, n_features) array of projection vectors
 
@@ -46,7 +45,7 @@ cdef class ObliqueTree(Tree):
 # Tree builder
 # =============================================================================
 
-cdef class ObliqueTreeBuilder:
+cdef class ObliqueTreeBuilder(TreeBuilder):
     # The TreeBuilder recursively builds a Tree object from training samples,
     # using a Splitter object for splitting internal nodes and assigning
     # values to leaves.
@@ -54,16 +53,15 @@ cdef class ObliqueTreeBuilder:
     # This class controls the various stopping criteria and the node splitting
     # evaluation order, e.g. depth-first or best-first.
 
-    cdef ObliqueSplitter splitter   # Splitting algorithm
+    cdef ObliqueSplitter oblique_splitter   # Splitting algorithm
 
-    cdef SIZE_t min_samples_split       # Minimum number of samples in an internal node
-    cdef SIZE_t min_samples_leaf        # Minimum number of samples in a leaf
-    cdef double min_weight_leaf         # Minimum weight in a leaf
-    cdef SIZE_t max_depth               # Maximal tree depth
-    cdef double min_impurity_split
-    cdef double min_impurity_decrease   # Impurity threshold for early stopping
+    # cdef SIZE_t min_samples_split       # Minimum number of samples in an internal node
+    # cdef SIZE_t min_samples_leaf        # Minimum number of samples in a leaf
+    # cdef double min_weight_leaf         # Minimum weight in a leaf
+    # cdef SIZE_t max_depth               # Maximal tree depth
+    # cdef double min_impurity_split
+    # cdef double min_impurity_decrease   # Impurity threshold for early stopping
 
-    cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
+    cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=*,
                 np.ndarray X_idx_sorted=*)
-    cdef _check_input(self, object X, np.ndarray y, np.ndarray sample_weight)
