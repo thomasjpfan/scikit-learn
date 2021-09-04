@@ -39,6 +39,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.tree import ExtraTreeClassifier
 from sklearn.tree import ExtraTreeRegressor
+from sklearn.tree import ObliqueDecisionTreeClassifier
+from sklearn.tree import ObliqueDecisionTreeRegressor
 
 from sklearn import tree
 from sklearn.tree._tree import TREE_LEAF, TREE_UNDEFINED
@@ -54,11 +56,13 @@ REG_CRITERIONS = ("squared_error", "absolute_error", "friedman_mse", "poisson")
 CLF_TREES = {
     "DecisionTreeClassifier": DecisionTreeClassifier,
     "ExtraTreeClassifier": ExtraTreeClassifier,
+    "ObliqueDecisionTreeClassifier": ObliqueDecisionTreeClassifier,
 }
 
 REG_TREES = {
     "DecisionTreeRegressor": DecisionTreeRegressor,
     "ExtraTreeRegressor": ExtraTreeRegressor,
+    "ObliqueDecisionTreeRegressor": ObliqueDecisionTreeRegressor,
 }
 
 ALL_TREES: dict = dict()

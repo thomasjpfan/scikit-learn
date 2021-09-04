@@ -404,6 +404,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
 
         # build the tree on the supervised dataset
         builder_func(self.tree_, X, y, sample_weight)
+
         if self.n_outputs_ == 1 and is_classifier(self):
             self.n_classes_ = self.n_classes_[0]
             self.classes_ = self.classes_[0]
@@ -2368,6 +2369,17 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
 
             return proba
 
+    @deprecated(  # type: ignore
+        "The attribute `n_features_` is deprecated in 1.0 and will be removed "
+        "in 1.2. Use `n_features_in_` instead."
+    )
+    @property
+    def n_features_(self):
+        return self.n_features_in_
+
+    def _more_tags(self):
+        return {"multilabel": True}
+
 
 class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
     """A decision tree regressor.
@@ -2667,3 +2679,11 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
             grid, target_features, averaged_predictions
         )
         return averaged_predictions
+
+    @deprecated(  # type: ignore
+        "The attribute `n_features_` is deprecated in 1.0 and will be removed "
+        "in 1.2. Use `n_features_in_` instead."
+    )
+    @property
+    def n_features_(self):
+        return self.n_features_in_
