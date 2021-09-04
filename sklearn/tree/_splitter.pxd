@@ -12,9 +12,6 @@
 import numpy as np
 cimport numpy as np
 
-from libc.stdlib cimport free
-from libc.stdlib cimport qsort
-
 from ._criterion cimport Criterion
 
 from ._tree cimport DTYPE_t          # Type of X

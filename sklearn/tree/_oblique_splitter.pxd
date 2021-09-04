@@ -1,16 +1,12 @@
 # distutils: language = c++
 
-# Authors: Gilles Louppe <g.louppe@gmail.com>
-#          Peter Prettenhofer <peter.prettenhofer@gmail.com>
-#          Brian Holt <bdholt1@gmail.com>
-#          Joel Nothman <joel.nothman@gmail.com>
-#          Arnaud Joly <arnaud.v.joly@gmail.com>
-#          Jacob Schreiber <jmschreiber91@gmail.com>
+# Authors: Adam Li <adam2392@gmail.com>
+#          Chester Huynh <chester.huynh924@gmail.com>
+#          Parth Vora <pvora4@jhu.edu>
 #
 # License: BSD 3 clause
 
-# COPIED FROM SKLEARN, but modified for ObliqueSplits
-# See _splitter.pyx for details.
+# See _oblique_splitter.pyx for details.
 
 import numpy as np
 cimport numpy as np

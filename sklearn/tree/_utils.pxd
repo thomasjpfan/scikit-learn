@@ -12,7 +12,6 @@ import numpy as np
 cimport numpy as np
 from ._tree cimport Node
 from ..neighbors._quad_tree cimport Cell
-# from ._oblique_tree cimport ObliqueNode
 
 ctypedef np.npy_float32 DTYPE_t          # Type of X
 ctypedef np.npy_float64 DOUBLE_t         # Type of y, sample_weight
@@ -47,8 +46,6 @@ ctypedef fused realloc_ptr:
     (StackRecord*)
     (PriorityHeapRecord*)
     (DTYPE_t**)
-    # (ObliqueNode*)
-    # (ObliqueNode**)
 
 cdef realloc_ptr safe_realloc(realloc_ptr* p, size_t nelems) nogil except *
 
