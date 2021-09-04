@@ -93,7 +93,7 @@ NODE_DTYPE = np.dtype({
 # TreeBuilder
 # =============================================================================
 
-cdef class ObliqueTreeBuilder:
+cdef class ObliqueTreeBuilder(TreeBuilder):
     """Interface for different tree building strategies."""
 
     cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
@@ -110,23 +110,18 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 
     def __cinit__(self, ObliqueSplitter splitter, SIZE_t min_samples_split,
                   SIZE_t min_samples_leaf, double min_weight_leaf,
-                  SIZE_t max_depth, double min_impurity_decrease,
-                  double min_impurity_split):
+                  SIZE_t max_depth, double min_impurity_decrease):
         self.oblique_splitter = splitter
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.min_weight_leaf = min_weight_leaf
         self.max_depth = max_depth
         self.min_impurity_decrease = min_impurity_decrease
-        self.min_impurity_split = min_impurity_split
 
     cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None,
                 np.ndarray X_idx_sorted=None):
         """Build a decision tree from the training set (X, y)."""
-        # with gil:
-        # print('Inside build...')
-
         # check input
         X, y, sample_weight = self._check_input(X, y, sample_weight)
 
@@ -143,7 +138,6 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
             init_capacity = 2047
 
         tree._resize(init_capacity)
-        # print('finished resizing...')
 
         # Parameters
         cdef ObliqueSplitter splitter = self.oblique_splitter
@@ -152,12 +146,9 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
         cdef double min_weight_leaf = self.min_weight_leaf
         cdef SIZE_t min_samples_split = self.min_samples_split
         cdef double min_impurity_decrease = self.min_impurity_decrease
-        cdef double min_impurity_split = self.min_impurity_split
 
         # Recursive partition (without actual recursion)
-        # print('splitter: ', splitter)
         splitter.init(X, y, sample_weight_ptr)
-        # print('Splitter initialized...')
 
         cdef SIZE_t start
         cdef SIZE_t end
@@ -179,9 +170,6 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 
         cdef Stack stack = Stack(INITIAL_STACK_SIZE)
         cdef StackRecord stack_record
-
-        # with gil:
-        # print('Got to nogil part.')
 
         with nogil:
             # push root node onto stack
@@ -215,7 +203,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
                     first = 0
 
                 is_leaf = (is_leaf or
-                           (impurity <= min_impurity_split))
+                           (impurity <= min_impurity_decrease))
 
                 if not is_leaf:
                     splitter.oblique_node_split(impurity, &split, &n_constant_features)
@@ -347,14 +335,6 @@ cdef class ObliqueTree(Tree):
 
         self.proj_vec_weights = vector[vector[DTYPE_t]](self.capacity)
         self.proj_vec_indices = vector[vector[SIZE_t]](self.capacity)
-
-    def __dealloc__(self):
-        """Destructor."""
-        # Free all inner structures
-        free(self.n_classes)
-        free(self.value)
-        free(self.nodes)
-        # print("freed nodes")
 
     def __reduce__(self):
         """Reduce re-implementation, for pickling."""

@@ -51,6 +51,7 @@ cdef class ObliqueSplitter(Splitter):
     both sparse and dense data, one split at a time.
     """
 
+    # XXX: Alternatively, I have to override the __new__ function
     def __cinit__(self, Criterion criterion, SIZE_t max_features,
                   SIZE_t min_samples_leaf, double min_weight_leaf,
                   double feature_combinations, object random_state):
@@ -101,21 +102,6 @@ cdef class ObliqueSplitter(Splitter):
 
         self.n_non_zeros = max(int(self.max_features * self.feature_combinations), 1)
 
-    def __dealloc__(self):
-        """Destructor."""
-
-        free(self.samples)
-        # print("freed samples")
-
-        free(self.features)
-        # print("freed features")
-
-        free(self.constant_features)
-        # print("freed constant_features")
-
-        free(self.feature_values)
-        # print("freed feature_values")
-
     def __getstate__(self):
         return {}
 
@@ -146,7 +132,6 @@ cdef class ObliqueSplitter(Splitter):
             closer than lower weight samples. If not provided, all samples
             are assumed to have uniform weight.
         """
-        # print('inside split init...')
         self.rand_r_state = self.random_state.randint(0, RAND_R_MAX)
         cdef SIZE_t n_samples = X.shape[0]
 
@@ -158,7 +143,6 @@ cdef class ObliqueSplitter(Splitter):
         cdef double weighted_n_samples = 0.0
         j = 0
 
-        # print('Initializing sample weights...')
         for i in range(n_samples):
             # Only work with positively weighted samples
             if sample_weight == NULL or sample_weight[i] != 0.0:
@@ -182,15 +166,10 @@ cdef class ObliqueSplitter(Splitter):
 
         self.n_features = n_features
 
-        # print('About to safe realloc...')
         safe_realloc(&self.feature_values, n_samples)
-        # print('Safe reallocated feature values..')
         safe_realloc(&self.constant_features, n_features)
-        # print('After second...')
         self.y = y
-
         self.sample_weight = sample_weight
-        # print('Finished init...')
 
         return 0
 

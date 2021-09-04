@@ -37,7 +37,6 @@ from ..utils.validation import _check_sample_weight
 from ..utils import compute_sample_weight
 from ..utils.multiclass import check_classification_targets
 from ..utils.validation import check_is_fitted
-from ..utils.validation import _deprecate_positional_args
 
 from ._criterion import Criterion
 from ._splitter import Splitter
@@ -166,7 +165,6 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     def fit(
         self, X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated"
     ):
-
         random_state = check_random_state(self.random_state)
 
         if self.ccp_alpha < 0.0:
@@ -389,24 +387,23 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             # Make a deepcopy in case the criterion has mutable attributes that
             # might be shared and modified concurrently during parallel fitting
             criterion = copy.deepcopy(criterion)
+
         # set splitter, tree and tree builder
         splitter = self._set_splitter(
             issparse(X), criterion, min_samples_leaf, min_weight_leaf, random_state
         )
         self._set_tree()
-        builder = self._set_builder(
+        builder_func = self._set_builder(
             splitter,
             min_samples_split,
             min_samples_leaf,
             min_weight_leaf,
             max_depth,
             max_leaf_nodes,
-            self.min_impurity_decrease,
         )
 
         # build the tree on the supervised dataset
-        builder.build(self.tree_, X, y, sample_weight)
-
+        builder_func(self.tree_, X, y, sample_weight)
         if self.n_outputs_ == 1 and is_classifier(self):
             self.n_classes_ = self.n_classes_[0]
             self.classes_ = self.classes_[0]
@@ -418,6 +415,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     def _set_splitter(
         self, issparse, criterion, min_samples_leaf, min_weight_leaf, random_state
     ):
+        """Set splitting function."""
         SPLITTERS = SPARSE_SPLITTERS if issparse else DENSE_SPLITTERS
 
         splitter = self.splitter
@@ -432,11 +430,12 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         return splitter
 
     def _set_tree(self):
+        """Set type of tree."""
         if is_classifier(self):
-            self.tree_ = Tree(self.n_features_, self.n_classes_, self.n_outputs_)
+            self.tree_ = Tree(self.n_features_in_, self.n_classes_, self.n_outputs_)
         else:
             self.tree_ = Tree(
-                self.n_features_,
+                self.n_features_in_,
                 # TODO: tree should't need this in this case
                 np.array([1] * self.n_outputs_, dtype=np.intp),
                 self.n_outputs_,
@@ -450,8 +449,8 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         min_weight_leaf,
         max_depth,
         max_leaf_nodes,
-        min_impurity_split,
     ):
+        """Set type of tree builder and the underlying functions."""
         # Use BestFirst if max_leaf_nodes given; use DepthFirst otherwise
         if max_leaf_nodes < 0:
             builder = DepthFirstTreeBuilder(
@@ -461,8 +460,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
                 min_weight_leaf,
                 max_depth,
                 self.min_impurity_decrease,
-                min_impurity_split,
-            )
+            ).build
         else:
             builder = BestFirstTreeBuilder(
                 splitter,
@@ -472,8 +470,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
                 max_depth,
                 max_leaf_nodes,
                 self.min_impurity_decrease,
-                min_impurity_split,
-            )
+            ).build
         return builder
 
     def _validate_X_predict(self, X, check_input):
@@ -681,14 +678,17 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
 
 
 class BaseObliqueDecisionTree(BaseDecisionTree):
-    """Base class for decision trees.
+    """Base class for oblique decision trees.
+
+    Inherits all functionality from a regular base decision tree,
+    and overrides the splitter, tree and tree builder setting
+    to use the Oblique versions.
 
     Warning: This class should not be used directly.
     Use derived classes instead.
     """
 
     @abstractmethod
-    @_deprecate_positional_args
     def __init__(
         self,
         *,
@@ -702,7 +702,6 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
         max_leaf_nodes,
         random_state,
         min_impurity_decrease,
-        min_impurity_split,
         feature_combinations=None,
         class_weight=None,
         ccp_alpha=0.0,
@@ -718,7 +717,6 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
             max_leaf_nodes=max_leaf_nodes,
             random_state=random_state,
             min_impurity_decrease=min_impurity_decrease,
-            min_impurity_split=min_impurity_split,
             class_weight=class_weight,
             ccp_alpha=ccp_alpha,
         )
@@ -745,10 +743,12 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
 
     def _set_tree(self):
         if is_classifier(self):
-            self.tree_ = ObliqueTree(self.n_features_, self.n_classes_, self.n_outputs_)
+            self.tree_ = ObliqueTree(
+                self.n_features_in_, self.n_classes_, self.n_outputs_
+            )
         else:
             self.tree_ = ObliqueTree(
-                self.n_features_,
+                self.n_features_in_,
                 # TODO: tree should't need this in this case
                 np.array([1] * self.n_outputs_, dtype=np.intp),
                 self.n_outputs_,
@@ -762,7 +762,6 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
         min_weight_leaf,
         max_depth,
         max_leaf_nodes,
-        min_impurity_split,
     ):
         # Use BestFirst if max_leaf_nodes given; use DepthFirst otherwise
         if max_leaf_nodes < 0:
@@ -773,8 +772,7 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
                 min_weight_leaf,
                 max_depth,
                 self.min_impurity_decrease,
-                min_impurity_split,
-            )
+            ).oblique_build
         else:
             raise NotImplementedError("Havent implemented Best First tree builder")
         return builder
@@ -2066,6 +2064,9 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
         valid partition of the node samples is found, even if it requires to
         effectively inspect more than ``max_features`` features.
 
+        Note: Compared to axis-aligned Random Forests, one can set
+        max_features to a number greater then ``n_features``.
+
     random_state : int, RandomState instance or None, default=None
         Controls the randomness of the estimator. The features are always
         randomly permuted at each split, even if ``splitter`` is set to
@@ -2100,17 +2101,6 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
         if ``sample_weight`` is passed.
 
         .. versionadded:: 0.19
-
-    min_impurity_split : float, default=0
-        Threshold for early stopping in tree growth. A node will split
-        if its impurity is above the threshold, otherwise it is a leaf.
-
-        .. deprecated:: 0.19
-           ``min_impurity_split`` has been deprecated in favor of
-           ``min_impurity_decrease`` in 0.19. The default value of
-           ``min_impurity_split`` has changed from 1e-7 to 0 in 0.23 and it
-           will be removed in 1.0 (renaming of 0.25).
-           Use ``min_impurity_decrease`` instead.
 
     class_weight : dict, list of dict or "balanced", default=None
         Weights associated with classes in the form ``{class_label: weight}``.
@@ -2212,8 +2202,8 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
     --------
     >>> from sklearn.datasets import load_iris
     >>> from sklearn.model_selection import cross_val_score
-    >>> from sklearn.tree import DecisionTreeClassifier
-    >>> clf = DecisionTreeClassifier(random_state=0)
+    >>> from sklearn.tree import ObliqueDecisionTreeClassifier
+    >>> clf = ObliqueDecisionTreeClassifier(random_state=0)
     >>> iris = load_iris()
     >>> cross_val_score(clf, iris.data, iris.target, cv=10)
     ...                             # doctest: +SKIP
@@ -2222,7 +2212,6 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
 
-    @_deprecate_positional_args
     def __init__(
         self,
         *,
@@ -2237,7 +2226,6 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
         random_state=None,
         max_leaf_nodes=None,
         min_impurity_decrease=0.0,
-        min_impurity_split=None,
         class_weight=None,
         ccp_alpha=0.0,
     ):
@@ -2253,7 +2241,6 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             class_weight=class_weight,
             random_state=random_state,
             min_impurity_decrease=min_impurity_decrease,
-            min_impurity_split=min_impurity_split,
             feature_combinations=feature_combinations,
             ccp_alpha=ccp_alpha,
         )
@@ -2502,17 +2489,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
 
         .. versionadded:: 0.19
 
-    min_impurity_split : float, default=0
-        Threshold for early stopping in tree growth. A node will split
-        if its impurity is above the threshold, otherwise it is a leaf.
-
-        .. deprecated:: 0.19
-           ``min_impurity_split`` has been deprecated in favor of
-           ``min_impurity_decrease`` in 0.19. The default value of
-           ``min_impurity_split`` has changed from 1e-7 to 0 in 0.23 and it
-           will be removed in 1.0 (renaming of 0.25).
-           Use ``min_impurity_decrease`` instead.
-
     ccp_alpha : non-negative float, default=0.0
         Complexity parameter used for Minimal Cost-Complexity Pruning. The
         subtree with the largest cost complexity that is smaller than
@@ -2588,7 +2564,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
            0.16...,  0.11..., -0.73..., -0.30..., -0.00...])
     """
 
-    @_deprecate_positional_args
     def __init__(
         self,
         *,
@@ -2602,7 +2577,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
         random_state=None,
         max_leaf_nodes=None,
         min_impurity_decrease=0.0,
-        min_impurity_split=None,
         feature_combinations=1.5,
         ccp_alpha=0.0,
     ):
@@ -2617,7 +2591,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
             max_leaf_nodes=max_leaf_nodes,
             random_state=random_state,
             min_impurity_decrease=min_impurity_decrease,
-            min_impurity_split=min_impurity_split,
             feature_combinations=1.5,
             ccp_alpha=ccp_alpha,
         )
