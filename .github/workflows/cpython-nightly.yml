@@ -61,7 +61,8 @@ jobs:
           if [[ $INSTALL_NUMPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
           else
-            pip install git+https://github.com/numpy/numpy.git
+            git clone https://github.com/numpy/numpy.git ~/numpy
+            cd ~/numpy && pip install -e .
           fi
       - name: Install scipy
         run: |
@@ -69,12 +70,13 @@ jobs:
           if [[ $INSTALL_SCIPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
           else
-            pip install git+https://github.com/scipy/scipy.git
+            git clone https://github.com/scipy/scipy.git ~/scipy
+            cd ~/scipy && pip install -e .
           fi
       - name: Install scikit-learn
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          pip install --no-build-isolation .
+          pip install --no-build-isolation -e .
       - name: Test scikit-learn
         run: |
           cd /tmp && python -m pytest -n 2 --pyargs sklearn
