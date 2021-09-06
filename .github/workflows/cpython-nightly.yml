@@ -54,9 +54,9 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1
       - name: build
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           which g++
           which gcc
-          # export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
       # - name: Setup ccache
       #   uses: actions/cache@v2
       #   with:
