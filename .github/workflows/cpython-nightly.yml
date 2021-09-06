@@ -80,3 +80,4 @@ jobs:
       - name: Test scikit-learn
         run: |
           cd /tmp && python -m pytest -n 2 --pyargs sklearn
+          echo "WOW"
