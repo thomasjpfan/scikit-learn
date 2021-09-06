@@ -46,42 +46,35 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      # - name: Install build dependencies
-      #   run: |
-      #     sudo apt-get install libatlas-base-dev liblapack-dev gfortran libgmp-dev libmpfr-dev libsuitesparse-dev libmpc-dev
-      #     # pip install --upgrade pip setuptools
-      - name: ccache
+      - name: Install build dependencies
+        run: |
+          sudo apt-get install libatlas-base-dev liblapack-dev gfortran libgmp-dev libmpfr-dev libsuitesparse-dev libmpc-dev
+          # pip install --upgrade pip setuptools
+      - name: Setup cache
         uses: hendrikmuhs/ccache-action@v1
-      - name: build
+      - name: Install python dependencies
+        run: |
+          pip install pytest pytest-xdist cython wheel
+      - name: Install numpy
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          which g++
-          which gcc
-      # - name: Setup ccache
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: prime-numbers
-      #     key: ${{ runner.os }}-primes
-      # - name: Install python dependencies
-      #   run: |
-      #     pip install pytest pytest-xdist cython wheel
-      # - name: Install numpy
-      #   run: |
-      #     if [[ $INSTALL_NUMPY == "wheel" ]]; then
-      #       pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
-      #     else
-      #       pip install git+https://github.com/numpy/numpy.git
-      #     fi
-      # - name: Install scipy
-      #   run: |
-      #     if [[ $INSTALL_SCIPY == "wheel" ]]; then
-      #       pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
-      #     else
-      #       pip install git+https://github.com/scipy/scipy.git
-      #     fi
-      # - name: Install scikit-learn
-      #   run: |
-      #     pip install --no-build-isolation .
-      # - name: Test scikit-learn
-      #   run: |
-      #     cd /tmp && python -m pytest -n 2 --pyargs sklearn
+          if [[ $INSTALL_NUMPY == "wheel" ]]; then
+            pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
+          else
+            pip install git+https://github.com/numpy/numpy.git
+          fi
+      - name: Install scipy
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          if [[ $INSTALL_SCIPY == "wheel" ]]; then
+            pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
+          else
+            pip install git+https://github.com/scipy/scipy.git
+          fi
+      - name: Install scikit-learn
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          pip install --no-build-isolation .
+      - name: Test scikit-learn
+        run: |
+          cd /tmp && python -m pytest -n 2 --pyargs sklearn
