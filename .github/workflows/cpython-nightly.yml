@@ -1,36 +1,36 @@
 name: CPython Nightly
 
-on:
-  schedule:
-    # Nightly build at 1:00 A.M. on Sunday
-    - cron: "0 1 * * 0"
-  pull_request:
-  # Manual run
-  workflow_dispatch:
+on: [push]
+  # schedule:
+  #   # Nightly build at 1:00 A.M. on Sunday
+  #   - cron: "0 1 * * 0"
+  # pull_request:
+  # # Manual run
+  # workflow_dispatch:
 
 jobs:
-  get_latest_commit:
-    name: Check build trigger
-    runs-on: ubuntu-latest
-    if: "github.repository == 'scikit-learn/scikit-learn'"
-    outputs:
-      commit_msg: ${{ steps.get_commit.outputs.commit_msg }}
+  # get_latest_commit:
+  #   name: Check build trigger
+  #   runs-on: ubuntu-latest
+  #   if: "github.repository == 'scikit-learn/scikit-learn'"
+  #   outputs:
+  #     commit_msg: ${{ steps.get_commit.outputs.commit_msg }}
 
-    steps:
-      - name: Checkout scikit-learn
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+  #   steps:
+  #     - name: Checkout scikit-learn
+  #       uses: actions/checkout@v2
+  #       with:
+  #         ref: ${{ github.event.pull_request.head.sha }}
 
-      - id: get_commit
-        name: Get commit
-        run: |
-          echo "::set-output name=commit_msg::$(git log --no-merges -1 --oneline)"
+  #     - id: get_commit
+  #       name: Get commit
+  #       run: |
+  #         echo "::set-output name=commit_msg::$(git log --no-merges -1 --oneline)"
 
   nightly:
     name: Nightly CPython-${{ matrix.python-version }}
-    needs: get_latest_commit
-    if: "contains(needs.get_latest_commit.outputs.commit_msg, '[python-dev]') || github.event_name == 'schedule' || github.event_name == 'workflow_run'"
+    # needs: get_latest_commit
+    # if: "contains(needs.get_latest_commit.outputs.commit_msg, '[python-dev]') || github.event_name == 'schedule' || github.event_name == 'workflow_run'"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -42,34 +42,46 @@ jobs:
       INSTALL_NUMPY: ${{ matrix.install-numpy }}
       INSTALL_SCIPY: ${{ matrix.install-scipy }}
     steps:
-      - uses: actions/checkout@v2
+      # - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install build dependencies
+      # - name: Install build dependencies
+      #   run: |
+      #     sudo apt-get install libatlas-base-dev liblapack-dev gfortran libgmp-dev libmpfr-dev libsuitesparse-dev libmpc-dev
+      #     # pip install --upgrade pip setuptools
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1
+      - name: build
         run: |
-          sudo apt-get install libatlas-base-dev liblapack-dev gfortran libgmp-dev libmpfr-dev libsuitesparse-dev libmpc-dev
-          pip install --upgrade pip setuptools
-      - name: Install python dependencies
-        run: |
-          pip install pytest pytest-xdist cython wheel
-      - name: Install numpy
-        run: |
-          if [[ $INSTALL_NUMPY == "wheel" ]]; then
-            pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
-          else
-            pip install git+https://github.com/numpy/numpy.git
-          fi
-      - name: Install scipy
-        run: |
-          if [[ $INSTALL_SCIPY == "wheel" ]]; then
-            pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
-          else
-            pip install git+https://github.com/scipy/scipy.git
-          fi
-      - name: Install scikit-learn
-        run: |
-          pip install --no-build-isolation .
-      - name: Test scikit-learn
-        run: |
-          cd /tmp && python -m pytest -n 2 --pyargs sklearn
+          which g++
+          which gcc
+          # export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+      # - name: Setup ccache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: prime-numbers
+      #     key: ${{ runner.os }}-primes
+      # - name: Install python dependencies
+      #   run: |
+      #     pip install pytest pytest-xdist cython wheel
+      # - name: Install numpy
+      #   run: |
+      #     if [[ $INSTALL_NUMPY == "wheel" ]]; then
+      #       pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
+      #     else
+      #       pip install git+https://github.com/numpy/numpy.git
+      #     fi
+      # - name: Install scipy
+      #   run: |
+      #     if [[ $INSTALL_SCIPY == "wheel" ]]; then
+      #       pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
+      #     else
+      #       pip install git+https://github.com/scipy/scipy.git
+      #     fi
+      # - name: Install scikit-learn
+      #   run: |
+      #     pip install --no-build-isolation .
+      # - name: Test scikit-learn
+      #   run: |
+      #     cd /tmp && python -m pytest -n 2 --pyargs sklearn
