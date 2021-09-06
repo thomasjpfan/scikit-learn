@@ -61,7 +61,7 @@ jobs:
           if [[ $INSTALL_NUMPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
           else
-            git clone https://github.com/numpy/numpy.git ~/numpy
+            git clone --recursive https://github.com/numpy/numpy.git ~/numpy
             cd ~/numpy && pip install -e .
           fi
       - name: Install scipy
@@ -70,7 +70,7 @@ jobs:
           if [[ $INSTALL_SCIPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
           else
-            git clone https://github.com/scipy/scipy.git ~/scipy
+            git clone --recursive https://github.com/scipy/scipy.git ~/scipy
             cd ~/scipy && pip install -e .
           fi
       - name: Install scikit-learn
