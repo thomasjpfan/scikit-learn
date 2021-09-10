@@ -5,6 +5,12 @@ set -x
 
 UNAMESTR=`uname`
 
+if [[ "$DISTRIB" == *"mamba"* ]]; then
+    # condaforge/mambaforge-pypy3 needs compilers
+    apt-get -yq update
+    apt-get -yq install build-essential
+fi
+
 make_conda() {
     TO_INSTALL="$@"
     if [[ "$DISTRIB" == *"mamba"* ]]; then

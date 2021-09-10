@@ -219,7 +219,6 @@ jobs:
         DISTRIB: 'conda-mamba'
         DOCKER_CONTAINER: 'condaforge/mambaforge-pypy3:4.10.3-5'
         PYTEST_XDIST_VERSION: 'none'
-        TEST_DOCSTRINGS: 'false'
         BLAS: 'openblas'
 
 # - template: build_tools/azure/posix.yml
