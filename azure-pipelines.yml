@@ -205,7 +205,7 @@ jobs:
 
 - template: build_tools/azure/posix-docker.yml
   parameters:
-    name: Linux-Docker
+    name: Linux_Docker
     vmImage: ubuntu-20.04
     # dependsOn: [git_commit]
     # condition: |
