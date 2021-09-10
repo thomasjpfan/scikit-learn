@@ -7,7 +7,7 @@ UNAMESTR=`uname`
 
 make_conda() {
     TO_INSTALL="$@"
-    if [[ "$DISTRIB" == "conda-mamba" ]]; then
+    if [[ "$DISTRIB" == *"mamba"* ]]; then
         mamba create -n $VIRTUALENV --yes $TO_INSTALL
     else
         conda create -n $VIRTUALENV --yes $TO_INSTALL
