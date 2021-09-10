@@ -29,8 +29,8 @@ jobs:
     PYTEST_XDIST_VERSION: 'latest'
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'false'
-    BLAS: 'openblas'
     TEST_DOCSTRINGS: 'false'
+    BLAS: 'openblas'
     DISTRIB: ''
     DOCKER_CONTAINER: ''
   strategy:
@@ -66,6 +66,7 @@ jobs:
         -e OMP_NUM_THREADS=$OMP_NUM_THREADS
         -e OPENBLAS_NUM_THREADS=$OPENBLAS_NUM_THREADS
         -e SKLEARN_SKIP_NETWORK_TESTS=$SKLEARN_SKIP_NETWORK_TESTS
+        -e BLAS=$BLAS
         $DOCKER_CONTAINER
         sleep 1000000
       displayName: 'Start container'
