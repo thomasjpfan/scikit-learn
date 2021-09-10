@@ -41,7 +41,7 @@ setup_ccache() {
 # imports get_dep
 source build_tools/shared.sh
 
-if [[ "$DISTRIB" == "conda" || "$DISTRIB" == "conda-mamba" ]]; then
+if [[ "$DISTRIB" == "conda" || "$DISTRIB" == *"mamba"* ]]; then
 
     if [[ "$CONDA_CHANNEL" != "" ]]; then
         TO_INSTALL="-c $CONDA_CHANNEL"
