@@ -5,7 +5,7 @@ set -x
 
 UNAMESTR=`uname`
 
-if [[ "$DISTRIB" == *"pypy3"* ]]; then
+if [[ "$DISTRIB" == "conda-mamba-pypy3" ]]; then
     # condaforge/mambaforge-pypy3 needs compilers
     apt-get -yq update
     apt-get -yq install build-essential
@@ -19,12 +19,6 @@ make_conda() {
         conda create -n $VIRTUALENV --yes $TO_INSTALL
     fi
     source activate $VIRTUALENV
-
-    python --version
-    which python
-    python -c "import platform; print(platform.python_implementation())"
-    python -c "import platform; assert platform.python_implementation() == 'PyPy'"
-    exit 1
 }
 
 setup_ccache() {
