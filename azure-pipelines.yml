@@ -202,6 +202,22 @@ jobs:
         PYTEST_VERSION: 'min'
         THREADPOOLCTL_VERSION: 'min'
 
+- template: build_tools/azure/posix-pypy3.yml
+  parameters:
+    name: Linux32
+    vmImage: ubuntu-20.04
+    dependsOn: [linting, git_commit]
+    condition: |
+      and(
+        succeeded(),
+        not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
+        ne(variables['Build.Reason'], 'Schedule')
+      )
+    matrix:
+      debian_atlas_32bit:
+        PYTEST_XDIST_VERSION: 'none'
+        TEST_DOCSTRINGS: 'true'
+
 - template: build_tools/azure/posix.yml
   parameters:
     name: macOS

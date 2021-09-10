@@ -7,7 +7,11 @@ UNAMESTR=`uname`
 
 make_conda() {
     TO_INSTALL="$@"
-    conda create -n $VIRTUALENV --yes $TO_INSTALL
+    if [[ "$DISTRIB" == "conda-mamba" ]]; then
+        mamba create -n $VIRTUALENV --yes $TO_INSTALL
+    else
+        conda create -n $VIRTUALENV --yes $TO_INSTALL
+    fi
     source activate $VIRTUALENV
 }
 
@@ -25,7 +29,7 @@ setup_ccache() {
 # imports get_dep
 source build_tools/shared.sh
 
-if [[ "$DISTRIB" == "conda" ]]; then
+if [[ "$DISTRIB" == "conda" || "$DISTRIB" == "conda-mamba" ]]; then
 
     if [[ "$CONDA_CHANNEL" != "" ]]; then
         TO_INSTALL="-c $CONDA_CHANNEL"
