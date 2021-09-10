@@ -216,7 +216,7 @@ jobs:
     #   )
     matrix:
       pypy3:
-        DISTRIB: 'conda-mamba'
+        DISTRIB: 'conda-mamba-pypy3'
         DOCKER_CONTAINER: 'condaforge/mambaforge-pypy3:4.10.3-5'
         PYTEST_XDIST_VERSION: 'none'
         PILLOW_VERSION: 'none'

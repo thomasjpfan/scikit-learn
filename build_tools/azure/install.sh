@@ -5,7 +5,7 @@ set -x
 
 UNAMESTR=`uname`
 
-if [[ "$DISTRIB" == *"mamba"* ]]; then
+if [[ "$DISTRIB" == *"pypy3"* ]]; then
     # condaforge/mambaforge-pypy3 needs compilers
     apt-get -yq update
     apt-get -yq install build-essential
@@ -19,6 +19,12 @@ make_conda() {
         conda create -n $VIRTUALENV --yes $TO_INSTALL
     fi
     source activate $VIRTUALENV
+
+    python --version
+    which python
+    python -c "import platform; print(platform.python_implementation())"
+    python -c "import platform; assert platform.python_implementation() == 'PyPy'"
+    exit 1
 }
 
 setup_ccache() {
@@ -43,7 +49,13 @@ if [[ "$DISTRIB" == "conda" || "$DISTRIB" == "conda-mamba" ]]; then
         TO_INSTALL=""
     fi
 
-    TO_INSTALL="$TO_INSTALL python=$PYTHON_VERSION ccache pip blas[build=$BLAS]"
+    if [[ "$DISTRIB" == *"pypy"* ]]; then
+        TO_INSTALL="$TO_INSTALL pypy"
+    else
+        TO_INSTALL="$TO_INSTALL python=$PYTHON_VERSION"
+    fi
+
+    TO_INSTALL="$TO_INSTALL ccache pip blas[build=$BLAS]"
 
     TO_INSTALL="$TO_INSTALL $(get_dep numpy $NUMPY_VERSION)"
     TO_INSTALL="$TO_INSTALL $(get_dep scipy $SCIPY_VERSION)"
