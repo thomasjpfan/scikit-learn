@@ -82,6 +82,7 @@ cdef class Tree:
 # Tree builder
 # =============================================================================
 
+
 cdef class TreeBuilder:
     # The TreeBuilder recursively builds a Tree object from training samples,
     # using a Splitter object for splitting internal nodes and assigning

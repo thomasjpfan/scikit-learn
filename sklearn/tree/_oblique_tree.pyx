@@ -2,17 +2,9 @@
 # cython: boundscheck=False
 # cython: wraparound=False
 
-# Authors: Gilles Louppe <g.louppe@gmail.com>
-#          Peter Prettenhofer <peter.prettenhofer@gmail.com>
-#          Brian Holt <bdholt1@gmail.com>
-#          Noel Dawe <noel@dawe.me>
-#          Satrajit Gosh <satrajit.ghosh@gmail.com>
-#          Lars Buitinck
-#          Arnaud Joly <arnaud.v.joly@gmail.com>
-#          Joel Nothman <joel.nothman@gmail.com>
-#          Fares Hedayati <fares.hedayati@gmail.com>
-#          Jacob Schreiber <jmschreiber91@gmail.com>
-#          Nelson Liu <nelson@nelsonliu.me>
+# Authors: Adam Li <adam2392@gmail.com>
+#          Chester Huynh <chester.huynh924@gmail.com>
+#          Parth Vora <pvora4@jhu.edu>
 #
 # License: BSD 3 clause
 
