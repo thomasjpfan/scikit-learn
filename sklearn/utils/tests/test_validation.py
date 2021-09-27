@@ -52,8 +52,8 @@ from sklearn.utils.validation import (
     FLOAT_DTYPES,
     _get_feature_names,
     _check_feature_names_in,
+    _check_fit_params,
 )
-from sklearn.utils.validation import _check_fit_params
 from sklearn.base import BaseEstimator
 import sklearn
 
@@ -1032,14 +1032,14 @@ def test_check_scalar_valid(x):
             target_type=numbers.Real,
             min_val=2,
             max_val=5,
-            closed="neither",
+            include_boundaries="both",
         )
     assert len(record) == 0
     assert scalar == x
 
 
 @pytest.mark.parametrize(
-    "x, target_name, target_type, min_val, max_val, closed, err_msg",
+    "x, target_name, target_type, min_val, max_val, include_boundaries, err_msg",
     [
         (
             1,
@@ -1059,7 +1059,7 @@ def test_check_scalar_valid(x):
             2,
             4,
             "neither",
-            ValueError("test_name2 == 1, must be >= 2."),
+            ValueError("test_name2 == 1, must be > 2."),
         ),
         (
             5,
@@ -1068,7 +1068,7 @@ def test_check_scalar_valid(x):
             2,
             4,
             "neither",
-            ValueError("test_name3 == 5, must be <= 4."),
+            ValueError("test_name3 == 5, must be < 4."),
         ),
         (
             2,
@@ -1076,7 +1076,7 @@ def test_check_scalar_valid(x):
             int,
             2,
             4,
-            "left",
+            "right",
             ValueError("test_name4 == 2, must be > 2."),
         ),
         (
@@ -1085,13 +1085,25 @@ def test_check_scalar_valid(x):
             int,
             2,
             4,
-            "right",
+            "left",
             ValueError("test_name5 == 4, must be < 4."),
+        ),
+        (
+            4,
+            "test_name6",
+            int,
+            2,
+            4,
+            "bad parameter value",
+            ValueError(
+                "Unknown value for `include_boundaries`: 'bad parameter value'. "
+                "Possible values are: ('left', 'right', 'both', 'neither')."
+            ),
         ),
     ],
 )
 def test_check_scalar_invalid(
-    x, target_name, target_type, min_val, max_val, closed, err_msg
+    x, target_name, target_type, min_val, max_val, include_boundaries, err_msg
 ):
     """Test that check_scalar returns the right error if a wrong input is
     given"""
@@ -1102,7 +1114,7 @@ def test_check_scalar_invalid(
             target_type=target_type,
             min_val=min_val,
             max_val=max_val,
-            closed=closed,
+            include_boundaries=include_boundaries,
         )
     assert str(raised_error.value) == str(err_msg)
     assert type(raised_error.value) == type(err_msg)
@@ -1240,6 +1252,14 @@ def test_check_sample_weight():
     X = np.ones((5, 2), dtype=int)
     sample_weight = _check_sample_weight(None, X, dtype=X.dtype)
     assert sample_weight.dtype == np.float64
+
+    # check negative weight when only_non_negative=True
+    X = np.ones((5, 2))
+    sample_weight = np.ones(_num_samples(X))
+    sample_weight[-1] = -10
+    err_msg = "Negative values in data passed to `sample_weight`"
+    with pytest.raises(ValueError, match=err_msg):
+        _check_sample_weight(sample_weight, X, only_non_negative=True)
 
 
 @pytest.mark.parametrize("toarray", [np.array, sp.csr_matrix, sp.csc_matrix])
