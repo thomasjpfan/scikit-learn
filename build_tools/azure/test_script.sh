@@ -51,5 +51,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-python -m pytest --pyargs sklearn.utils.validation -k test_check_pandas_sparse_valid
+python -m pytest --pyargs sklearn.utils.tests test_check_pandas_sparse_valid
 set +x
