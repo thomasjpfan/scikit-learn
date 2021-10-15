@@ -51,7 +51,5 @@ cp setup.cfg $TEST_DIR
 cd $TEST_DIR
 
 set -x
-python -m pytest --pyargs sklearn.gaussian_process.kernels
-python -m pytest --pyargs sklearn.neural_network
-python -m pytest --pyargs sklearn/utils/validation -k test_check_pandas_sparse_valid
+python -m pytest --pyargs sklearn.utils.validation -k test_check_pandas_sparse_valid
 set +x
