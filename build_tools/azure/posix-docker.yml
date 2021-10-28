@@ -4,13 +4,11 @@ parameters:
   matrix: []
   dependsOn: []
   condition: ne(variables['Build.Reason'], 'Schedule')
-  continueOnError: 'false'
 
 jobs:
 - job: ${{ parameters.name }}
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.condition }}
-  continueOnError: ${{ parameters.continueOnError }}
   pool:
     vmImage: ${{ parameters.vmImage }}
   variables:

@@ -4,6 +4,7 @@ parameters:
   matrix: []
   dependsOn: []
   condition: ''
+  alwaysSucceed: false
 
 jobs:
 - job: ${{ parameters.name }}
@@ -38,6 +39,10 @@ jobs:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
+- ${{ if eq(parameters.alwaysSucceed, true) }}:
+    - bash: echo "Task always succeeds"
+      displayName: Always succeed
+- ${{ if eq(parameters.alwaysSucceed, false) }}:
     - bash: echo "##vso[task.prependpath]$CONDA/bin"
       displayName: Add conda to PATH
       condition: startsWith(variables['DISTRIB'], 'conda')
