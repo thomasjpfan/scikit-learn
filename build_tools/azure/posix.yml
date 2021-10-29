@@ -4,6 +4,7 @@ parameters:
   matrix: []
   dependsOn: []
   condition: ''
+  alwaysSucceed: false
 
 jobs:
 - job: ${{ parameters.name }}
@@ -33,7 +34,7 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    WOW: $[ dependencies['git_commit']['outputs']['commit.message'] ]
+    WOW: ${{ parameters.alwaysSucceed }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
