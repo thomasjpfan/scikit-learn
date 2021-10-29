@@ -40,9 +40,11 @@ jobs:
 
   steps:
     - ${{ if eq(parameters.alwaysSucceed, true) }}:
-      - bash: echo "Always succeed"
-        displayName: Always succeed
+      - bash: echo "Checking"
+        displayName: Checking ${{ parameters.alwaysSucceed }}
     - ${{ else }}:
+      - bash: echo "Checking"
+        displayName: Checking ${{ parameters.alwaysSucceed }}
       - bash: echo "##vso[task.prependpath]$CONDA/bin"
         displayName: Add conda to PATH
         condition: startsWith(variables['DISTRIB'], 'conda')
