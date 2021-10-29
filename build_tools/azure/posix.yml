@@ -35,14 +35,14 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    # COMMIt_MESSAGE: ${{ parameters.commitMessage }}
+    COMMIt_MESSAGE: ${{ parameters.commitMessage }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - bash: echo "${{ parameters.commitMessage }}"
-      # condition: contains(variables['COMMIt_MESSAGE'], '${{ parameters.alwaysSucceedCommit }}')
+    - bash: echo "WOW"
+      condition: contains(variables['Build.SourceVersionMessage'], '${{ parameters.alwaysSucceedCommit }}')
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
