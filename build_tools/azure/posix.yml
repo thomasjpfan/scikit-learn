@@ -34,7 +34,7 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
+    ALWAYS_SUCCEED: $[ ${{ parameters.alwaysSucceed }} ]
     WOW3: $[ dependencies['git_commit']['outputs']['commit.message'] ]
   strategy:
     matrix:
@@ -43,6 +43,8 @@ jobs:
   steps:
     - bash: echo "$WOW3"
       displayName: Checking ${{ variables['ALWAYS_SUCCEED'] }}
+    - bash: echo "$ALWAYS_SUCCEED"
+      displayName: Checking ${{ variables['WOW3'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
