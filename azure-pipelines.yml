@@ -137,7 +137,6 @@ jobs:
       )
     # This task will
     alwaysSucceed: $[ dependencies['git_commit']['outputs']['commit.message'] ]
-    alwaysSucceed2: dependencies['git_commit']['outputs']['commit.message']
     matrix:
       py37_conda_forge_openblas_ubuntu_1804:
         DISTRIB: 'conda'
