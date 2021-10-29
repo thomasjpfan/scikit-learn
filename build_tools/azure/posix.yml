@@ -43,6 +43,8 @@ jobs:
     # - ${{ if eq(parameters.alwaysSucceed, true) }}:
     - bash: echo "$ALWAYS_SUCCEED"
       displayName: Checking $[variables.ALWAYS_SUCCEED]
+    - bash: echo "Second"
+      condition: contains(variables['ALWAYS_SUCCEED'], '[azure all-parallel]')
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
