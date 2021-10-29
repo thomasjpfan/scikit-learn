@@ -35,7 +35,6 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: contains(${{ parameters.message }}, ${{ parameters.alwaysSucceedCommit }})
     MESSAGE: ${{ parameters.message }}
   strategy:
     matrix:
@@ -44,6 +43,7 @@ jobs:
   steps:
     - bash: echo "$ALWAYS_SUCCEED"
     - bash: echo "$MESSAGE"
+      condition: contains(${{ parameters.message }}, ${{ parameters.alwaysSucceedCommit }})
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
