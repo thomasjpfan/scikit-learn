@@ -33,14 +33,13 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: ${{ dependencies['git_commit']['outputs']['commit.message'] }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
     - bash: echo "$ALWAYS_SUCCEED"
-      displayName: Checking variables['ALWAYS_SUCCEED']
+      displayName: Checking ${{ dependencies['git_commit']['outputs']['commit.message'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
