@@ -4,7 +4,8 @@ parameters:
   matrix: []
   dependsOn: []
   condition: ''
-  alwaysSucceed: false
+  alwaysSucceed: '1'
+  alwaysSucceed2: '2'
 
 jobs:
 - job: ${{ parameters.name }}
@@ -35,6 +36,7 @@ jobs:
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
     ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
+    ALWAYS_SUCCEED2: ${{ parameters.alwaysSucceed2 }}
     WOW: $[ dependencies['git_commit']['outputs']['commit.message'] ]
   strategy:
     matrix:
@@ -43,6 +45,8 @@ jobs:
   steps:
     - bash: echo "$WOW"
       displayName: Checking ${{ variables['ALWAYS_SUCCEED'] }}
+    - bash: echo "$WOW"
+      displayName: Checking ${{ variables['ALWAYS_SUCCEED2'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
