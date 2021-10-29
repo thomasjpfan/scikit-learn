@@ -35,7 +35,7 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: contains(${{ parameters.message }}, ${{ parameter.alwaysSucceedCommit }})
+    ALWAYS_SUCCEED: contains(${{ parameters.message }}, ${{ parameters.alwaysSucceedCommit }})
     MESSAGE: ${{ parameters.message }}
   strategy:
     matrix:
