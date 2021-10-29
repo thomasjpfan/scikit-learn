@@ -40,6 +40,7 @@ jobs:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
+    # - ${{ if eq(parameters.alwaysSucceed, true) }}:
     - bash: echo "$ALWAYS_SUCCEED"
       displayName: Checking ${{ variables['ALWAYS_SUCCEED'] }}
     # - ${{ else }}:
