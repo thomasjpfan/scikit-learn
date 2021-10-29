@@ -34,13 +34,14 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
+    ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - bash: echo "wow"
-      displayName: Checking ${{ parameters.alwaysSucceed }}
+    - bash: echo "$WOW"
+      displayName: Checking ${{ variables['WOW'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
