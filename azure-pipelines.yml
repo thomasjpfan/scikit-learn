@@ -135,7 +135,6 @@ jobs:
         not(contains(dependencies['git_commit']['outputs']['commit.message'], '[ci skip]')),
         ne(variables['Build.Reason'], 'Schedule')
       )
-    # Configures test to always succeed when [azure all-parallel] is in the commit message
     matrix:
       py37_conda_forge_openblas_ubuntu_1804:
         DISTRIB: 'conda'
