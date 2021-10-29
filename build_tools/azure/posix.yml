@@ -37,15 +37,16 @@ jobs:
     TEST_DOCSTRINGS: 'false'
     ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
     ALWAYS_SUCCEED2: ${{ parameters.alwaysSucceed2 }}
-    WOW: $[ dependencies['git_commit']['outputs']['commit.message'] ]
+    WOW: ${{ parameters.alwaysSucceed }}
+    WOW2: ${{ parameters.alwaysSucceed2 }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - bash: echo "$WOW"
+    - bash: echo "$WOW1"
       displayName: Checking ${{ variables['ALWAYS_SUCCEED'] }}
-    - bash: echo "$WOW"
+    - bash: echo "$WOW2"
       displayName: Checking ${{ variables['ALWAYS_SUCCEED2'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
