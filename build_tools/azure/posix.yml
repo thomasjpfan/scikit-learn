@@ -41,7 +41,7 @@ jobs:
 
   steps:
     - bash: echo "$WOW"
-      displayName: Checking ${{ variables['WOW'] }}
+      displayName: Checking ${{ variables['ALWAYS_SUCCEED'] }}
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
