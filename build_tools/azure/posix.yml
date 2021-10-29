@@ -34,23 +34,23 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
+    ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - ${{ if eq(parameters.alwaysSucceed, true) }}:
-      - bash: echo "Checking"
-        displayName: Checking ${{ parameters.alwaysSucceed }}
-    - ${{ else }}:
-      - bash: echo "Checking"
-        displayName: Checking ${{ parameters.alwaysSucceed }}
-      - bash: echo "##vso[task.prependpath]$CONDA/bin"
-        displayName: Add conda to PATH
-        condition: startsWith(variables['DISTRIB'], 'conda')
-      - bash: sudo chown -R $USER $CONDA
-        displayName: Take ownership of conda installation
-        condition: startsWith(variables['DISTRIB'], 'conda')
+    - bash: echo "$ALWAYS_SUCCEED"
+      displayName: Checking variables['ALWAYS_SUCCEED']
+    # - ${{ else }}:
+    #   - bash: echo "$ALWAYS_SUCCEED"
+    #     displayName: Checking variables['ALWAYS_SUCCEED']
+    #   - bash: echo "##vso[task.prependpath]$CONDA/bin"
+    #     displayName: Add conda to PATH
+    #     condition: startsWith(variables['DISTRIB'], 'conda')
+    #   - bash: sudo chown -R $USER $CONDA
+    #     displayName: Take ownership of conda installation
+    #     condition: startsWith(variables['DISTRIB'], 'conda')
     # - task: Cache@2
     #   inputs:
     #     key: '"$(Agent.JobName)"'
