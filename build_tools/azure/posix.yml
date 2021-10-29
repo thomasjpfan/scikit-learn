@@ -4,7 +4,8 @@ parameters:
   matrix: []
   dependsOn: []
   condition: ''
-  alwaysSucceed: '1'
+  alwaysSucceedCommit: 'xxxxxxxxxxxxxxx'
+  message: ''
 
 jobs:
 - job: ${{ parameters.name }}
@@ -34,18 +35,15 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
+    ALWAYS_SUCCEED: contains(${{ parameters.message }}, ${{ parameter.alwaysSucceedCommit }})
+    MESSAGE: ${{ parameters.message }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
     - bash: echo "$ALWAYS_SUCCEED"
-      displayName: Checking variables["ALWAYS_SUCCEED"]
-    - bash: echo "Second"
-      condition: contains(variables['ALWAYS_SUCCEED'], '[azure all-parallel]')
-    - ${{ if not(contains(parameters.alwaysSucceed, '[azure all-parallel]')) }}:
-      - bash: echo "Inner task"
+    - bash: echo "$MESSAGE"
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
