@@ -43,7 +43,7 @@ jobs:
   steps:
     - bash: echo "$ALWAYS_SUCCEED"
     - bash: echo "$MESSAGE"
-      condition: contains(variables.MESSAGE, ${{ parameters.alwaysSucceedCommit }})
+      condition: contains(variables['MESSAGE'], '${{ parameters.alwaysSucceedCommit }}')
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
