@@ -33,7 +33,7 @@ jobs:
     THREADPOOLCTL_VERSION: 'latest'
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
-    ALWAYS_SUCCEED: dependencies['git_commit']['outputs']['commit.message']
+    ALWAYS_SUCCEED: ${{ dependencies['git_commit']['outputs']['commit.message'] }}
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
