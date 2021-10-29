@@ -35,6 +35,7 @@ jobs:
     COVERAGE: 'true'
     TEST_DOCSTRINGS: 'false'
     ALWAYS_SUCCEED: ${{ parameters.alwaysSucceed }}
+    WOW: $[ dependencies['git_commit']['outputs']['commit.message'] ]
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}

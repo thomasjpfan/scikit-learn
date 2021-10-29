@@ -136,7 +136,7 @@ jobs:
         ne(variables['Build.Reason'], 'Schedule')
       )
     # This task will
-    alwaysSucceed: $[ dependencies['git_commit']['outputs']['commit.message'] ], '[azure all-parallel]'
+    alwaysSucceed: $[ dependencies['git_commit']['outputs']['commit.message'] ]
     matrix:
       py37_conda_forge_openblas_ubuntu_1804:
         DISTRIB: 'conda'
