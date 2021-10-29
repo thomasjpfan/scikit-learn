@@ -39,7 +39,7 @@ jobs:
 
   steps:
     - bash: echo "$ALWAYS_SUCCEED"
-      displayName: Checking ${{ dependencies['git_commit']['outputs']['commit.message'] }}
+      displayName: Checking $[ dependencies['git_commit']['outputs']['commit.message'] ]
     # - ${{ else }}:
     #   - bash: echo "$ALWAYS_SUCCEED"
     #     displayName: Checking variables['ALWAYS_SUCCEED']
