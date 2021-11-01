@@ -36,7 +36,7 @@ jobs:
       matrix:
         include:
           - python-version: '3.10.0-alpha - 3.10.x'
-            install-numpy: 'wheel'
+            install-numpy: 'git'
             install-scipy: 'git'
     env:
       INSTALL_NUMPY: ${{ matrix.install-numpy }}
@@ -65,8 +65,7 @@ jobs:
           if [[ $INSTALL_NUMPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple numpy
           else
-            git clone --recursive https://github.com/numpy/numpy.git ~/numpy
-            cd ~/numpy && pip install -e .
+            pip install git+https://github.com/numpy/numpy.git
           fi
       - name: Install scipy
         run: |
@@ -74,8 +73,7 @@ jobs:
           if [[ $INSTALL_SCIPY == "wheel" ]]; then
             pip install -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy
           else
-            git clone --recursive https://github.com/scipy/scipy.git ~/scipy
-            cd ~/scipy && pip install -e .
+            pip install git+https://github.com/scipy/scipy.git
           fi
       - name: Install scikit-learn
         run: |
