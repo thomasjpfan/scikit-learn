@@ -10,14 +10,14 @@ on:
   push:
 
 jobs:
-  get_latest_commit:
-    name: Check build trigger
-    runs-on: ubuntu-latest
-    # if: "github.repository == 'scikit-learn/scikit-learn'"
-    outputs:
-      commit_msg: ${{ steps.get_commit.outputs.commit_msg }}
+  # get_latest_commit:
+  #   name: Check build trigger
+  #   runs-on: ubuntu-latest
+  #   # if: "github.repository == 'scikit-learn/scikit-learn'"
+  #   outputs:
+  #     commit_msg: ${{ steps.get_commit.outputs.commit_msg }}
 
-    steps:
+  #   steps:
       # - name: Checkout scikit-learn
       #   uses: actions/checkout@v2
       #   with:
@@ -30,7 +30,7 @@ jobs:
 
   nightly-cpython:
     name: Nightly CPython-${{ matrix.python-version }}
-    needs: get_latest_commit
+    # needs: get_latest_commit
     # if: "contains(needs.get_latest_commit.outputs.commit_msg, '[python-dev]') || github.event_name == 'schedule' || github.event_name == 'workflow_run'"
     runs-on: ubuntu-20.04
     strategy:
