@@ -48,9 +48,9 @@ if [[ -n "$CHECK_WARNINGS" ]]; then
     TEST_CMD="$TEST_CMD $PYTHON_3_10_WARNING"
 fi
 
-if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
-    TEST_CMD="$TEST_CMD -n2"
-fi
+# if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
+#     TEST_CMD="$TEST_CMD -n2"
+# fi
 
 set -x
 $TEST_CMD --pyargs sklearn.utils.tests
