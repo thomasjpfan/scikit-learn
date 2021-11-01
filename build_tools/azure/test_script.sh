@@ -54,5 +54,5 @@ fi
 # fi
 
 # set -x
-# $TEST_CMD --pyargs sklearn.utils.tests
+"$TEST_CMD" --pyargs sklearn.utils.tests
 # set +x
