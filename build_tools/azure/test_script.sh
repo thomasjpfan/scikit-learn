@@ -35,7 +35,7 @@ if [[ "$COVERAGE" == "true" ]]; then
     # web report across all the platforms so there is no need for this text
     # report that otherwise hides the test failures and forces long scrolls in
     # the CI logs.
-    export COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
+    export COVERAGE_PROCESS_START="$(BUILD_SOURCESDIRECTORY)/.coveragerc"
     TEST_CMD="$TEST_CMD --cov-config=$COVERAGE_PROCESS_START --cov sklearn --cov-report="
 fi
 
