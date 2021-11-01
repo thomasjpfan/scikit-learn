@@ -124,12 +124,12 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     echo "Installing numpy and scipy master wheels"
     dev_anaconda_url=https://pypi.anaconda.org/scipy-wheels-nightly/simple
     pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url numpy pandas scipy
-    pip install --pre cython
-    setup_ccache
-    echo "Installing joblib master"
-    pip install https://github.com/joblib/joblib/archive/master.zip
-    echo "Installing pillow master"
-    pip install https://github.com/python-pillow/Pillow/archive/main.zip
+    # pip install --pre cython
+    # setup_ccache
+    # echo "Installing joblib master"
+    # pip install https://github.com/joblib/joblib/archive/master.zip
+    # echo "Installing pillow master"
+    # pip install https://github.com/python-pillow/Pillow/archive/main.zip
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
@@ -165,6 +165,7 @@ except ImportError:
 export SKLEARN_BUILD_PARALLEL=3
 
 # python -m pip list
+python -m pip install scikit-learn
 # if [[ "$DISTRIB" == "conda-pip-latest" ]]; then
 #     # Check that pip can automatically build scikit-learn with the build
 #     # dependencies specified in pyproject.toml using an isolated build
