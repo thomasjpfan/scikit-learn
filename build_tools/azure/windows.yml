@@ -35,18 +35,18 @@ jobs:
         # architecture: 'x86'
       # displayName: Use 32 bit System Python
       # condition: eq(variables['PYTHON_ARCH'], '32')
-    - bash: ./build_tools/azure/install_win.sh
-      displayName: 'Install'
-    - bash: ./build_tools/azure/test_script.sh
-      displayName: 'Test Library'
-    - bash: ./build_tools/azure/upload_codecov.sh
-      condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
-      displayName: 'Upload To Codecov'
-      env:
-        CODECOV_TOKEN: $(CODECOV_TOKEN)
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFiles: '$(TEST_DIR)/$(JUNITXML)'
-        testRunTitle: ${{ format('{0}-$(Agent.JobName)', parameters.name) }}
-      displayName: 'Publish Test Results'
-      condition: succeededOrFailed()
+    # - bash: ./build_tools/azure/install_win.sh
+    #   displayName: 'Install'
+    # - bash: ./build_tools/azure/test_script.sh
+    #   displayName: 'Test Library'
+    # - bash: ./build_tools/azure/upload_codecov.sh
+    #   condition: and(succeeded(), eq(variables['COVERAGE'], 'true'))
+    #   displayName: 'Upload To Codecov'
+    #   env:
+    #     CODECOV_TOKEN: $(CODECOV_TOKEN)
+    # - task: PublishTestResults@2
+    #   inputs:
+    #     testResultsFiles: '$(TEST_DIR)/$(JUNITXML)'
+    #     testRunTitle: ${{ format('{0}-$(Agent.JobName)', parameters.name) }}
+    #   displayName: 'Publish Test Results'
+    #   condition: succeededOrFailed()

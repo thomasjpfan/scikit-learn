@@ -37,3 +37,10 @@ pip install scikit-learn
 
 # Install the generated wheel package to test it
 # pip install --pre --no-index --find-links dist scikit-learn
+
+TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
+# Python 3.10 deprecates disutils and is imported by numpy interally during import time
+PYTHON_3_10_WARNING="-W ignore:'The distutils':DeprecationWarning"
+TEST_CMD="$TEST_CMD $PYTHON_3_10_WARNING"
+
+$TEST_CMD
