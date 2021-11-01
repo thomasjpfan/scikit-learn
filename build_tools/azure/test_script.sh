@@ -8,24 +8,24 @@ elif [[ "$DISTRIB" == "ubuntu" ]] || [[ "$DISTRIB" == "debian-32" ]]; then
     source $VIRTUALENV/bin/activate
 fi
 
-if [[ "$BUILD_WITH_ICC" == "true" ]]; then
-    source /opt/intel/oneapi/setvars.sh
-fi
+# if [[ "$BUILD_WITH_ICC" == "true" ]]; then
+#     source /opt/intel/oneapi/setvars.sh
+# fi
 
-mkdir -p $TEST_DIR
-cp setup.cfg $TEST_DIR
-cd $TEST_DIR
+# mkdir -p $TEST_DIR
+# cp setup.cfg $TEST_DIR
+# cd $TEST_DIR
 
-python -c "import sklearn; sklearn.show_versions()"
-python -m threadpoolctl -i sklearn
+# python -c "import sklearn; sklearn.show_versions()"
+# python -m threadpoolctl -i sklearn
 
-if ! command -v conda &> /dev/null
-then
-    pip list
-else
-    # conda list provides more info than pip list (when available)
-    conda list
-fi
+# if ! command -v conda &> /dev/null
+# then
+#     pip list
+# else
+#     # conda list provides more info than pip list (when available)
+#     conda list
+# fi
 
 TEST_CMD="python -m pytest --showlocals --durations=20 --junitxml=$JUNITXML"
 
@@ -44,13 +44,15 @@ if [[ -n "$CHECK_WARNINGS" ]]; then
     TEST_CMD="$TEST_CMD -Werror::DeprecationWarning -Werror::FutureWarning -Wignore:tostring:DeprecationWarning"
 
     # Python 3.10 deprecates disutils and is imported by numpy interally during import time
-    TEST_CMD="$TEST_CMD '-Wignore:The distutils:DeprecationWarning'"
+    TEST_CMD="$TEST_CMD -Wignore:The distutils:DeprecationWarning"
+
+    echo $TEST_CMD
 fi
 
-if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
-    TEST_CMD="$TEST_CMD -n2"
-fi
+# if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
+#     TEST_CMD="$TEST_CMD -n2"
+# fi
 
-set -x
-$TEST_CMD --pyargs sklearn.utils.tests
-set +x
+# set -x
+# $TEST_CMD --pyargs sklearn.utils.tests
+# set +x

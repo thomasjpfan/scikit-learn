@@ -126,10 +126,10 @@ elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url numpy pandas scipy
     pip install --pre cython
     setup_ccache
-    echo "Installing joblib master"
-    pip install https://github.com/joblib/joblib/archive/master.zip
-    echo "Installing pillow master"
-    pip install https://github.com/python-pillow/Pillow/archive/main.zip
+    # echo "Installing joblib master"
+    # pip install https://github.com/joblib/joblib/archive/master.zip
+    # echo "Installing pillow master"
+    # pip install https://github.com/python-pillow/Pillow/archive/main.zip
 fi
 
 python -m pip install $(get_dep threadpoolctl $THREADPOOLCTL_VERSION) \
@@ -164,29 +164,29 @@ except ImportError:
 # workers with 2 cores when building the compiled extensions of scikit-learn.
 export SKLEARN_BUILD_PARALLEL=3
 
-python -m pip list
-if [[ "$DISTRIB" == "conda-pip-latest" ]]; then
-    # Check that pip can automatically build scikit-learn with the build
-    # dependencies specified in pyproject.toml using an isolated build
-    # environment:
-    pip install --verbose --editable .
-else
-    if [[ "$BUILD_WITH_ICC" == "true" ]]; then
-        wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-        sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-        rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
-        sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
-        sudo apt-get update
-        sudo apt-get install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
-        source /opt/intel/oneapi/setvars.sh
+# python -m pip list
+# if [[ "$DISTRIB" == "conda-pip-latest" ]]; then
+#     # Check that pip can automatically build scikit-learn with the build
+#     # dependencies specified in pyproject.toml using an isolated build
+#     # environment:
+#     pip install --verbose --editable .
+# else
+#     if [[ "$BUILD_WITH_ICC" == "true" ]]; then
+#         wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+#         sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+#         rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB
+#         sudo add-apt-repository "deb https://apt.repos.intel.com/oneapi all main"
+#         sudo apt-get update
+#         sudo apt-get install intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic
+#         source /opt/intel/oneapi/setvars.sh
 
-        # The "build_clib" command is implicitly used to build "libsvm-skl".
-        # To compile with a different compiler, we also need to specify the
-        # compiler for this command
-        python setup.py build_ext --compiler=intelem -i build_clib --compiler=intelem
-    fi
-    # Use the pre-installed build dependencies and build directly in the
-    # current environment.
-    python setup.py develop
-fi
-ccache -s
+#         # The "build_clib" command is implicitly used to build "libsvm-skl".
+#         # To compile with a different compiler, we also need to specify the
+#         # compiler for this command
+#         python setup.py build_ext --compiler=intelem -i build_clib --compiler=intelem
+#     fi
+#     # Use the pre-installed build dependencies and build directly in the
+#     # current environment.
+#     python setup.py develop
+# fi
+# ccache -s
