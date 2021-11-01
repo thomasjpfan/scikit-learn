@@ -1,36 +1,37 @@
 name: CPython Nightly
 
 on:
-  schedule:
-    # Nightly build at 1:00 A.M.
-    - cron: "0 1 * * *"
-  pull_request:
-  # Manual run
-  workflow_dispatch:
+  # schedule:
+  #   # Nightly build at 1:00 A.M.
+  #   - cron: "0 1 * * *"
+  # pull_request:
+  # # Manual run
+  # workflow_dispatch:
+  push:
 
 jobs:
   get_latest_commit:
     name: Check build trigger
     runs-on: ubuntu-latest
-    if: "github.repository == 'scikit-learn/scikit-learn'"
+    # if: "github.repository == 'scikit-learn/scikit-learn'"
     outputs:
       commit_msg: ${{ steps.get_commit.outputs.commit_msg }}
 
     steps:
-      - name: Checkout scikit-learn
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+      # - name: Checkout scikit-learn
+      #   uses: actions/checkout@v2
+      #   with:
+      #     ref: ${{ github.event.pull_request.head.sha }}
 
-      - id: get_commit
-        name: Get commit
-        run: |
-          echo "::set-output name=commit_msg::$(git log --no-merges -1 --oneline)"
+      # - id: get_commit
+      #   name: Get commit
+      #   run: |
+      #     echo "::set-output name=commit_msg::$(git log --no-merges -1 --oneline)"
 
   nightly-cpython:
     name: Nightly CPython-${{ matrix.python-version }}
     needs: get_latest_commit
-    if: "contains(needs.get_latest_commit.outputs.commit_msg, '[python-dev]') || github.event_name == 'schedule' || github.event_name == 'workflow_run'"
+    # if: "contains(needs.get_latest_commit.outputs.commit_msg, '[python-dev]') || github.event_name == 'schedule' || github.event_name == 'workflow_run'"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
