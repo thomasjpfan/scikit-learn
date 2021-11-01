@@ -74,7 +74,7 @@ jobs:
     matrix:
       pylatest_pip_scipy_dev:
         DISTRIB: 'conda-pip-scipy-dev'
-        PYTHON_VERSION: '*'
+        PYTHON_VERSION: '3.9'
         CHECK_WARNINGS: 'true'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         PYTEST_XDIST_VERSION: 'none'
