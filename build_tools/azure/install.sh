@@ -119,11 +119,11 @@ elif [[ "$DISTRIB" == "conda-pip-latest" ]]; then
 elif [[ "$DISTRIB" == "conda-pip-scipy-dev" ]]; then
     # FIXME: temporary fix to link against system libraries on linux
     export LDFLAGS="$LDFLAGS -Wl,--sysroot=/"
-    make_conda "ccache python=$PYTHON_VERSION"
+    # make_conda "ccache python=$PYTHON_VERSION"
     python -m pip install -U pip
-    echo "Installing numpy and scipy master wheels"
-    dev_anaconda_url=https://pypi.anaconda.org/scipy-wheels-nightly/simple
-    pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url numpy pandas scipy
+    # echo "Installing numpy and scipy master wheels"
+    # dev_anaconda_url=https://pypi.anaconda.org/scipy-wheels-nightly/simple
+    # pip install --pre --upgrade --timeout=60 --extra-index $dev_anaconda_url numpy pandas scipy
     # pip install --pre cython
     # setup_ccache
     # echo "Installing joblib master"
