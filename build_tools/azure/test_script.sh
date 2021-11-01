@@ -52,5 +52,5 @@ if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
 fi
 
 set -x
-eval $TEST_CMD --pyargs sklearn.utils.tests
+($TEST_CMD --pyargs sklearn.utils.tests)
 set +x
