@@ -4,7 +4,7 @@ set -e
 set -x
 
 if [[ "$PYTHON_ARCH" == "64" ]]; then
-    conda create -n $VIRTUALENV -q -y python=$PYTHON_VERSION numpy scipy cython matplotlib wheel pillow joblib
+    conda create -n $VIRTUALENV -q -y python=$PYTHON_VERSION numpy scipy cython
 
     source activate $VIRTUALENV
 
@@ -30,8 +30,10 @@ fi
 python --version
 pip --version
 
+pip install scikit-learn
+
 # Build scikit-learn
-python setup.py bdist_wheel
+# python setup.py bdist_wheel
 
 # Install the generated wheel package to test it
-pip install --pre --no-index --find-links dist scikit-learn
+# pip install --pre --no-index --find-links dist scikit-learn
