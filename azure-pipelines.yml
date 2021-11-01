@@ -77,6 +77,7 @@ jobs:
         PYTHON_VERSION: '*'
         CHECK_WARNINGS: 'true'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
+        PYTEST_XDIST_VERSION: 'none'
         TEST_DOCSTRINGS: 'true'
         # Tests that require large downloads over the networks are skipped in CI.
         # Here we make sure, that they are still run on a regular basis.
