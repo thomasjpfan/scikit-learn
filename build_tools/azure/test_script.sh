@@ -44,7 +44,8 @@ if [[ -n "$CHECK_WARNINGS" ]]; then
     TEST_CMD="$TEST_CMD -Werror::DeprecationWarning -Werror::FutureWarning -Wignore:tostring:DeprecationWarning"
 
     # Python 3.10 deprecates disutils and is imported by numpy interally during import time
-    TEST_CMD='"$TEST_CMD" -Wignore:The distutils:DeprecationWarning'
+    PYTHON_3_10_WARNING='-Wignore:The distutils:DeprecationWarning'
+    TEST_CMD="$TEST_CMD $PYTHON_3_10_WARNING"
 fi
 
 if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
