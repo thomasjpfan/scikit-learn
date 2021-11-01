@@ -4,11 +4,11 @@ set -e
 set -x
 
 if [[ "$PYTHON_ARCH" == "64" ]]; then
-    conda create -n $VIRTUALENV -q -y python=$PYTHON_VERSION numpy scipy cython
+    # conda create -n $VIRTUALENV -q -y python=$PYTHON_VERSION numpy scipy cython
 
-    source activate $VIRTUALENV
+    # source activate $VIRTUALENV
 
-    pip install threadpoolctl
+    pip install threadpoolctl scipy numpy cython
 
     if [[ "$PYTEST_VERSION" == "*" ]]; then
         pip install pytest

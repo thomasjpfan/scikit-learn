@@ -25,16 +25,16 @@ jobs:
       ${{ insert }}: ${{ parameters.matrix }}
 
   steps:
-    - bash: echo "##vso[task.prependpath]$CONDA/Scripts"
-      displayName: Add conda to PATH for 64 bit Python
-      condition: eq(variables['PYTHON_ARCH'], '64')
+    # - bash: echo "##vso[task.prependpath]$CONDA/Scripts"
+    #   displayName: Add conda to PATH for 64 bit Python
+    #   condition: eq(variables['PYTHON_ARCH'], '64')
     - task: UsePythonVersion@0
       inputs:
         versionSpec: '$(PYTHON_VERSION)'
         addToPath: true
-        architecture: 'x86'
-      displayName: Use 32 bit System Python
-      condition: eq(variables['PYTHON_ARCH'], '32')
+        # architecture: 'x86'
+      # displayName: Use 32 bit System Python
+      # condition: eq(variables['PYTHON_ARCH'], '32')
     - bash: ./build_tools/azure/install_win.sh
       displayName: 'Install'
     - bash: ./build_tools/azure/test_script.sh

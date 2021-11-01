@@ -2,15 +2,15 @@
 
 set -e
 
-if [[ "$DISTRIB" =~ ^conda.* ]]; then
-    source activate $VIRTUALENV
-elif [[ "$DISTRIB" == "ubuntu" ]] || [[ "$DISTRIB" == "debian-32" ]]; then
-    source $VIRTUALENV/bin/activate
-fi
+# if [[ "$DISTRIB" =~ ^conda.* ]]; then
+#     source activate $VIRTUALENV
+# elif [[ "$DISTRIB" == "ubuntu" ]] || [[ "$DISTRIB" == "debian-32" ]]; then
+#     source $VIRTUALENV/bin/activate
+# fi
 
-if [[ "$BUILD_WITH_ICC" == "true" ]]; then
-    source /opt/intel/oneapi/setvars.sh
-fi
+# if [[ "$BUILD_WITH_ICC" == "true" ]]; then
+#     source /opt/intel/oneapi/setvars.sh
+# fi
 
 mkdir -p $TEST_DIR
 cp setup.cfg $TEST_DIR
@@ -35,7 +35,7 @@ if [[ "$COVERAGE" == "true" ]]; then
     # web report across all the platforms so there is no need for this text
     # report that otherwise hides the test failures and forces long scrolls in
     # the CI logs.
-    export COVERAGE_PROCESS_START="$(BUILD_SOURCESDIRECTORY)/.coveragerc"
+    export COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
     TEST_CMD="$TEST_CMD --cov-config=$COVERAGE_PROCESS_START --cov sklearn --cov-report="
 fi
 
@@ -52,5 +52,5 @@ if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
 fi
 
 set -x
-eval "$TEST_CMD --pyargs sklearn.utils.tests"
+eval $TEST_CMD --pyargs sklearn.utils.tests
 set +x
