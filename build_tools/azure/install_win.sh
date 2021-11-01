@@ -43,4 +43,4 @@ TEST_CMD="python -m pytest --showlocals --durations=20"
 PYTHON_3_10_WARNING="-W ignore:The\ distutils:DeprecationWarning"
 TEST_CMD="$TEST_CMD $PYTHON_3_10_WARNING"
 
-$TEST_CMD
+'$TEST_CMD'
