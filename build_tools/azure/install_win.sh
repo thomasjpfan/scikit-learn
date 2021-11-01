@@ -41,7 +41,7 @@ set -x
 TEST_CMD="python -m pytest --showlocals --durations=20"
 
 COVERAGE_PROCESS_START="$BUILD_SOURCESDIRECTORY/.coveragerc"
-TEST_CMD="$TEST_CMD --cov-config=$COVERAGE_PROCESS_START --cov sklearn --cov-report="
+TEST_CMD="$TEST_CMD --cov-config='$COVERAGE_PROCESS_START' --cov sklearn --cov-report="
 
 # Python 3.10 deprecates disutils and is imported by numpy interally during import time
 PYTHON_3_10_WARNING="-Wignore:The\ distutils:DeprecationWarning"
