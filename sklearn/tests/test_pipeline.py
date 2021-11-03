@@ -253,6 +253,7 @@ def test_pipeline_init_tuple():
     pipe.set_params(transf="passthrough")
     pipe.fit(X, y=None)
     pipe.score(X)
+    assert False
 
 
 def test_pipeline_methods_anova():

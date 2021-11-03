@@ -48,5 +48,5 @@ if [[ "$PYTEST_XDIST_VERSION" != "none" ]]; then
 fi
 
 set -x
-$TEST_CMD --pyargs sklearn
+$TEST_CMD --pyargs sklearn.tests.test_pipeline
 set +x
