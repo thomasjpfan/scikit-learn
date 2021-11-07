@@ -35,6 +35,7 @@ jobs:
     DISTRIB: ''
     DOCKER_CONTAINER: ''
     SHOW_SHORT_SUMMARY: 'false'
+    CPU_COUNT: '2'
   strategy:
     matrix:
       ${{ insert }}: ${{ parameters.matrix }}
