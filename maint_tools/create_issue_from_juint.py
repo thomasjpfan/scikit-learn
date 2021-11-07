@@ -86,9 +86,9 @@ if not failure_cases:
     if issue is not None:
         print(f"Closing issue #{issue.number}")
         new_body = (
-            "## Closed issue because CI is no longer failing! ✅\n"
-            f"[See successful run]({args.link_to_run})**\n"
-            "### Previous failing issue\n"
+            "## Closed issue because CI is no longer failing! ✅\n\n"
+            f"[Successful run]({args.link_to_run})\n\n"
+            "## Previous failing issue\n\n"
             f"{issue.body}"
         )
         issue.edit(state="closed", body=new_body)
