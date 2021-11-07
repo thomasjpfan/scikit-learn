@@ -48,12 +48,12 @@ def create_or_update_issue(body):
 
     if issue is None:
         # Create new issue
-        issue = issue_repo.create_issue(title, body=body_text)
+        issue = issue_repo.create_issue(title=title, body=body_text)
         print(f"Created issue in {args.issue_repo}#{issue.number}")
         sys.exit()
     else:
         # Update existing issue
-        issue.edit(title, body=body_text)
+        issue.edit(title=title, body=body_text)
         print(f"Updated issue in {args.issue_repo}#{issue.number}")
         sys.exit()
 
@@ -85,7 +85,13 @@ if not failure_cases:
     issue = get_issue()
     if issue is not None:
         print(f"Closing issue #{issue.number}")
-        issue.edit(state="closed")
+        new_body = (
+            "## Closed issue because CI is no longer failing! ✅\n"
+            f"[See successful run]({args.link_to_run})**\n"
+            "### Previous failing issue\n"
+            f"{issue.body}"
+        )
+        issue.edit(state="closed", body=new_body)
     sys.exit()
 
 # Create content for issue
