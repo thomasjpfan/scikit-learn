@@ -60,7 +60,7 @@ def create_or_update_issue(body):
 
 junit_path = Path(args.junit_file)
 if not junit_path.exists():
-    body = "Unable to find junit file. Please see link to details."
+    body = "Unable to find junit file. Please see link for details."
     create_or_update_issue(body)
     sys.exit()
 
