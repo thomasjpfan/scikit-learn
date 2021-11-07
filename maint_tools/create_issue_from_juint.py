@@ -25,7 +25,7 @@ parser.add_argument("link_to_run", help="URL to link to")
 parser.add_argument("junit_file", help="JUnit file")
 
 args = parser.parse_args()
-gh = Github(args.bot_gitub_token)
+gh = Github(args.bot_github_token)
 issue_repo = gh.get_repo(args.issue_repo)
 title = f"⚠️ CI failed on {args.ci_name} ⚠️"
 
