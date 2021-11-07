@@ -50,19 +50,19 @@ def create_or_update_issue(body):
         # Create new issue
         issue = issue_repo.create_issue(title, body=body_text)
         print(f"Created issue in {args.issue_repo}#{issue.number}")
-        sys.exit(0)
+        sys.exit()
     else:
         # Update existing issue
         issue.edit(title, body=body_text)
         print(f"Updated issue in {args.issue_repo}#{issue.number}")
-        sys.exit(0)
+        sys.exit()
 
 
 junit_path = Path(args.junit_file)
 if not junit_path.exists():
     body = "Unable to find junit file. Please see link to details."
     create_or_update_issue(body)
-    sys.exit(1)
+    sys.exit()
 
 # Find failures in junit file
 tree = ET.parse(args.junit_file)
@@ -84,11 +84,9 @@ if not failure_cases:
     print("Test has no failures!")
     issue = get_issue()
     if issue is not None:
-        print(f"Closing issue {issue}")
+        print(f"Closing issue #{issue.number}")
         issue.edit(state="closed")
-        issue
-
-    sys.exit(0)
+    sys.exit()
 
 # Create content for issue
 issue_summary = (
