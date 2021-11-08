@@ -1,9 +1,14 @@
 """Creates or updates an issue if the CI fails. This is useful to keep track of
-scheduled jobs that an fail.
+scheduled jobs that are failing repeatedly.
 
-This scirpt depends on:
+This script depends on:
 - `defusedxml` for safer parsing for xml
 - `PyGithub` for interacting with GitHub
+
+The GitHub token only requires the `repo:public_repo` scope are described in
+https://docs.github.com/en/developers/apps/building-oauth-apps/scopes-for-oauth-apps#available-scopes.
+This scope allows the bot to create and edit its own issues. It is best to use a
+github account that does **not** have commit access to the public repo.
 """
 
 from pathlib import Path
@@ -21,7 +26,7 @@ parser.add_argument(
 )
 parser.add_argument("ci_name", help="Name of CI run instance")
 parser.add_argument("issue_repo", help="Repo to track issues")
-parser.add_argument("link_to_run", help="URL to link to")
+parser.add_argument("link_to_ci_run", help="URL to link to")
 parser.add_argument("junit_file", help="JUnit file")
 
 args = parser.parse_args()
@@ -42,7 +47,7 @@ def get_issue():
 
 def create_or_update_issue(body):
     # Interact with GitHub API to create issue
-    header = f"**CI Failed on [{args.ci_name}]({args.link_to_run})**"
+    header = f"**CI Failed on [{args.ci_name}]({args.link_to_ci_run})**"
     body_text = f"{header}\n{body}"
     issue = get_issue()
 
@@ -87,7 +92,7 @@ if not failure_cases:
         print(f"Closing issue #{issue.number}")
         new_body = (
             "## Closed issue because CI is no longer failing! ✅\n\n"
-            f"[Successful run]({args.link_to_run})\n\n"
+            f"[Successful run]({args.link_to_ci_run})\n\n"
             "## Previous failing issue\n\n"
             f"{issue.body}"
         )
