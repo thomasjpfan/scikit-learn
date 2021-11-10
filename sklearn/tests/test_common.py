@@ -32,6 +32,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import RandomizedSearchCV
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.experimental import enable_halving_search_cv  # noqa
 from sklearn.model_selection import HalvingGridSearchCV
 from sklearn.model_selection import HalvingRandomSearchCV
@@ -340,6 +341,7 @@ column_name_estimators = list(
         _tested_estimators(),
         [make_pipeline(LogisticRegression(C=1))],
         list(_generate_search_cv_instances()),
+        [GradientBoostingRegressor(n_iter_no_change=5)],
     )
 )
 
