@@ -73,6 +73,12 @@ if not junit_path.exists():
 tree = ET.parse(args.junit_file)
 failure_cases = []
 
+# Check if test collection failed
+error = tree.find("./testsuite/testcase/error")
+if error is not None:
+    # Early exit for test collection errors
+    failure_cases.append({"title": "Test Collection Failure", "body": error.text})
+
 for item in tree.iter("testcase"):
     failure = item.find("failure")
     if failure is None:
