@@ -273,6 +273,8 @@ jobs:
         PYTHON_ARCH: '64'
         PYTEST_VERSION: '*'
         COVERAGE: 'true'
+        CPU_COUNT: '3'
       py37_pip_openblas_32bit:
         PYTHON_VERSION: '3.7'
         PYTHON_ARCH: '32'
+        CPU_COUNT: '3'
