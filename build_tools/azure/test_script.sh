@@ -62,5 +62,5 @@ if [[ "$CHECK_MEMORY" == "true" ]]; then
 fi
 
 set -x
-eval "$TEST_CMD --pyargs sklearn"
+eval "$TEST_CMD --pyargs sklearn.tests.test_isotonic"
 set +x
