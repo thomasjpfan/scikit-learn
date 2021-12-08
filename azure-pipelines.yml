@@ -10,7 +10,7 @@ schedules:
 jobs:
 - template: build_tools/azure/posix-docs.yml
   parameters:
-    name: Doc Build latest
+    name: Doc_Build_Latest
     matrix:
       build_docs_latest:
         PYTHON_VERSION: '*'
