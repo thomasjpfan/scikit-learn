@@ -3,9 +3,10 @@ version: 2.1
 jobs:
   download-and-host-docs:
     docker:
-      - image: circleci/python:3.7.7-buster
+      - image: cimg/base:2020.01
     steps:
-      - run: bash build_tools/circle/download_and_host.sh
+      - checkout
+      - run: build_tools/circle/download_and_host.sh
       # - store_artifacts:
       #     path: doc/_build/html/stable
       #     destination: doc
