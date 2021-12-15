@@ -1,0 +1,8 @@
+name: Blank Issue
+description: Please note that Github Discussions should be used in most cases instead.
+labels: ['Needs Triage']
+
+body:
+- type: textarea
+  validations:
+    required: true
