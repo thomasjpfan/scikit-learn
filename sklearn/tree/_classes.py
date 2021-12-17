@@ -2217,7 +2217,7 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
         )
 
     def fit(
-        self, X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated"
+        self, X, y, sample_weight=None, check_input=True
     ):
         """Build a decision tree classifier from the training set (X, y).
 
@@ -2242,12 +2242,6 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             Allow to bypass several input checking.
             Don't use this parameter unless you know what you do.
 
-        X_idx_sorted : deprecated, default="deprecated"
-            This parameter is deprecated and has no effect.
-            It will be removed in 1.1 (renaming of 0.26).
-
-            .. deprecated :: 0.24
-
         Returns
         -------
         self : DecisionTreeClassifier
@@ -2258,8 +2252,7 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             X,
             y,
             sample_weight=sample_weight,
-            check_input=check_input,
-            X_idx_sorted=X_idx_sorted,
+            check_input=check_input
         )
         return self
 
@@ -2578,7 +2571,7 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
         )
 
     def fit(
-        self, X, y, sample_weight=None, check_input=True, X_idx_sorted="deprecated"
+        self, X, y, sample_weight=None, check_input=True
     ):
         """Build a decision tree regressor from the training set (X, y).
 
@@ -2602,12 +2595,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
             Allow to bypass several input checking.
             Don't use this parameter unless you know what you do.
 
-        X_idx_sorted : deprecated, default="deprecated"
-            This parameter is deprecated and has no effect.
-            It will be removed in 1.1 (renaming of 0.26).
-
-            .. deprecated :: 0.24
-
         Returns
         -------
         self : DecisionTreeRegressor
@@ -2619,7 +2606,6 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
             y,
             sample_weight=sample_weight,
             check_input=check_input,
-            X_idx_sorted=X_idx_sorted,
         )
         return self
 
