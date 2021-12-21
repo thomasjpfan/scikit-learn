@@ -21,16 +21,6 @@ from ._tree cimport INT32_t          # Signed 32 bit integer
 from ._tree cimport UINT32_t         # Unsigned 32 bit integer
 
 
-cdef double INFINITY = np.inf
-
-# Mitigate precision differences between 32 bit and 64 bit
-cdef DTYPE_t FEATURE_THRESHOLD = 1e-7
-
-# Constant to switch between algorithm non zero value extract algorithm
-# in SparseSplitter
-cdef DTYPE_t EXTRACT_NNZ_SWITCH = 0.1
-
-
 cdef struct SplitRecord:
     # Data to track sample split
     SIZE_t feature         # Which feature to split on.
@@ -102,11 +92,3 @@ cdef class Splitter:
     cdef void node_value(self, double* dest) nogil
 
     cdef double node_impurity(self) nogil
-
-
-cdef inline void sort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil
-cdef inline void swap(DTYPE_t* Xf, SIZE_t* samples, SIZE_t i, SIZE_t j) nogil
-cdef inline DTYPE_t median3(DTYPE_t* Xf, SIZE_t n) nogil
-cdef void introsort(DTYPE_t* Xf, SIZE_t *samples, SIZE_t n, int maxd) nogil
-cdef inline void sift_down(DTYPE_t* Xf, SIZE_t* samples, SIZE_t start, SIZE_t end) nogil
-cdef void heapsort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil

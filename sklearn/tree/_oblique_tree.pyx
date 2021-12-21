@@ -26,8 +26,6 @@ from scipy.sparse import csr_matrix
 
 from cython.operator cimport dereference as deref
 
-from ._tree cimport Tree, Node
-
 from ._utils cimport Stack
 from ._utils cimport StackRecord
 from ._utils cimport PriorityHeap
@@ -66,18 +64,18 @@ cdef SIZE_t INITIAL_STACK_SIZE = 10
 # Repeat struct definition for numpy
 NODE_DTYPE = np.dtype({
     'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity',
-              'n_node_samples', 'weighted_n_node_samples',
+              'n_node_samples', 'weighted_n_node_samples', 
               ],
     'formats': [np.intp, np.intp, np.intp, np.float64, np.float64, np.intp,
                 np.float64],
     'offsets': [
-         <Py_ssize_t> &(<Node*> NULL).left_child,
-         <Py_ssize_t> &(<Node*> NULL).right_child,
-         <Py_ssize_t> &(<Node*> NULL).feature,
-         <Py_ssize_t> &(<Node*> NULL).threshold,
-         <Py_ssize_t> &(<Node*> NULL).impurity,
-         <Py_ssize_t> &(<Node*> NULL).n_node_samples,
-         <Py_ssize_t> &(<Node*> NULL).weighted_n_node_samples
+         <Py_ssize_t> &(<ObliqueNode*> NULL).left_child,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).right_child,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).feature,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).threshold,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).impurity,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).n_node_samples,
+         <Py_ssize_t> &(<ObliqueNode*> NULL).weighted_n_node_samples
     ]
 })
 
@@ -85,35 +83,66 @@ NODE_DTYPE = np.dtype({
 # TreeBuilder
 # =============================================================================
 
-cdef class ObliqueTreeBuilder(TreeBuilder):
+cdef class ObliqueTreeBuilder:
     """Interface for different tree building strategies."""
 
-    cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
+    cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None,
                 np.ndarray X_idx_sorted=None):
         """Build a decision tree from the training set (X, y)."""
         pass
 
+    cdef inline _check_input(self, object X, np.ndarray y,
+                             np.ndarray sample_weight):
+        """Check input dtype, layout and format"""
+        if issparse(X):
+            X = X.tocsc()
+            X.sort_indices()
+
+            if X.data.dtype != DTYPE:
+                X.data = np.ascontiguousarray(X.data, dtype=DTYPE)
+
+            if X.indices.dtype != np.int32 or X.indptr.dtype != np.int32:
+                raise ValueError("No support for np.int64 index based "
+                                 "sparse matrices")
+
+        elif X.dtype != DTYPE:
+            # since we have to copy we will make it fortran for efficiency
+            X = np.asfortranarray(X, dtype=DTYPE)
+
+        if y.dtype != DOUBLE or not y.flags.contiguous:
+            y = np.ascontiguousarray(y, dtype=DOUBLE)
+
+        if (sample_weight is not None and
+            (sample_weight.dtype != DOUBLE or
+            not sample_weight.flags.contiguous)):
+                sample_weight = np.asarray(sample_weight, dtype=DOUBLE,
+                                           order="C")
+
+        return X, y, sample_weight
 
 # Depth first builder ---------------------------------------------------------
 
 cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
     """Build a decision tree in depth-first fashion."""
 
-    def __cinit__(self, ObliqueSplitter splitter, SIZE_t min_samples_split,
+    def __cinit__(self, BaseObliqueSplitter splitter, SIZE_t min_samples_split,
                   SIZE_t min_samples_leaf, double min_weight_leaf,
                   SIZE_t max_depth, double min_impurity_decrease):
-        self.oblique_splitter = splitter
+        self.splitter = splitter
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.min_weight_leaf = min_weight_leaf
         self.max_depth = max_depth
         self.min_impurity_decrease = min_impurity_decrease
 
-    cpdef oblique_build(self, ObliqueTree tree, object X, np.ndarray y,
+    cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None,
                 np.ndarray X_idx_sorted=None):
         """Build a decision tree from the training set (X, y)."""
+        # with gil:
+        # print('Inside build...')
+
         # check input
         X, y, sample_weight = self._check_input(X, y, sample_weight)
 
@@ -130,9 +159,10 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
             init_capacity = 2047
 
         tree._resize(init_capacity)
+        # print('finished resizing...')
 
         # Parameters
-        cdef ObliqueSplitter splitter = self.oblique_splitter
+        cdef BaseObliqueSplitter splitter = self.splitter
         cdef SIZE_t max_depth = self.max_depth
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
         cdef double min_weight_leaf = self.min_weight_leaf
@@ -140,7 +170,9 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
         cdef double min_impurity_decrease = self.min_impurity_decrease
 
         # Recursive partition (without actual recursion)
-        splitter.init(X, y, sample_weight_ptr)
+        # print('splitter: ', splitter)
+        splitter.init(X, y, sample_weight_ptr, X_idx_sorted)
+        # print('Splitter initialized...')
 
         cdef SIZE_t start
         cdef SIZE_t end
@@ -162,6 +194,9 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 
         cdef Stack stack = Stack(INITIAL_STACK_SIZE)
         cdef StackRecord stack_record
+
+        # with gil:
+        # print('Got to nogil part.')
 
         with nogil:
             # push root node onto stack
@@ -198,7 +233,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
                            (impurity <= min_impurity_decrease))
 
                 if not is_leaf:
-                    splitter.oblique_node_split(impurity, &split, &n_constant_features)
+                    splitter.node_split(impurity, &split, &n_constant_features)
                     # If EPSILON=0 in the below comparison, float precision
                     # issues stop splitting, producing trees that are
                     # dissimilar to v0.18
@@ -206,10 +241,10 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
                                (split.improvement + EPSILON <
                                 min_impurity_decrease))
 
-                node_id = tree._add_oblique_node(parent, is_left, is_leaf, split.feature,
+                node_id = tree._add_node(parent, is_left, is_leaf, split.feature,
                                          split.threshold, impurity, n_node_samples,
-                                         weighted_n_node_samples,
-                                         split.proj_vec_weights,
+                                         weighted_n_node_samples, 
+                                         split.proj_vec_weights, 
                                          split.proj_vec_indices)
 
                 if node_id == SIZE_MAX:
@@ -248,11 +283,11 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 # ObliqueTree
 # =============================================================================
 
-cdef class ObliqueTree(Tree):
+cdef class ObliqueTree:
     """Array-based representation of a binary decision tree.
 
     The binary tree is represented as a number of parallel arrays. The i-th
-    element of each array holds information about the node `i`. Node 0 is the
+    element of each array holds information about the node `i`. ObliqueNode 0 is the
     tree's root. You can find a detailed description of all arrays in
     `_tree.pxd`. NOTE: Some of the arrays only apply to either leaves or split
     nodes, resp. In this case the values of nodes of the other type are
@@ -302,6 +337,52 @@ cdef class ObliqueTree(Tree):
         weighted_n_node_samples[i] holds the weighted number of training samples
         reaching node i.
     """
+    # Wrap for outside world.
+    # WARNING: these reference the current `nodes` and `value` buffers, which
+    # must not be freed by a subsequent memory allocation.
+    # (i.e. through `_resize` or `__setstate__`)
+    property n_classes:
+        def __get__(self):
+            return sizet_ptr_to_ndarray(self.n_classes, self.n_outputs)
+
+    property children_left:
+        def __get__(self):
+            return self._get_node_ndarray()['left_child'][:self.node_count]
+
+    property children_right:
+        def __get__(self):
+            return self._get_node_ndarray()['right_child'][:self.node_count]
+
+    property n_leaves:
+        def __get__(self):
+            return np.sum(np.logical_and(
+                self.children_left == -1,
+                self.children_right == -1))
+
+    property feature:
+        def __get__(self):
+            return self._get_node_ndarray()['feature'][:self.node_count]
+
+    property threshold:
+        def __get__(self):
+            return self._get_node_ndarray()['threshold'][:self.node_count]
+
+    property impurity:
+        def __get__(self):
+            return self._get_node_ndarray()['impurity'][:self.node_count]
+
+    property n_node_samples:
+        def __get__(self):
+            return self._get_node_ndarray()['n_node_samples'][:self.node_count]
+
+    property weighted_n_node_samples:
+        def __get__(self):
+            return self._get_node_ndarray()['weighted_n_node_samples'][:self.node_count]
+
+    property value:
+        def __get__(self):
+            return self._get_value_ndarray()[:self.node_count]
+
     def __cinit__(self, int n_features, np.ndarray[SIZE_t, ndim=1] n_classes,
                   int n_outputs):
         """Constructor."""
@@ -327,6 +408,14 @@ cdef class ObliqueTree(Tree):
 
         self.proj_vec_weights = vector[vector[DTYPE_t]](self.capacity)
         self.proj_vec_indices = vector[vector[SIZE_t]](self.capacity)
+
+    def __dealloc__(self):
+        """Destructor."""
+        # Free all inner structures
+        free(self.n_classes)
+        free(self.value)
+        free(self.nodes)
+        # print("freed nodes")
 
     def __reduce__(self):
         """Reduce re-implementation, for pickling."""
@@ -378,7 +467,7 @@ cdef class ObliqueTree(Tree):
         if self._resize_c(self.capacity) != 0:
             raise MemoryError("resizing tree to %d" % self.capacity)
         nodes = memcpy(self.nodes, (<np.ndarray> node_ndarray).data,
-                       self.capacity * sizeof(Node))
+                       self.capacity * sizeof(ObliqueNode))
         value = memcpy(self.value, (<np.ndarray> value_ndarray).data,
                        self.capacity * self.value_stride * sizeof(double))
 
@@ -393,6 +482,18 @@ cdef class ObliqueTree(Tree):
                     continue
                 self.proj_vec_weights[i].push_back(weight)
                 self.proj_vec_indices[i].push_back(j)
+
+    cdef int _resize(self, SIZE_t capacity) nogil except -1:
+        """Resize all inner arrays to `capacity`, if `capacity` == -1, then
+           double the size of the inner arrays.
+
+        Returns -1 in case of failure to allocate memory (and raise MemoryError)
+        or 0 otherwise.
+        """
+        if self._resize_c(capacity) != 0:
+            # Acquire gil only if we need to raise
+            with gil:
+                raise MemoryError()
 
     cdef int _resize_c(self, SIZE_t capacity=SIZE_MAX) nogil except -1:
         """Guts of _resize
@@ -428,10 +529,10 @@ cdef class ObliqueTree(Tree):
         self.capacity = capacity
         return 0
 
-    cdef SIZE_t _add_oblique_node(self, SIZE_t parent, bint is_left, bint is_leaf,
+    cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
                           SIZE_t feature, double threshold, double impurity,
                           SIZE_t n_node_samples,
-                          double weighted_n_node_samples,
+                          double weighted_n_node_samples, 
                           vector[DTYPE_t]* proj_vec_weights,
                           vector[SIZE_t]* proj_vec_indices) nogil except -1:
         """Add a node to the tree.
@@ -447,7 +548,7 @@ cdef class ObliqueTree(Tree):
             if self._resize_c() != 0:
                 return SIZE_MAX
 
-        cdef Node* node = &self.nodes[node_id]
+        cdef ObliqueNode* node = &self.nodes[node_id]
         #cdef DTYPE_t* projection = &self.proj_vecs[node_id]
 
         node.impurity = impurity
@@ -477,6 +578,21 @@ cdef class ObliqueTree(Tree):
 
         return node_id
 
+    cpdef np.ndarray predict(self, object X):
+        """Predict target for X."""
+        out = self._get_value_ndarray().take(self.apply(X), axis=0,
+                                             mode='clip')
+        if self.n_outputs == 1:
+            out = out.reshape(X.shape[0], self.max_n_classes)
+        return out
+
+    cpdef np.ndarray apply(self, object X):
+        """Finds the terminal region (=leaf node) for each sample in X."""
+        if issparse(X):
+            return self._apply_sparse_csr(X)
+        else:
+            return self._apply_dense(X)
+
     cdef inline np.ndarray _apply_dense(self, object X):
         """Finds the terminal region (=leaf node) for each sample in X."""
 
@@ -498,7 +614,7 @@ cdef class ObliqueTree(Tree):
         cdef SIZE_t* out_ptr = <SIZE_t*> out.data
 
         # Initialize auxiliary data-structure
-        cdef Node* node = NULL
+        cdef ObliqueNode* node = NULL
         cdef SIZE_t i = 0
         cdef SIZE_t j = 0
         cdef DTYPE_t proj_feat = 0
@@ -513,7 +629,7 @@ cdef class ObliqueTree(Tree):
                 # loop through each sample and start with the first node
                 node = self.nodes
                 node_id = 0
-
+                
                 # While node not a leaf
                 while node.left_child != _TREE_LEAF:
                     # ... and node.right_child != _TREE_LEAF:
@@ -539,8 +655,6 @@ cdef class ObliqueTree(Tree):
 
     cdef inline np.ndarray _apply_sparse_csr(self, object X):
         """Finds the terminal region (=leaf node) for each sample in sparse X.
-
-        TODO: implement
         """
         # Check input
         if not isinstance(X, csr_matrix):
@@ -569,7 +683,7 @@ cdef class ObliqueTree(Tree):
 
         # Initialize auxiliary data-structure
         cdef DTYPE_t feature_value = 0.
-        cdef Node* node = NULL
+        cdef ObliqueNode* node = NULL
         cdef DTYPE_t* X_sample = NULL
         cdef SIZE_t i = 0
         cdef INT32_t k = 0
@@ -614,6 +728,12 @@ cdef class ObliqueTree(Tree):
 
         return out
 
+    cpdef object decision_path(self, object X):
+        """Finds the decision path (=node) for each sample in X."""
+        if issparse(X):
+            return self._decision_path_sparse_csr(X)
+        else:
+            return self._decision_path_dense(X)
 
     cdef inline object _decision_path_dense(self, object X):
         """Finds the decision path (=node) for each sample in X."""
@@ -641,7 +761,7 @@ cdef class ObliqueTree(Tree):
         cdef SIZE_t* indices_ptr = <SIZE_t*> indices.data
 
         # Initialize auxiliary data-structure
-        cdef Node* node = NULL
+        cdef ObliqueNode* node = NULL
         cdef SIZE_t i = 0
         cdef SIZE_t j = 0
         cdef DTYPE_t proj_feat = 0
@@ -695,10 +815,7 @@ cdef class ObliqueTree(Tree):
         return out
 
     cdef inline object _decision_path_sparse_csr(self, object X):
-        """Finds the decision path (=node) for each sample in X.
-
-        TODO: implement.
-        """
+        """Finds the decision path (=node) for each sample in X."""
 
         # Check input
         if not isinstance(X, csr_matrix):
@@ -731,7 +848,7 @@ cdef class ObliqueTree(Tree):
 
         # Initialize auxiliary data-structure
         cdef DTYPE_t feature_value = 0.
-        cdef Node* node = NULL
+        cdef ObliqueNode* node = NULL
         cdef DTYPE_t* X_sample = NULL
         cdef SIZE_t i = 0
         cdef INT32_t k = 0
@@ -792,11 +909,11 @@ cdef class ObliqueTree(Tree):
 
     cpdef compute_feature_importances(self, normalize=True):
         """Computes the importance of each feature (aka variable)."""
-        cdef Node* left                                 # left child
-        cdef Node* right                                # right child
-        cdef Node* nodes = self.nodes                   # array of all nodes
-        cdef Node* node = nodes                         # pointer to nodes
-        cdef Node* end_node = node + self.node_count    # the last node
+        cdef ObliqueNode* left                                 # left child
+        cdef ObliqueNode* right                                # right child
+        cdef ObliqueNode* nodes = self.nodes                   # array of all nodes
+        cdef ObliqueNode* node = nodes                         # pointer to nodes
+        cdef ObliqueNode* end_node = node + self.node_count    # the last node
 
         cdef double normalizer = 0.
 
@@ -827,3 +944,146 @@ cdef class ObliqueTree(Tree):
                 importances /= normalizer
 
         return importances
+
+    cdef np.ndarray _get_value_ndarray(self):
+        """Wraps value as a 3-d NumPy array.
+
+        The array keeps a reference to this ObliqueTree, which manages the underlying
+        memory.
+        """
+        cdef np.npy_intp shape[3]
+        shape[0] = <np.npy_intp> self.node_count
+        shape[1] = <np.npy_intp> self.n_outputs
+        shape[2] = <np.npy_intp> self.max_n_classes
+        cdef np.ndarray arr
+        arr = np.PyArray_SimpleNewFromData(3, shape, np.NPY_DOUBLE, self.value)
+        Py_INCREF(self)
+        arr.base = <PyObject*> self
+        return arr
+
+    cdef np.ndarray _get_node_ndarray(self):
+        """Wraps nodes as a NumPy struct array.
+
+        The array keeps a reference to this ObliqueTree, which manages the underlying
+        memory. Individual fields are publicly accessible as properties of the
+        ObliqueTree.
+        """
+        cdef np.npy_intp shape[1]
+        shape[0] = <np.npy_intp> self.node_count
+        cdef np.npy_intp strides[1]
+        strides[0] = sizeof(ObliqueNode)
+        cdef np.ndarray arr
+        Py_INCREF(NODE_DTYPE)
+        arr = PyArray_NewFromDescr(<PyTypeObject *> np.ndarray,
+                                   <np.dtype> NODE_DTYPE, 1, shape,
+                                   strides, <void*> self.nodes,
+                                   np.NPY_DEFAULT, None)
+        Py_INCREF(self)
+        arr.base = <PyObject*> self
+        return arr
+
+    def compute_partial_dependence(self, DTYPE_t[:, ::1] X,
+                                   int[::1] target_features,
+                                   double[::1] out):
+        """Partial dependence of the response on the ``target_feature`` set.
+
+        For each sample in ``X`` a tree traversal is performed.
+        Each traversal starts from the root with weight 1.0.
+
+        At each non-leaf node that splits on a target feature, either
+        the left child or the right child is visited based on the feature
+        value of the current sample, and the weight is not modified.
+        At each non-leaf node that splits on a complementary feature,
+        both children are visited and the weight is multiplied by the fraction
+        of training samples which went to each child.
+
+        At each leaf, the value of the node is multiplied by the current
+        weight (weights sum to 1 for all visited terminal nodes).
+
+        Parameters
+        ----------
+        X : view on 2d ndarray, shape (n_samples, n_target_features)
+            The grid points on which the partial dependence should be
+            evaluated.
+        target_features : view on 1d ndarray, shape (n_target_features)
+            The set of target features for which the partial dependence
+            should be evaluated.
+        out : view on 1d ndarray, shape (n_samples)
+            The value of the partial dependence function on each grid
+            point.
+        """
+        cdef:
+            double[::1] weight_stack = np.zeros(self.node_count,
+                                                dtype=np.float64)
+            SIZE_t[::1] node_idx_stack = np.zeros(self.node_count,
+                                                  dtype=np.intp)
+            SIZE_t sample_idx
+            SIZE_t feature_idx
+            int stack_size
+            double left_sample_frac
+            double current_weight
+            double total_weight  # used for sanity check only
+            ObliqueNode *current_node  # use a pointer to avoid copying attributes
+            SIZE_t current_node_idx
+            bint is_target_feature
+            SIZE_t _TREE_LEAF = TREE_LEAF  # to avoid python interactions
+
+        for sample_idx in range(X.shape[0]):
+            # init stacks for current sample
+            stack_size = 1
+            node_idx_stack[0] = 0  # root node
+            weight_stack[0] = 1  # all the samples are in the root node
+            total_weight = 0
+
+            while stack_size > 0:
+                # pop the stack
+                stack_size -= 1
+                current_node_idx = node_idx_stack[stack_size]
+                current_node = &self.nodes[current_node_idx]
+
+                if current_node.left_child == _TREE_LEAF:
+                    # leaf node
+                    out[sample_idx] += (weight_stack[stack_size] *
+                                        self.value[current_node_idx])
+                    total_weight += weight_stack[stack_size]
+                else:
+                    # non-leaf node
+
+                    # determine if the split feature is a target feature
+                    is_target_feature = False
+                    for feature_idx in range(target_features.shape[0]):
+                        if target_features[feature_idx] == current_node.feature:
+                            is_target_feature = True
+                            break
+
+                    if is_target_feature:
+                        # In this case, we push left or right child on stack
+                        if X[sample_idx, feature_idx] <= current_node.threshold:
+                            node_idx_stack[stack_size] = current_node.left_child
+                        else:
+                            node_idx_stack[stack_size] = current_node.right_child
+                        stack_size += 1
+                    else:
+                        # In this case, we push both children onto the stack,
+                        # and give a weight proportional to the number of
+                        # samples going through each branch.
+
+                        # push left child
+                        node_idx_stack[stack_size] = current_node.left_child
+                        left_sample_frac = (
+                            self.nodes[current_node.left_child].weighted_n_node_samples /
+                            current_node.weighted_n_node_samples)
+                        current_weight = weight_stack[stack_size]
+                        weight_stack[stack_size] = current_weight * left_sample_frac
+                        stack_size += 1
+
+                        # push right child
+                        node_idx_stack[stack_size] = current_node.right_child
+                        weight_stack[stack_size] = (
+                            current_weight * (1 - left_sample_frac))
+                        stack_size += 1
+
+            # Sanity check. Should never happen.
+            if not (0.999 < total_weight < 1.001):
+                raise ValueError("Total weight should be 1.0 but was %.9f" %
+                                 total_weight)

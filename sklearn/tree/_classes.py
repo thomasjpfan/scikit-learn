@@ -1,6 +1,6 @@
 """
-This module gathers tree-based methods, including decision, regression and
-randomized trees. Single and multi-output problems are both handled.
+This module gathers tree-based methods, including decision, regression,
+oblique and randomized trees. Single and multi-output problems are both handled.
 """
 
 # Authors: Gilles Louppe <g.louppe@gmail.com>
@@ -11,6 +11,7 @@ randomized trees. Single and multi-output problems are both handled.
 #          Joly Arnaud <arnaud.v.joly@gmail.com>
 #          Fares Hedayati <fares.hedayati@gmail.com>
 #          Nelson Liu <nelson@nelsonliu.me>
+#          Adam Li <adam2392@gmail.com>
 #
 # License: BSD 3 clause
 
@@ -45,9 +46,8 @@ from ._tree import BestFirstTreeBuilder
 from ._tree import Tree
 from ._tree import _build_pruned_tree_ccp
 from ._tree import ccp_pruning_path
-from ._oblique_splitter import ObliqueSplitter
-from ._oblique_tree import ObliqueDepthFirstTreeBuilder
-from ._oblique_tree import ObliqueTree
+from ._oblique_splitter import BaseObliqueSplitter
+from ._oblique_tree import ObliqueDepthFirstTreeBuilder, ObliqueTree
 from . import _tree, _splitter, _criterion, _oblique_splitter
 
 
@@ -407,16 +407,29 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     ):
         """Set splitting function."""
         SPLITTERS = SPARSE_SPLITTERS if issparse else DENSE_SPLITTERS
+        OBLIQUE_SPLITTERS = OBLIQUE_SPARSE_SPLITTERS if issparse else OBLIQUE_DENSE_SPLITTERS
 
         splitter = self.splitter
-        if not isinstance(self.splitter, Splitter):
-            splitter = SPLITTERS[self.splitter](
-                criterion,
-                self.max_features_,
-                min_samples_leaf,
-                min_weight_leaf,
-                random_state,
-            )
+        if self.splitter_type == 'oblique':
+            if not isinstance(self.splitter, BaseObliqueSplitter):
+                splitter_func = OBLIQUE_SPLITTERS[self.splitter]
+                splitter = OBLIQUE_SPLITTERS[self.splitter](
+                    criterion,
+                    self.max_features_,
+                    min_samples_leaf,
+                    min_weight_leaf,
+                    self.feature_combinations,
+                    random_state,
+                )
+        elif self.splitter_type == 'axisaligned':
+            if not isinstance(self.splitter, Splitter):
+                splitter = SPLITTERS[self.splitter](
+                    criterion,
+                    self.max_features_,
+                    min_samples_leaf,
+                    min_weight_leaf,
+                    random_state,
+                )
         return splitter
 
     def _set_tree(self):
@@ -714,22 +727,22 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
         # SPORF params
         self.feature_combinations = feature_combinations
 
-    def _set_splitter(
-        self, issparse, criterion, min_samples_leaf, min_weight_leaf, random_state
-    ):
-        SPLITTERS = OBLIQUE_SPARSE_SPLITTERS if issparse else OBLIQUE_DENSE_SPLITTERS
+    # def _set_splitter(
+    #     self, issparse, criterion, min_samples_leaf, min_weight_leaf, random_state
+    # ):
+    #     SPLITTERS = OBLIQUE_SPARSE_SPLITTERS if issparse else OBLIQUE_DENSE_SPLITTERS
 
-        splitter = self.splitter
-        if not isinstance(self.splitter, ObliqueSplitter):
-            splitter = SPLITTERS[self.splitter](
-                criterion,
-                self.max_features_,
-                min_samples_leaf,
-                min_weight_leaf,
-                self.feature_combinations,
-                random_state,
-            )
-        return splitter
+    #     splitter = self.splitter
+    #     if not isinstance(self.splitter, ObliqueSplitter):
+    #         splitter = SPLITTERS[self.splitter](
+    #             criterion,
+    #             self.max_features_,
+    #             min_samples_leaf,
+    #             min_weight_leaf,
+    #             self.feature_combinations,
+    #             random_state,
+    #         )
+    #     return splitter
 
     def _set_tree(self):
         if is_classifier(self):
@@ -762,7 +775,7 @@ class BaseObliqueDecisionTree(BaseDecisionTree):
                 min_weight_leaf,
                 max_depth,
                 self.min_impurity_decrease,
-            ).oblique_build
+            ).build
         else:
             raise NotImplementedError("Havent implemented Best First tree builder")
         return builder
@@ -1001,6 +1014,7 @@ class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
     array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
+    splitter_type = 'axisaligned'
 
     def __init__(
         self,
@@ -2182,6 +2196,7 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
     array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
+    splitter_type = 'oblique'
 
     def __init__(
         self,

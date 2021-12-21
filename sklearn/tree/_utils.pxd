@@ -11,6 +11,8 @@
 import numpy as np
 cimport numpy as np
 from ._tree cimport Node
+from ._oblique_tree cimport ObliqueNode
+
 from ..neighbors._quad_tree cimport Cell
 
 ctypedef np.npy_float32 DTYPE_t          # Type of X
@@ -45,6 +47,8 @@ ctypedef fused realloc_ptr:
     (Cell*)
     (StackRecord*)
     (PriorityHeapRecord*)
+    (ObliqueNode*)
+    (ObliqueNode**)
     (DTYPE_t**)
 
 cdef realloc_ptr safe_realloc(realloc_ptr* p, size_t nelems) nogil except *
