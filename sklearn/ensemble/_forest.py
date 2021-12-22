@@ -2965,7 +2965,7 @@ class ObliqueRandomForestClassifier(ForestClassifier):
             base_estimator=ObliqueDecisionTreeClassifier(),
             n_estimators=n_estimators,
             estimator_params=(
-                "criterion"
+                "criterion",
                 "max_depth",
                 "feature_combinations",
                 "min_samples_split",
