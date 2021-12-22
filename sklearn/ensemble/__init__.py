@@ -8,6 +8,7 @@ from ._forest import RandomForestRegressor
 from ._forest import RandomTreesEmbedding
 from ._forest import ExtraTreesClassifier
 from ._forest import ExtraTreesRegressor
+from ._forest import ObliqueRandomForestClassifier
 from ._bagging import BaggingClassifier
 from ._bagging import BaggingRegressor
 from ._iforest import IsolationForest
@@ -44,4 +45,5 @@ __all__ = [
     "StackingRegressor",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
+    "ObliqueRandomForestClassifier"
 ]
