@@ -96,11 +96,15 @@ def _handle_zeros_in_scale(scale, copy=True, constant_mask=None):
     construction.
     """
     # if we are fitting on 1D arrays, scale might be a scalar
-    if np.isscalar(scale):
+    is_array_namespace = hasattr(scale, "__array_namespace__")
+    if is_array_namespace:
+        np = scale.__array_namespace__()
+
+    if scale.ndim == 0:
         if scale == 0.0:
             scale = 1.0
         return scale
-    elif isinstance(scale, np.ndarray):
+    elif is_array_namespace or isinstance(scale, np.ndarray):
         if constant_mask is None:
             # Detect near constant values to avoid dividing by a very small
             # value that could lead to surprising results and numerical
@@ -844,6 +848,9 @@ class StandardScaler(_OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
             force_all_finite="allow-nan",
             reset=first_call,
         )
+        if hasattr(X, "__array_namespace__"):
+            np = X.__array_namespace__()
+
         n_features = X.shape[1]
 
         if sample_weight is not None:
@@ -933,8 +940,8 @@ class StandardScaler(_OneToOneFeatureMixin, TransformerMixin, BaseEstimator):
         # for backward-compatibility, reduce n_samples_seen_ to an integer
         # if the number of samples is the same for each feature (i.e. no
         # missing values)
-        if np.ptp(self.n_samples_seen_) == 0:
-            self.n_samples_seen_ = self.n_samples_seen_[0]
+        # if np.ptp(self.n_samples_seen_) == 0:
+        #     self.n_samples_seen_ = self.n_samples_seen_[0]
 
         if self.with_std:
             # Extract the list of near constant features on the raw variances,

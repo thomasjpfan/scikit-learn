@@ -5,6 +5,7 @@
 # License: BSD 3 clause
 
 import numpy as np
+import numpy
 
 from scipy.special import expit as logistic_sigmoid
 from scipy.special import xlogy
@@ -20,6 +21,7 @@ def inplace_identity(X):
         and `n_features` is the number of features.
     """
     # Nothing to do
+    return X
 
 
 def inplace_logistic(X):
@@ -30,7 +32,7 @@ def inplace_logistic(X):
     X : {array-like, sparse matrix}, shape (n_samples, n_features)
         The input data.
     """
-    logistic_sigmoid(X, out=X)
+    return logistic_sigmoid(X)
 
 
 def inplace_tanh(X):
@@ -41,7 +43,7 @@ def inplace_tanh(X):
     X : {array-like, sparse matrix}, shape (n_samples, n_features)
         The input data.
     """
-    np.tanh(X, out=X)
+    return np.tanh(X)
 
 
 def inplace_relu(X):
@@ -52,7 +54,9 @@ def inplace_relu(X):
     X : {array-like, sparse matrix}, shape (n_samples, n_features)
         The input data.
     """
-    np.maximum(X, 0, out=X)
+    np = X.__array_namespace__() if hasattr(X, "__array_namespace__") else numpy
+
+    return np.where(X >= 0.0, X, np.asarray(0.0))
 
 
 def inplace_softmax(X):
@@ -64,8 +68,9 @@ def inplace_softmax(X):
         The input data.
     """
     tmp = X - X.max(axis=1)[:, np.newaxis]
-    np.exp(tmp, out=X)
+    X = np.exp(tmp)
     X /= X.sum(axis=1)[:, np.newaxis]
+    return X
 
 
 ACTIVATIONS = {
@@ -144,6 +149,7 @@ def inplace_relu_derivative(Z, delta):
     delta : {array-like}, shape (n_samples, n_features)
          The backpropagated error signal to be modified inplace.
     """
+    # np = Z.__array_namespace__() if hasattr(Z, "__array_namespace__") else numpy
     delta[Z == 0] = 0
 
 
@@ -171,7 +177,12 @@ def squared_loss(y_true, y_pred):
     loss : float
         The degree to which the samples are correctly predicted.
     """
-    return ((y_true - y_pred) ** 2).mean() / 2
+    np = (
+        y_pred.__array_namespace__()
+        if hasattr(y_pred, "__array_namespace__")
+        else numpy
+    )
+    return np.mean((y_true - y_pred) ** 2) / 2
 
 
 def log_loss(y_true, y_prob):

@@ -14,6 +14,7 @@ import warnings
 import numbers
 import operator
 
+import numpy
 import numpy as np
 import scipy.sparse as sp
 from inspect import signature, isclass, Parameter
@@ -698,7 +699,7 @@ def check_array(
     array_converted : object
         The converted and validated array.
     """
-    if isinstance(array, np.matrix):
+    if isinstance(array, numpy.matrix):
         warnings.warn(
             "np.matrix usage is deprecated in 1.0 and will raise a TypeError "
             "in 1.2. Please convert to a numpy array with np.asarray. For "
@@ -706,6 +707,9 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
+
+    if hasattr(array, "__array_namespace__"):
+        np = array.__array_namespace__()
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -817,22 +821,22 @@ def check_array(
         with warnings.catch_warnings():
             try:
                 warnings.simplefilter("error", ComplexWarning)
-                if dtype is not None and np.dtype(dtype).kind in "iu":
-                    # Conversion float -> int should not contain NaN or
-                    # inf (numpy#14412). We cannot use casting='safe' because
-                    # then conversion float -> int would be disallowed.
-                    array = np.asarray(array, order=order)
-                    if array.dtype.kind == "f":
-                        _assert_all_finite(
-                            array,
-                            allow_nan=False,
-                            msg_dtype=dtype,
-                            estimator_name=estimator_name,
-                            input_name=input_name,
-                        )
-                    array = array.astype(dtype, casting="unsafe", copy=False)
-                else:
-                    array = np.asarray(array, order=order, dtype=dtype)
+                # if dtype is not None and np.dtype(dtype).kind in "iu":
+                #     # Conversion float -> int should not contain NaN or
+                #     # inf (numpy#14412). We cannot use casting='safe' because
+                #     # then conversion float -> int would be disallowed.
+                #     array = np.asarray(array, order=order)
+                #     if array.dtype.kind == "f":
+                #         _assert_all_finite(
+                #             array,
+                #             allow_nan=False,
+                #             msg_dtype=dtype,
+                #             estimator_name=estimator_name,
+                #             input_name=input_name,
+                #         )
+                #     array = array.astype(dtype, casting="unsafe", copy=False)
+                # else:
+                #     array = np.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
                 raise ValueError(
                     "Complex data not supported\n{}\n".format(array)
@@ -885,13 +889,13 @@ def check_array(
                 % (array.ndim, estimator_name)
             )
 
-        if force_all_finite:
-            _assert_all_finite(
-                array,
-                input_name=input_name,
-                estimator_name=estimator_name,
-                allow_nan=force_all_finite == "allow-nan",
-            )
+        # if force_all_finite:
+        #     _assert_all_finite(
+        #         array,
+        #         input_name=input_name,
+        #         estimator_name=estimator_name,
+        #         allow_nan=force_all_finite == "allow-nan",
+        #     )
 
     if ensure_min_samples > 0:
         n_samples = _num_samples(array)
@@ -911,8 +915,8 @@ def check_array(
                 % (n_features, array.shape, ensure_min_features, context)
             )
 
-    if copy and np.may_share_memory(array, array_orig):
-        array = np.array(array, dtype=dtype, order=order)
+    # if copy and np.may_share_memory(array, array_orig):
+    #     array = np.array(array, dtype=dtype, order=order)
 
     return array
 

@@ -7,6 +7,8 @@
 # License: BSD 3 clause
 
 import numpy as np
+import numpy
+from math import sqrt
 
 from abc import ABCMeta, abstractmethod
 import warnings
@@ -132,7 +134,9 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
 
             # For the hidden layers
             if (i + 1) != (self.n_layers_ - 1):
-                hidden_activation(activations[i + 1])
+                # only works for relu for now
+                # activations[i + 1] = hidden_activation(activations[i + 1])
+                activations[i + 1] = hidden_activation(activations[i + 1])
 
         # For the last layer
         output_activation = ACTIVATIONS[self.out_activation_]
@@ -181,11 +185,24 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
 
         This function does backpropagation for the specified one layer.
         """
-        coef_grads[layer] = safe_sparse_dot(activations[layer].T, deltas[layer])
+        np = (
+            activations[layer].__array_namespace__()
+            if hasattr(activations[layer], "__array_namespace__")
+            else numpy
+        )
+        if activations[layer].ndim > 1:
+            transpose = (
+                np.matrix_transpose if hasattr(np, "matrix_transpose") else np.transpose
+            )
+            coef_grads[layer] = safe_sparse_dot(
+                transpose(activations[layer]), deltas[layer]
+            )
+        else:
+            coef_grads[layer] = activations[layer] * deltas[layer]
         coef_grads[layer] += self.alpha * self.coefs_[layer]
         coef_grads[layer] /= n_samples
 
-        intercept_grads[layer] = np.mean(deltas[layer], 0)
+        intercept_grads[layer] = np.mean(deltas[layer], axis=0)
 
     def _loss_grad_lbfgs(
         self, packed_coef_inter, X, y, activations, deltas, coef_grads, intercept_grads
@@ -274,6 +291,8 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
         intercept_grads : list, length = n_layers - 1
         """
         n_samples = X.shape[0]
+        np = X.__array_namespace__() if hasattr(X, "__array_namespace__") else numpy
+        dot = np.vecdot if hasattr(np, "vecdot") else np.dot
 
         # Forward propagate
         activations = self._forward_pass(activations)
@@ -286,8 +305,8 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
         # Add L2 regularization term to loss
         values = 0
         for s in self.coefs_:
-            s = s.ravel()
-            values += np.dot(s, s)
+            s = np.reshape(s, -1)
+            values += dot(s, s)
         loss += (0.5 * self.alpha) * values / n_samples
 
         # Backward propagate
@@ -305,9 +324,13 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
         )
 
         inplace_derivative = DERIVATIVES[self.activation]
+        transpose = (
+            np.matrix_transpose if hasattr(np, "matrix_transpose") else np.transpose
+        )
         # Iterate over the hidden layers
         for i in range(self.n_layers_ - 2, 0, -1):
-            deltas[i - 1] = safe_sparse_dot(deltas[i], self.coefs_[i].T)
+            coefs_transpose = transpose(self.coefs_[i])
+            deltas[i - 1] = safe_sparse_dot(deltas[i], coefs_transpose)
             inplace_derivative(activations[i], deltas[i - 1])
 
             self._compute_loss_grad(
@@ -319,6 +342,7 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
     def _initialize(self, y, layer_units, dtype):
         # set all attributes, allocate weights etc for first call
         # Initialize parameters
+        np = y.__array_namespace__() if hasattr(y, "__array_namespace__") else numpy
         self.n_iter_ = 0
         self.t_ = 0
         self.n_outputs_ = y.shape[1]
@@ -342,7 +366,10 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
 
         for i in range(self.n_layers_ - 1):
             coef_init, intercept_init = self._init_coef(
-                layer_units[i], layer_units[i + 1], dtype
+                layer_units[i],
+                layer_units[i + 1],
+                dtype,
+                np,
             )
             self.coefs_.append(coef_init)
             self.intercepts_.append(intercept_init)
@@ -356,22 +383,20 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
             else:
                 self.best_loss_ = np.inf
 
-    def _init_coef(self, fan_in, fan_out, dtype):
+    def _init_coef(self, fan_in, fan_out, dtype, np):
         # Use the initialization method recommended by
         # Glorot et al.
         factor = 6.0
         if self.activation == "logistic":
             factor = 2.0
-        init_bound = np.sqrt(factor / (fan_in + fan_out))
+        init_bound = sqrt(factor / (fan_in + fan_out))
 
         # Generate weights and bias:
         coef_init = self._random_state.uniform(
             -init_bound, init_bound, (fan_in, fan_out)
         )
         intercept_init = self._random_state.uniform(-init_bound, init_bound, fan_out)
-        coef_init = coef_init.astype(dtype, copy=False)
-        intercept_init = intercept_init.astype(dtype, copy=False)
-        return coef_init, intercept_init
+        return np.asarray(coef_init), np.asarray(intercept_init)
 
     def _fit(self, X, y, incremental=False):
         # Make sure self.hidden_layer_sizes is a list
@@ -382,7 +407,7 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
 
         # Validate input parameters.
         self._validate_hyperparameters()
-        if np.any(np.array(hidden_layer_sizes) <= 0):
+        if numpy.any(numpy.array(hidden_layer_sizes) <= 0):
             raise ValueError(
                 "hidden_layer_sizes must be > 0, got %s." % hidden_layer_sizes
             )
@@ -391,12 +416,13 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
         )
 
         X, y = self._validate_input(X, y, incremental, reset=first_pass)
+        np = X.__array_namespace__() if hasattr(X, "__array_namespace__") else numpy
 
         n_samples, n_features = X.shape
 
         # Ensure y is 2D
         if y.ndim == 1:
-            y = y.reshape((-1, 1))
+            y = np.reshape(y, (-1, 1))
 
         self.n_outputs_ = y.shape[1]
 
@@ -626,10 +652,10 @@ class BaseMultilayerPerceptron(BaseEstimator, metaclass=ABCMeta):
                 for batch_slice in gen_batches(n_samples, batch_size):
                     if self.shuffle:
                         X_batch = _safe_indexing(X, sample_idx[batch_slice])
-                        y_batch = y[sample_idx[batch_slice]]
+                        y_batch = _safe_indexing(y, sample_idx[batch_slice])
                     else:
-                        X_batch = X[batch_slice]
-                        y_batch = y[batch_slice]
+                        X_batch = X[batch_slice, :]
+                        y_batch = y[batch_slice, :]
 
                     activations[0] = X_batch
                     batch_loss, coef_grads, intercept_grads = self._backprop(
@@ -1580,9 +1606,10 @@ class MLPRegressor(RegressorMixin, BaseMultilayerPerceptron):
             The predicted values.
         """
         check_is_fitted(self)
+        np = X.__array_namespace__() if hasattr(X, "__array_namespace__") else numpy
         y_pred = self._forward_pass_fast(X)
         if y_pred.shape[1] == 1:
-            return y_pred.ravel()
+            return np.reshape(y_pred, -1)
         return y_pred
 
     def _validate_input(self, X, y, incremental, reset):

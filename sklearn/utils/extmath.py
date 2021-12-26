@@ -14,6 +14,7 @@ Extended math utilities.
 import warnings
 
 import numpy as np
+import numpy
 from scipy import linalg, sparse
 
 from . import check_random_state
@@ -951,11 +952,16 @@ def _incremental_mean_and_var(
     `utils.sparsefuncs.incr_mean_variance_axis` and
     `utils.sparsefuncs_fast.incr_mean_variance_axis0`
     """
+    if hasattr(X, "__array_namespace__"):
+        np = X.__array_namespace__()
     # old = stats until now
     # new = the current increment
     # updated = the aggregated stats
-    last_sum = last_mean * last_sample_count
+    last_sum = np.astype(last_sample_count, np.float64)
+    last_sum *= last_mean
+
     X_nan_mask = np.isnan(X)
+    # X_nan_mask = np.astype(X_nan_mask, np.float64, copy=False)
     if np.any(X_nan_mask):
         sum_op = np.nansum
     else:
@@ -978,12 +984,15 @@ def _incremental_mean_and_var(
     else:
         new_sum = _safe_accumulator_op(sum_op, X, axis=0)
         n_samples = X.shape[0]
-        new_sample_count = n_samples - np.sum(X_nan_mask, axis=0)
+        X_nan_mask_int = np.astype(X_nan_mask, np.int64, copy=False)
+        new_sample_count = n_samples - np.sum(X_nan_mask_int, axis=0)
 
     updated_sample_count = last_sample_count + new_sample_count
+    updated_sample_count = np.astype(updated_sample_count, np.float64, copy=False)
 
     updated_mean = (last_sum + new_sum) / updated_sample_count
 
+    new_sample_count = np.astype(new_sample_count, np.float64, copy=False)
     if last_variance is None:
         updated_variance = None
     else:
@@ -1019,9 +1028,11 @@ def _incremental_mean_and_var(
         # and recommendations", by Chan, Golub, and LeVeque.
         new_unnormalized_variance -= correction ** 2 / new_sample_count
 
+        last_sample_count = np.astype(last_sample_count, np.float64, copy=False)
+
         last_unnormalized_variance = last_variance * last_sample_count
 
-        with np.errstate(divide="ignore", invalid="ignore"):
+        with numpy.errstate(divide="ignore", invalid="ignore"):
             last_over_new_count = last_sample_count / new_sample_count
             updated_unnormalized_variance = (
                 last_unnormalized_variance

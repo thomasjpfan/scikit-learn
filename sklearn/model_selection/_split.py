@@ -20,6 +20,7 @@ import numbers
 from abc import ABCMeta, abstractmethod
 from inspect import signature
 
+import numpy
 import numpy as np
 from scipy.special import comb
 
@@ -1601,8 +1602,9 @@ class BaseShuffleSplit(metaclass=ABCMeta):
         to an integer.
         """
         X, y, groups = indexable(X, y, groups)
+        np = X.__array_namespace__() if hasattr(X, "__array_namespace__") else numpy
         for train, test in self._iter_indices(X, y, groups):
-            yield train, test
+            yield np.asarray(train), np.asarray(test)
 
     @abstractmethod
     def _iter_indices(self, X, y=None, groups=None):
@@ -2414,6 +2416,9 @@ def train_test_split(
     >>> train_test_split(y, shuffle=False)
     [[0, 1, 2], [3, 4]]
     """
+    if hasattr(arrays[0], "__array_namespace__"):
+        np = arrays[0].__array_namespace__()
+
     n_arrays = len(arrays)
     if n_arrays == 0:
         raise ValueError("At least one array required as input")

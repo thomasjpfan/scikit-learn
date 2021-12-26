@@ -4,7 +4,9 @@
 # Authors: Jiyuan Qian <jq401@nyu.edu>
 # License: BSD 3 clause
 
+import numpy
 import numpy as np
+from math import sqrt
 
 
 class BaseOptimizer:
@@ -251,6 +253,13 @@ class AdamOptimizer(BaseOptimizer):
         self.beta_2 = beta_2
         self.epsilon = epsilon
         self.t = 0
+
+        np = (
+            params[0].__array_namespace__()
+            if hasattr(params[0], "__array_namespace__")
+            else numpy
+        )
+
         self.ms = [np.zeros_like(param) for param in params]
         self.vs = [np.zeros_like(param) for param in params]
 
@@ -268,6 +277,11 @@ class AdamOptimizer(BaseOptimizer):
         updates : list, length = len(grads)
             The values to add to params
         """
+        np = (
+            self.ms[0].__array_namespace__()
+            if hasattr(self.ms[0], "__array_namespace__")
+            else numpy
+        )
         self.t += 1
         self.ms = [
             self.beta_1 * m + (1 - self.beta_1) * grad
@@ -277,9 +291,10 @@ class AdamOptimizer(BaseOptimizer):
             self.beta_2 * v + (1 - self.beta_2) * (grad ** 2)
             for v, grad in zip(self.vs, grads)
         ]
+
         self.learning_rate = (
             self.learning_rate_init
-            * np.sqrt(1 - self.beta_2 ** self.t)
+            * sqrt(1 - self.beta_2 ** self.t)
             / (1 - self.beta_1 ** self.t)
         )
         updates = [

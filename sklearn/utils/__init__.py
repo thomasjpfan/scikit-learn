@@ -193,6 +193,10 @@ def axis0_safe_slice(X, mask, len_mask):
 
 def _array_indexing(array, key, key_dtype, axis):
     """Index an array or scipy.sparse consistently across NumPy version."""
+    is_array_api = hasattr(array, "__array_namespace__")
+    if is_array_api:
+        np = array.__array_namespace__()
+
     if np_version < parse_version("1.12") or issparse(array):
         # FIXME: Remove the check for NumPy when using >= 1.12
         # check if we have an boolean array-likes to make the proper indexing
@@ -200,6 +204,15 @@ def _array_indexing(array, key, key_dtype, axis):
             key = np.asarray(key)
     if isinstance(key, tuple):
         key = list(key)
+
+    if is_array_api and key_dtype == "int":
+        # Array api does not support integer indexing
+        if axis == 0:
+            selected = [array[i] for i in key]
+        else:
+            selected = [array[:, i] for i in key]
+        return np.stack(selected, axis=axis)
+
     return array[key] if axis == 0 else array[:, key]
 
 
