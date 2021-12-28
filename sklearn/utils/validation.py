@@ -96,9 +96,13 @@ def _assert_all_finite(
     # validation is also imported in extmath
     from .extmath import _safe_accumulator_op
 
+    np, is_array_api = get_namespace(X)
+
     if _get_config()["assume_finite"]:
         return
-    X = np.asanyarray(X)
+
+    if not is_array_api:
+        X = np.asanyarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
     # false positives from overflow in sum method. The sum is also calculated
@@ -142,7 +146,7 @@ def _assert_all_finite(
 
     # for object dtype data, we only check for NaNs (GH-13254)
     elif X.dtype == np.dtype("object") and not allow_nan:
-        if _object_dtype_isnan(X).any():
+        if np.any(_object_dtype_isnan(X)):
             raise ValueError("Input contains NaN")
 
 
