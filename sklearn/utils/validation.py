@@ -15,6 +15,7 @@ import numbers
 import operator
 
 import numpy as np
+import numpy
 import scipy.sparse as sp
 from inspect import signature, isclass, Parameter
 
@@ -29,6 +30,7 @@ from .. import get_config as _get_config
 from ..exceptions import PositiveSpectrumWarning
 from ..exceptions import NotFittedError
 from ..exceptions import DataConversionWarning
+from ..utils._array_api import get_namespace
 
 FLOAT_DTYPES = (np.float64, np.float32, np.float16)
 
@@ -698,7 +700,7 @@ def check_array(
     array_converted : object
         The converted and validated array.
     """
-    if isinstance(array, np.matrix):
+    if isinstance(array, numpy.matrix):
         warnings.warn(
             "np.matrix usage is deprecated in 1.0 and will raise a TypeError "
             "in 1.2. Please convert to a numpy array with np.asarray. For "
@@ -706,6 +708,7 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
+    np, is_array_api = get_namespace(array)
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -821,7 +824,9 @@ def check_array(
                     # Conversion float -> int should not contain NaN or
                     # inf (numpy#14412). We cannot use casting='safe' because
                     # then conversion float -> int would be disallowed.
-                    array = np.asarray(array, order=order)
+                    if not is_array_api:
+                        # array_api does not have order
+                        array = np.asarray(array, order=order)
                     if array.dtype.kind == "f":
                         _assert_all_finite(
                             array,
@@ -830,9 +835,15 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    array = array.astype(dtype, casting="unsafe", copy=False)
+                    if is_array_api:
+                        array = np.astype(dtype, copy=False)
+                    else:
+                        array = array.astype(dtype, casting="unsafe", copy=False)
                 else:
-                    array = np.asarray(array, order=order, dtype=dtype)
+                    if is_array_api:
+                        array = np.astype(array, dtype)
+                    else:
+                        array = np.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
                 raise ValueError(
                     "Complex data not supported\n{}\n".format(array)
@@ -911,8 +922,12 @@ def check_array(
                 % (n_features, array.shape, ensure_min_features, context)
             )
 
-    if copy and np.may_share_memory(array, array_orig):
-        array = np.array(array, dtype=dtype, order=order)
+    if copy:
+        if not is_array_api:
+            if np.may_share_memory(array, array_orig):
+                array = np.array(array, dtype=dtype, order=order)
+        else:
+            array = np.asarray(array, dtype=dtype, copy=True)
 
     return array
 

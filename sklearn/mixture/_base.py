@@ -9,13 +9,13 @@ from abc import ABCMeta, abstractmethod
 from time import time
 
 import numpy as np
-from scipy.special import logsumexp
 
 from .. import cluster
 from ..base import BaseEstimator
 from ..base import DensityMixin
 from ..exceptions import ConvergenceWarning
 from ..utils import check_random_state
+from ..utils._array_api import get_namespace, logsumexp
 from ..utils.validation import check_is_fitted
 
 
@@ -136,6 +136,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             used for the method chosen to initialize the parameters.
         """
         n_samples, _ = X.shape
+        np, _ = get_namespace(X)
 
         if self.init_params == "kmeans":
             resp = np.zeros((n_samples, self.n_components))
@@ -149,7 +150,8 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             resp[np.arange(n_samples), label] = 1
         elif self.init_params == "random":
             resp = random_state.rand(n_samples, self.n_components)
-            resp /= resp.sum(axis=1)[:, np.newaxis]
+            resp = np.asarray(resp)
+            resp /= np.reshape(np.sum(resp, axis=1), (-1, 1))
         else:
             raise ValueError(
                 "Unimplemented initialization method '%s'" % self.init_params
@@ -225,6 +227,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         labels : array, shape (n_samples,)
             Component labels.
         """
+        np, _ = get_namespace(X)
         X = self._validate_data(X, dtype=[np.float64, np.float32], ensure_min_samples=2)
         if X.shape[0] < self.n_components:
             raise ValueError(
@@ -291,7 +294,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         # for any value of max_iter and tol (and any random_state).
         _, log_resp = self._e_step(X)
 
-        return log_resp.argmax(axis=1)
+        return np.argmax(log_resp, axis=1)
 
     def _e_step(self, X):
         """E step.
@@ -309,6 +312,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             Logarithm of the posterior probabilities (or responsibilities) of
             the point of each sample in X.
         """
+        np, _ = get_namespace(X)
         log_prob_norm, log_resp = self._estimate_log_prob_resp(X)
         return np.mean(log_prob_norm), log_resp
 
@@ -527,11 +531,15 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         log_responsibilities : array, shape (n_samples, n_components)
             logarithm of the responsibilities
         """
+        np, is_array_api = get_namespace(X)
         weighted_log_prob = self._estimate_weighted_log_prob(X)
         log_prob_norm = logsumexp(weighted_log_prob, axis=1)
-        with np.errstate(under="ignore"):
-            # ignore underflow
-            log_resp = weighted_log_prob - log_prob_norm[:, np.newaxis]
+        if is_array_api:
+            log_resp = weighted_log_prob - np.reshape(log_prob_norm, (-1, 1))
+        else:
+            with np.errstate(under="ignore"):
+                # ignore underflow
+                log_resp = weighted_log_prob - log_prob_norm[:, np.newaxis]
         return log_prob_norm, log_resp
 
     def _print_verbose_msg_init_beg(self, n_init):
