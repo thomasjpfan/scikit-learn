@@ -9,7 +9,8 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     # supported version of the macos SDK as libomp will be vendored into the
     # scikit-learn wheels for macos. The list of binaries are in
     # https://packages.macports.org/libomp/.
-    git clone https://github.com/thomasjpfan/libomp-osx-artifacts --depth 1
+    LIBOMP_ARTIFACTS=$RUNNER_TEMP/libomp-osx-artifacts
+    git clone https://github.com/thomasjpfan/libomp-osx-artifacts --depth 1 $LIBOMP_ARTIFACTS
     if [[ "$CIBW_BUILD" == *-macosx_arm64 ]]; then
         # arm64 builds must cross compile because CI is on x64
         export PYTHON_CROSSENV=1
@@ -17,10 +18,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
         # https://github.com/scipy/scipy/issues/14688
         # We use the same deployment target to match SciPy.
         export MACOSX_DEPLOYMENT_TARGET=12.0
-        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/arm64
+        ROOT_FOLDER=$LIBOMP_ARTIFACTS/11.0.1/arm64
     else
         export MACOSX_DEPLOYMENT_TARGET=10.13
-        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/x86_64
+        ROOT_FOLDER=$LIBOMP_ARTIFACTS/11.0.1/x86_64
     fi
 
     export CC=/usr/bin/clang
