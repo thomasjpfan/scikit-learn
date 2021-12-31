@@ -17,10 +17,10 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
         # https://github.com/scipy/scipy/issues/14688
         # We use the same deployment target to match SciPy.
         export MACOSX_DEPLOYMENT_TARGET=12.0
-        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/arm64/
+        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/arm64
     else
         export MACOSX_DEPLOYMENT_TARGET=10.13
-        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/x86_64/
+        ROOT_FOLDER=$PWD/libomp-osx-artifacts/11.0.1/x86_64
     fi
 
     export CC=/usr/bin/clang
