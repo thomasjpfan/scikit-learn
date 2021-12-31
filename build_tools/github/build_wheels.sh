@@ -9,7 +9,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     # supported version of the macos SDK as libomp will be vendored into the
     # scikit-learn wheels for macos. The list of binaries are in
     # https://packages.macports.org/libomp/.
-    git clnoe https://github.com/thomasjpfan/libomp-osx-artifacts --depth 1
+    git clone https://github.com/thomasjpfan/libomp-osx-artifacts --depth 1
     if [[ "$CIBW_BUILD" == *-macosx_arm64 ]]; then
         # arm64 builds must cross compile because CI is on x64
         export PYTHON_CROSSENV=1
