@@ -26,18 +26,14 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     fi
 
     sudo conda create -n build $OPENMP_URL
-
     PREFIX="/usr/local/miniconda/envs/build"
-    ls $PREFIX/include
-    ls $PREFIX/lib
-    exit 1
 
     export CC=/usr/bin/clang
     export CXX=/usr/bin/clang++
     export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
-    export CFLAGS="$CFLAGS -I$CONDA_PREFIX/include"
-    export CXXFLAGS="$CXXFLAGS -I$CONDA_PREFIX/include"
-    export LDFLAGS="$LDFLAGS -Wl,-rpath,$CONDA_PREFIX/include/lib -L$CONDA_PREFIX/include/lib -lomp"
+    export CFLAGS="$CFLAGS -I$PREFIX/include"
+    export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
+    export LDFLAGS="$LDFLAGS -Wl,-rpath,$PREFIX/include/lib -L$PREFIX/include/lib -lomp"
 fi
 
 # The version of the built dependencies are specified
