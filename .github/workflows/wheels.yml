@@ -196,11 +196,6 @@ jobs:
         with:
           python-version: '3.9'  # update once build dependencies are available
 
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: build
-        if: matrix.os == 'macos-latest'
-
       - name: Build and test wheels
         env:
           CONFTEST_PATH: ${{ github.workspace }}/conftest.py
