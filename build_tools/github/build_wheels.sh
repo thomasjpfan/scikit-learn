@@ -26,12 +26,15 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
 
     sudo conda install $OPENMP_URL
 
-    export CC=/usr/bin/clang
-    export CXX=/usr/bin/clang++
-    export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
-    export CFLAGS="$CFLAGS -I$CONDA_PREFIX/include"
-    export CXXFLAGS="$CXXFLAGS -I$CONDA_PREFIX/include"
-    export LDFLAGS="$LDFLAGS -Wl,-rpath,$CONDA_PREFIX/lib -L$CONDA_PREFIX/lib -lomp"
+    echo $CONDA_PREFIX
+
+    exit 1
+    # export CC=/usr/bin/clang
+    # export CXX=/usr/bin/clang++
+    # export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
+    # export CFLAGS="$CFLAGS -I$CONDA_PREFIX/include"
+    # export CXXFLAGS="$CXXFLAGS -I$CONDA_PREFIX/include"
+    # export LDFLAGS="$LDFLAGS -Wl,-rpath,$CONDA_PREFIX/lib -L$CONDA_PREFIX/lib -lomp"
 fi
 
 # The version of the built dependencies are specified
