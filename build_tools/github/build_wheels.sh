@@ -8,6 +8,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     # Make sure to use a libomp version binary compatible with the oldest
     # supported version of the macos SDK as libomp will be vendored into the
     # scikit-learn wheels for macos.
+
     if [[ "$CIBW_BUILD" == *-macosx_arm64 ]]; then
         # arm64 builds must cross compile because CI is on x64
         export PYTHON_CROSSENV=1
@@ -23,6 +24,8 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
         OPENMP_URL="https://anaconda.org/conda-forge/llvm-openmp/11.1.0/download/osx-64/llvm-openmp-11.1.0-hda6cdc1_1.tar.bz2"
     fi
 
+    conda create -n wheels
+    conda activate wheels
     conda install $OPENMP_URL
 
     export CC=/usr/bin/clang
