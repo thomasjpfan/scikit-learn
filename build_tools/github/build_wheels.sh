@@ -33,7 +33,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
     export CFLAGS="$CFLAGS -I$PREFIX/include"
     export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
-    export LDFLAGS="$LDFLAGS -Wl,-rpath,$PREFIX/include/lib -L$PREFIX/include/lib -lomp"
+    export LDFLAGS="$LDFLAGS -Wl,-rpath,$PREFIX/lib -L$PREFIX/lib -lomp"
 fi
 
 # The version of the built dependencies are specified
