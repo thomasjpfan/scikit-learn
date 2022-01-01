@@ -178,10 +178,10 @@ jobs:
           #   bitness: 64
           #   python: 38
           #   platform_id: macosx_arm64
-          - os: macos-latest
-            bitness: 64
-            python: 39
-            platform_id: macosx_arm64
+          # - os: macos-latest
+          #   bitness: 64
+          #   python: 39
+          #   platform_id: macosx_arm64
           # - os: macos-latest
           #   bitness: 64
           #   python: 310

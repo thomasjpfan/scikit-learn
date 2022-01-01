@@ -25,8 +25,7 @@ if [[ "$RUNNER_OS" == "macOS" ]]; then
     fi
 
     sudo conda install $OPENMP_URL
-
-    echo $CONDA_PREFIX
+    conda list
 
     exit 1
     # export CC=/usr/bin/clang
