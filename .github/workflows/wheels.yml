@@ -198,9 +198,7 @@ jobs:
 
       - uses: conda-incubator/setup-miniconda@v2
         with:
-          miniconda-version: "latest"
           activate-environment: build
-          python-version: "3.9"
         if: matrix.os == 'macos-latest'
 
       - name: Build and test wheels
