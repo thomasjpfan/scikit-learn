@@ -1,12 +1,16 @@
 """Tools to support array_api."""
 import numpy as np
 from scipy.special import logsumexp as sp_logsumexp
+from .._config import get_config
 
 
 def get_namespace(*xs):
     # `xs` contains one or more arrays, or possibly Python scalars (accepting
     # those is a matter of taste, but doesn't seem unreasonable).
     # Returns a tuple: (array_namespace, is_array_api)
+
+    if not get_config()["array_api_dispatch"]:
+        return np, False
 
     namespaces = {
         x.__array_namespace__() if hasattr(x, "__array_namespace__") else None
