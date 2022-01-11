@@ -92,3 +92,6 @@ cdef class Splitter:
     cdef void node_value(self, double* dest) nogil
 
     cdef double node_impurity(self) nogil
+
+
+cdef void sort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil

@@ -407,10 +407,12 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     ):
         """Set splitting function."""
         SPLITTERS = SPARSE_SPLITTERS if issparse else DENSE_SPLITTERS
-        OBLIQUE_SPLITTERS = OBLIQUE_SPARSE_SPLITTERS if issparse else OBLIQUE_DENSE_SPLITTERS
+        OBLIQUE_SPLITTERS = (
+            OBLIQUE_SPARSE_SPLITTERS if issparse else OBLIQUE_DENSE_SPLITTERS
+        )
 
         splitter = self.splitter
-        if self.splitter_type == 'oblique':
+        if self.splitter_type == "oblique":
             if not isinstance(self.splitter, BaseObliqueSplitter):
                 splitter_func = OBLIQUE_SPLITTERS[self.splitter]
                 splitter = OBLIQUE_SPLITTERS[self.splitter](
@@ -418,10 +420,10 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
                     self.max_features_,
                     min_samples_leaf,
                     min_weight_leaf,
-                    self.feature_combinations,
                     random_state,
+                    self.feature_combinations,
                 )
-        elif self.splitter_type == 'axisaligned':
+        elif self.splitter_type == "axisaligned":
             if not isinstance(self.splitter, Splitter):
                 splitter = SPLITTERS[self.splitter](
                     criterion,
@@ -1014,7 +1016,8 @@ class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
     array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
-    splitter_type = 'axisaligned'
+
+    splitter_type = "axisaligned"
 
     def __init__(
         self,
@@ -2196,7 +2199,8 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
     array([ 1.     ,  0.93...,  0.86...,  0.93...,  0.93...,
             0.93...,  0.93...,  1.     ,  0.93...,  1.      ])
     """
-    splitter_type = 'oblique'
+
+    splitter_type = "oblique"
 
     def __init__(
         self,
@@ -2231,9 +2235,7 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             ccp_alpha=ccp_alpha,
         )
 
-    def fit(
-        self, X, y, sample_weight=None, check_input=True
-    ):
+    def fit(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree classifier from the training set (X, y).
 
         Parameters
@@ -2263,12 +2265,7 @@ class ObliqueDecisionTreeClassifier(ClassifierMixin, BaseObliqueDecisionTree):
             Fitted estimator.
         """
 
-        super().fit(
-            X,
-            y,
-            sample_weight=sample_weight,
-            check_input=check_input
-        )
+        super().fit(X, y, sample_weight=sample_weight, check_input=check_input)
         return self
 
     def predict_proba(self, X, check_input=True):
@@ -2585,9 +2582,7 @@ class ObliqueDecisionTreeRegressor(RegressorMixin, BaseObliqueDecisionTree):
             ccp_alpha=ccp_alpha,
         )
 
-    def fit(
-        self, X, y, sample_weight=None, check_input=True
-    ):
+    def fit(self, X, y, sample_weight=None, check_input=True):
         """Build a decision tree regressor from the training set (X, y).
 
         Parameters

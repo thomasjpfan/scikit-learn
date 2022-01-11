@@ -62,7 +62,7 @@ cdef class ObliqueTree:
     cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
                           SIZE_t feature, double threshold, double impurity,
                           SIZE_t n_node_samples,
-                          double weighted_n_samples, 
+                          double weighted_n_samples,
                           vector[DTYPE_t]* proj_vec_weights,
                           vector[SIZE_t]* proj_vec_indices) nogil except -1
 
@@ -106,6 +106,5 @@ cdef class ObliqueTreeBuilder:
     cdef double min_impurity_decrease   # Impurity threshold for early stopping
 
     cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
-                np.ndarray sample_weight=*,
-                np.ndarray X_idx_sorted=*)
+                np.ndarray sample_weight=*)
     cdef _check_input(self, object X, np.ndarray y, np.ndarray sample_weight)

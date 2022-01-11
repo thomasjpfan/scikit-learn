@@ -16,6 +16,10 @@ from libc.string cimport memcpy
 from libc.string cimport memset
 from libc.stdint cimport SIZE_MAX
 
+from ._splitter cimport SplitRecord
+from ._tree cimport TreeBuilder
+from ._tree cimport Tree
+
 import numpy as np
 cimport numpy as np
 np.import_array()
@@ -64,7 +68,7 @@ cdef SIZE_t INITIAL_STACK_SIZE = 10
 # Repeat struct definition for numpy
 NODE_DTYPE = np.dtype({
     'names': ['left_child', 'right_child', 'feature', 'threshold', 'impurity',
-              'n_node_samples', 'weighted_n_node_samples', 
+              'n_node_samples', 'weighted_n_node_samples',
               ],
     'formats': [np.intp, np.intp, np.intp, np.float64, np.float64, np.intp,
                 np.float64],
@@ -79,16 +83,11 @@ NODE_DTYPE = np.dtype({
     ]
 })
 
-# =============================================================================
-# TreeBuilder
-# =============================================================================
-
 cdef class ObliqueTreeBuilder:
     """Interface for different tree building strategies."""
 
     cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
-                np.ndarray sample_weight=None,
-                np.ndarray X_idx_sorted=None):
+                np.ndarray sample_weight=None):
         """Build a decision tree from the training set (X, y)."""
         pass
 
@@ -137,8 +136,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
         self.min_impurity_decrease = min_impurity_decrease
 
     cpdef build(self, ObliqueTree tree, object X, np.ndarray y,
-                np.ndarray sample_weight=None,
-                np.ndarray X_idx_sorted=None):
+                np.ndarray sample_weight=None):
         """Build a decision tree from the training set (X, y)."""
         # with gil:
         # print('Inside build...')
@@ -171,7 +169,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 
         # Recursive partition (without actual recursion)
         # print('splitter: ', splitter)
-        splitter.init(X, y, sample_weight_ptr, X_idx_sorted)
+        splitter.init(X, y, sample_weight_ptr)
         # print('Splitter initialized...')
 
         cdef SIZE_t start
@@ -233,7 +231,7 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
                            (impurity <= min_impurity_decrease))
 
                 if not is_leaf:
-                    splitter.node_split(impurity, &split, &n_constant_features)
+                    splitter.node_split(impurity, <SplitRecord*>(&split), &n_constant_features)
                     # If EPSILON=0 in the below comparison, float precision
                     # issues stop splitting, producing trees that are
                     # dissimilar to v0.18
@@ -243,8 +241,8 @@ cdef class ObliqueDepthFirstTreeBuilder(ObliqueTreeBuilder):
 
                 node_id = tree._add_node(parent, is_left, is_leaf, split.feature,
                                          split.threshold, impurity, n_node_samples,
-                                         weighted_n_node_samples, 
-                                         split.proj_vec_weights, 
+                                         weighted_n_node_samples,
+                                         split.proj_vec_weights,
                                          split.proj_vec_indices)
 
                 if node_id == SIZE_MAX:
@@ -532,7 +530,7 @@ cdef class ObliqueTree:
     cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
                           SIZE_t feature, double threshold, double impurity,
                           SIZE_t n_node_samples,
-                          double weighted_n_node_samples, 
+                          double weighted_n_node_samples,
                           vector[DTYPE_t]* proj_vec_weights,
                           vector[SIZE_t]* proj_vec_indices) nogil except -1:
         """Add a node to the tree.
@@ -629,7 +627,7 @@ cdef class ObliqueTree:
                 # loop through each sample and start with the first node
                 node = self.nodes
                 node_id = 0
-                
+
                 # While node not a leaf
                 while node.left_child != _TREE_LEAF:
                     # ... and node.right_child != _TREE_LEAF:
