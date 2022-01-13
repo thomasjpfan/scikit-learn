@@ -175,13 +175,19 @@ def _estimate_gaussian_covariances_full(resp, X, nk, means, reg_covar):
     covariances : array, shape (n_components, n_features, n_features)
         The covariance matrix of the current components.
     """
-    np, _ = get_namespace(resp, X, nk)
+    np, is_array_api = get_namespace(resp, X, nk)
     n_components, n_features = means.shape
     covariances = np.empty((n_components, n_features, n_features))
     for k in range(n_components):
         diff = X - means[k, :]
         covariances[k, :, :] = ((resp[:, k] * diff.T) @ diff) / nk[k]
-        np.reshape(covariances[k, :, :], (-1,))[:: n_features + 1] += reg_covar
+
+        if is_array_api:
+            for i in range(n_features):
+                covariances[k, i, i] += reg_covar
+        else:
+            covariances[k].flat[:: n_features + 1] += reg_covar
+
     return covariances
 
 

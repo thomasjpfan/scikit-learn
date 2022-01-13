@@ -531,15 +531,12 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         log_responsibilities : array, shape (n_samples, n_components)
             logarithm of the responsibilities
         """
-        np, is_array_api = get_namespace(X)
+        np, _ = get_namespace(X)
         weighted_log_prob = self._estimate_weighted_log_prob(X)
         log_prob_norm = logsumexp(weighted_log_prob, axis=1)
-        if is_array_api:
+        with np.errstate(under="ignore"):
+            # ignore underflow
             log_resp = weighted_log_prob - np.reshape(log_prob_norm, (-1, 1))
-        else:
-            with np.errstate(under="ignore"):
-                # ignore underflow
-                log_resp = weighted_log_prob - log_prob_norm[:, np.newaxis]
         return log_prob_norm, log_resp
 
     def _print_verbose_msg_init_beg(self, n_init):

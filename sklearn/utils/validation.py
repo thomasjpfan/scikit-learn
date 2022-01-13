@@ -96,13 +96,12 @@ def _assert_all_finite(
     # validation is also imported in extmath
     from .extmath import _safe_accumulator_op
 
-    np, is_array_api = get_namespace(X)
+    np, _ = get_namespace(X)
 
     if _get_config()["assume_finite"]:
         return
 
-    if not is_array_api:
-        X = np.asanyarray(X)
+    X = np.asanyarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
     # false positives from overflow in sum method. The sum is also calculated
@@ -712,7 +711,7 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
-    np, is_array_api = get_namespace(array)
+    np, _ = get_namespace(array)
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -828,9 +827,7 @@ def check_array(
                     # Conversion float -> int should not contain NaN or
                     # inf (numpy#14412). We cannot use casting='safe' because
                     # then conversion float -> int would be disallowed.
-                    if not is_array_api:
-                        # array_api does not have order
-                        array = np.asarray(array, order=order)
+                    array = np.asarray(array, order=order)
                     if array.dtype.kind == "f":
                         _assert_all_finite(
                             array,
@@ -839,15 +836,9 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    if is_array_api:
-                        array = np.astype(dtype, copy=False)
-                    else:
-                        array = array.astype(dtype, casting="unsafe", copy=False)
+                    array = np.astype(dtype, casting="unsafe", copy=False)
                 else:
-                    if is_array_api:
-                        array = np.astype(array, dtype)
-                    else:
-                        array = np.asarray(array, order=order, dtype=dtype)
+                    array = np.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
                 raise ValueError(
                     "Complex data not supported\n{}\n".format(array)
@@ -926,12 +917,8 @@ def check_array(
                 % (n_features, array.shape, ensure_min_features, context)
             )
 
-    if copy:
-        if not is_array_api:
-            if np.may_share_memory(array, array_orig):
-                array = np.array(array, dtype=dtype, order=order)
-        else:
-            array = np.asarray(array, dtype=dtype, copy=True)
+    if copy and np.may_share_memory(array, array_orig):
+        array = np.array(array, dtype=dtype, order=order)
 
     return array
 

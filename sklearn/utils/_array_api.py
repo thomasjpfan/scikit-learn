@@ -1,7 +1,53 @@
 """Tools to support array_api."""
-import numpy as np
+import numpy
 from scipy.special import logsumexp as sp_logsumexp
 from .._config import get_config
+
+from contextlib import nullcontext
+
+
+# There are more clever ways to wrap the API to ignore kwargs, but I am writing them out
+# explicitly for demonstration purposes
+class _ArrayAPIWrapper:
+    def __init__(self, array_namespace):
+        self._array_namespace = array_namespace
+
+    def __getattr__(self, name):
+        return getattr(self._array_namespace, name)
+
+    def errstate(self, *args, **kwargs):
+        # errstate not in `array_api`
+        return nullcontext()
+
+    def astype(self, x, dtype, copy=True, **kwargs):
+        # ignore parameters that is not supported by array-api
+        f = self._array_namespace.astype
+        return f(x, dtype, copy=copy)
+
+    def asarray(self, obj, dtype=None, device=None, copy=None, **kwargs):
+        f = self._array_namespace.asarray
+        return f(obj, dtype=dtype, device=device, copy=copy)
+
+    def array(self, obj, dtype=None, device=None, copy=True, **kwargs):
+        f = self._array_namespace.asarray
+        return f(obj, dtype=dtype, device=device, copy=copy)
+
+    def asanyarray(self, obj, *args, **kwargs):
+        # no-op for now
+        return obj
+
+    def may_share_memory(self, *args, **kwargs):
+        # The safe choice is to return True all the time
+        return True
+
+
+class _NumPyApiWrapper:
+    def __getattr__(self, name):
+        return getattr(numpy, name)
+
+    def astype(self, x, dtype, *args, **kwargs):
+        # astype is not defined in the top level numpy namespace
+        return x.astype(dtype, *args, **kwargs)
 
 
 def get_namespace(*xs):
@@ -10,7 +56,7 @@ def get_namespace(*xs):
     # Returns a tuple: (array_namespace, is_array_api)
 
     if not get_config()["array_api_dispatch"]:
-        return np, False
+        return _NumPyApiWrapper(), False
 
     namespaces = {
         x.__array_namespace__() if hasattr(x, "__array_namespace__") else None
@@ -29,9 +75,9 @@ def get_namespace(*xs):
     (xp,) = namespaces
     if xp is None:
         # Use numpy as default
-        return np, False
+        return _NumPyApiWrapper(), False
 
-    return xp, True
+    return _ArrayAPIWrapper(xp), True
 
 
 def logsumexp(a, axis=None, b=None, keepdims=False, return_sign=False):
