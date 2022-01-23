@@ -17,6 +17,7 @@ from scipy.sparse import lil_matrix
 import numpy as np
 
 from .validation import check_array, _assert_all_finite
+from ..utils._array_api import get_namespace
 
 
 def _unique_multiclass(y):
@@ -70,6 +71,7 @@ def unique_labels(*ys):
     >>> unique_labels([1, 2, 10], [5, 11])
     array([ 1,  2,  5, 10, 11])
     """
+    np, _ = get_namespace(*ys)
     if not ys:
         raise ValueError("No argument has been passed.")
     # Check that we don't mix label format
@@ -108,7 +110,7 @@ def unique_labels(*ys):
     if len(set(isinstance(label, str) for label in ys_labels)) > 1:
         raise ValueError("Mix of label input types (string and number)")
 
-    return np.array(sorted(ys_labels))
+    return np.asarray(sorted(ys_labels))
 
 
 def _is_integral_float(y):
@@ -143,17 +145,21 @@ def is_multilabel(y):
     >>> is_multilabel(np.array([[1, 0, 0]]))
     True
     """
+    np, is_array_api = get_namespace(y)
     if hasattr(y, "__array__") or isinstance(y, Sequence):
-        # DeprecationWarning will be replaced by ValueError, see NEP 34
-        # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", np.VisibleDeprecationWarning)
-            try:
-                y = np.asarray(y)
-            except np.VisibleDeprecationWarning:
-                # dtype=object should be provided explicitly for ragged arrays,
-                # see NEP 34
-                y = np.array(y, dtype=object)
+        if is_array_api:
+            y = np.asarray(y)
+        else:
+            # DeprecationWarning will be replaced by ValueError, see NEP 34
+            # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+            with warnings.catch_warnings():
+                warnings.simplefilter("error", np.VisibleDeprecationWarning)
+                try:
+                    y = np.asarray(y)
+                except np.VisibleDeprecationWarning:
+                    # dtype=object should be provided explicitly for ragged arrays,
+                    # see NEP 34
+                    y = np.array(y, dtype=object)
 
     if not (hasattr(y, "shape") and y.ndim == 2 and y.shape[1] > 1):
         return False
@@ -269,6 +275,7 @@ def type_of_target(y, input_name=""):
     >>> type_of_target(np.array([[0, 1], [1, 1]]))
     'multilabel-indicator'
     """
+    np, is_array_api = get_namespace(y)
     valid = (
         isinstance(y, Sequence) or issparse(y) or hasattr(y, "__array__")
     ) and not isinstance(y, str)
@@ -285,16 +292,19 @@ def type_of_target(y, input_name=""):
     if is_multilabel(y):
         return "multilabel-indicator"
 
-    # DeprecationWarning will be replaced by ValueError, see NEP 34
-    # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", np.VisibleDeprecationWarning)
-        try:
-            y = np.asarray(y)
-        except np.VisibleDeprecationWarning:
-            # dtype=object should be provided explicitly for ragged arrays,
-            # see NEP 34
-            y = np.asarray(y, dtype=object)
+    if is_array_api:
+        y = np.asarray(y)
+    else:
+        # DeprecationWarning will be replaced by ValueError, see NEP 34
+        # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", np.VisibleDeprecationWarning)
+            try:
+                y = np.asarray(y)
+            except np.VisibleDeprecationWarning:
+                # dtype=object should be provided explicitly for ragged arrays,
+                # see NEP 34
+                y = np.asarray(y, dtype=object)
 
     # The old sequence of sequences format
     try:
@@ -331,7 +341,7 @@ def type_of_target(y, input_name=""):
         _assert_all_finite(y, input_name=input_name)
         return "continuous" + suffix
 
-    if (len(np.unique(y)) > 2) or (y.ndim >= 2 and len(y[0]) > 1):
+    if (np.unique(y).shape[0] > 2) or (y.ndim >= 2 and len(y[0]) > 1):
         return "multiclass" + suffix  # [1, 2, 3] or [[1., 2., 3]] or [[1, 2]]
     else:
         return "binary"  # [1, 2] or [["a"], ["b"]]

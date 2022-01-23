@@ -15,6 +15,7 @@ import numbers
 import operator
 
 import numpy as np
+import numpy
 import scipy.sparse as sp
 from inspect import signature, isclass, Parameter
 
@@ -29,6 +30,7 @@ from .. import get_config as _get_config
 from ..exceptions import PositiveSpectrumWarning
 from ..exceptions import NotFittedError
 from ..exceptions import DataConversionWarning
+from ..utils._array_api import get_namespace
 
 FLOAT_DTYPES = (np.float64, np.float32, np.float16)
 
@@ -94,8 +96,11 @@ def _assert_all_finite(
     # validation is also imported in extmath
     from .extmath import _safe_accumulator_op
 
+    np, _ = get_namespace(X)
+
     if _get_config()["assume_finite"]:
         return
+
     X = np.asanyarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
@@ -139,8 +144,8 @@ def _assert_all_finite(
             raise ValueError(msg_err)
 
     # for object dtype data, we only check for NaNs (GH-13254)
-    elif X.dtype == np.dtype("object") and not allow_nan:
-        if _object_dtype_isnan(X).any():
+    elif X.dtype == object and not allow_nan:
+        if np.any(_object_dtype_isnan(X)):
             raise ValueError("Input contains NaN")
 
 
@@ -698,7 +703,7 @@ def check_array(
     array_converted : object
         The converted and validated array.
     """
-    if isinstance(array, np.matrix):
+    if isinstance(array, numpy.matrix):
         warnings.warn(
             "np.matrix usage is deprecated in 1.0 and will raise a TypeError "
             "in 1.2. Please convert to a numpy array with np.asarray. For "
@@ -706,6 +711,7 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
+    np, _ = get_namespace(array)
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -830,7 +836,7 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    array = array.astype(dtype, casting="unsafe", copy=False)
+                    array = np.astype(dtype, casting="unsafe", copy=False)
                 else:
                     array = np.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
@@ -912,7 +918,7 @@ def check_array(
             )
 
     if copy and np.may_share_memory(array, array_orig):
-        array = np.array(array, dtype=dtype, order=order)
+        array = np.asarray(array, dtype=dtype, order=order)
 
     return array
 
@@ -1122,10 +1128,11 @@ def column_or_1d(y, *, warn=False):
     ValueError
         If `y` is not a 1D array or a 2D array with a single row or column.
     """
+    np, _ = get_namespace(y)
     y = np.asarray(y)
-    shape = np.shape(y)
+    shape = y.shape
     if len(shape) == 1:
-        return np.ravel(y)
+        return np.reshape(y, -1)
     if len(shape) == 2 and shape[1] == 1:
         if warn:
             warnings.warn(
@@ -1336,6 +1343,8 @@ def check_non_negative(X, whom):
     whom : str
         Who passed X to this function.
     """
+    np, _ = get_namespace(X)
+
     # avoid X.min() on sparse matrix since it also sorts the indices
     if sp.issparse(X):
         if X.format in ["lil", "dok"]:
@@ -1345,7 +1354,7 @@ def check_non_negative(X, whom):
         else:
             X_min = X.data.min()
     else:
-        X_min = X.min()
+        X_min = np.min(X)
 
     if X_min < 0:
         raise ValueError("Negative values in data passed to %s" % whom)
