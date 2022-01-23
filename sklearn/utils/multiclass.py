@@ -21,7 +21,8 @@ from ..utils._array_api import get_namespace
 
 
 def _unique_multiclass(y):
-    if hasattr(y, "__array__"):
+    np, is_array_api = get_namespace(y)
+    if hasattr(y, "__array__") or is_array_api:
         return np.unique(np.asarray(y))
     else:
         return set(y)
@@ -71,7 +72,7 @@ def unique_labels(*ys):
     >>> unique_labels([1, 2, 10], [5, 11])
     array([ 1,  2,  5, 10, 11])
     """
-    np, _ = get_namespace(*ys)
+    np, is_array_api = get_namespace(*ys)
     if not ys:
         raise ValueError("No argument has been passed.")
     # Check that we don't mix label format
@@ -104,8 +105,11 @@ def unique_labels(*ys):
     if not _unique_labels:
         raise ValueError("Unknown label type: %s" % repr(ys))
 
-    ys_labels = set(chain.from_iterable(_unique_labels(y) for y in ys))
+    if is_array_api:
+        return _unique_labels(ys[0])
 
+    # TODO: Mixing `set` + array_api is not allowed, refactor?
+    ys_labels = set(chain.from_iterable(_unique_labels(y) for y in ys))
     # Check that we don't mix string type with number type
     if len(set(isinstance(label, str) for label in ys_labels)) > 1:
         raise ValueError("Mix of label input types (string and number)")
@@ -277,8 +281,10 @@ def type_of_target(y, input_name=""):
     """
     np, is_array_api = get_namespace(y)
     valid = (
-        isinstance(y, Sequence) or issparse(y) or hasattr(y, "__array__")
-    ) and not isinstance(y, str)
+        (isinstance(y, Sequence) or issparse(y) or hasattr(y, "__array__"))
+        and not isinstance(y, str)
+        or is_array_api
+    )
 
     if not valid:
         raise ValueError(
