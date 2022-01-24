@@ -151,20 +151,17 @@ def is_multilabel(y):
     True
     """
     np, is_array_api = get_namespace(y)
-    if hasattr(y, "__array__") or isinstance(y, Sequence):
-        if is_array_api:
-            y = np.asarray(y)
-        else:
-            # DeprecationWarning will be replaced by ValueError, see NEP 34
-            # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-            with warnings.catch_warnings():
-                warnings.simplefilter("error", np.VisibleDeprecationWarning)
-                try:
-                    y = np.asarray(y)
-                except np.VisibleDeprecationWarning:
-                    # dtype=object should be provided explicitly for ragged arrays,
-                    # see NEP 34
-                    y = np.array(y, dtype=object)
+    if hasattr(y, "__array__") or isinstance(y, Sequence) or is_array_api:
+        # DeprecationWarning will be replaced by ValueError, see NEP 34
+        # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", np.VisibleDeprecationWarning)
+            try:
+                y = np.asarray(y)
+            except np.VisibleDeprecationWarning:
+                # dtype=object should be provided explicitly for ragged arrays,
+                # see NEP 34
+                y = np.asarray(y, dtype=object)
 
     if not (hasattr(y, "shape") and y.ndim == 2 and y.shape[1] > 1):
         return False
@@ -299,19 +296,16 @@ def type_of_target(y, input_name=""):
     if is_multilabel(y):
         return "multilabel-indicator"
 
-    if is_array_api:
-        y = np.asarray(y)
-    else:
-        # DeprecationWarning will be replaced by ValueError, see NEP 34
-        # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", np.VisibleDeprecationWarning)
-            try:
-                y = np.asarray(y)
-            except np.VisibleDeprecationWarning:
-                # dtype=object should be provided explicitly for ragged arrays,
-                # see NEP 34
-                y = np.asarray(y, dtype=object)
+    # DeprecationWarning will be replaced by ValueError, see NEP 34
+    # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", np.VisibleDeprecationWarning)
+        try:
+            y = np.asarray(y)
+        except np.VisibleDeprecationWarning:
+            # dtype=object should be provided explicitly for ragged arrays,
+            # see NEP 34
+            y = np.asarray(y, dtype=object)
 
     # The old sequence of sequences format
     try:

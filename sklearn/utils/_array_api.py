@@ -51,6 +51,10 @@ class _ArrayAPIWrapper:
         f = self._array_namespace.unique_counts
         return f(x)[1]
 
+    @property
+    def VisibleDeprecationWarning(self):
+        return DeprecationWarning
+
 
 class _NumPyApiWrapper:
     def __getattr__(self, name):
