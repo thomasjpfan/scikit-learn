@@ -115,9 +115,6 @@ def unique_labels(*ys):
     if len(set(isinstance(label, str) for label in ys_labels)) > 1:
         raise ValueError("Mix of label input types (string and number)")
 
-    # print(ys_label)
-    # assert False
-
     return np.asarray(sorted(ys_labels))
 
 
