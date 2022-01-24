@@ -124,7 +124,6 @@ def _class_means(X, y):
         cnt = np.bincount(y)
         np.add.at(means, y, X)
         means /= cnt[:, None]
-
     return means
 
 
@@ -485,12 +484,10 @@ class LinearDiscriminantAnalysis(
         n_classes = self.classes_.shape[0]
 
         self.means_ = _class_means(X, y)
-
         if self.store_covariance:
             self.covariance_ = _class_cov(X, y, self.priors_)
 
         Xc = []
-
         for idx, group in enumerate(self.classes_):
             Xg = X[y == group]
             Xc.append(Xg - self.means_[idx, :])

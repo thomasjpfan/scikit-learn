@@ -106,13 +106,17 @@ def unique_labels(*ys):
         raise ValueError("Unknown label type: %s" % repr(ys))
 
     if is_array_api:
-        return _unique_labels(ys[0])
+        # array_api does not allow for mixed dtypes
+        unique_ys = np.concatenate([_unique_labels(y) for y in ys])
+        return np.unique(unique_ys)
 
-    # TODO: Mixing `set` + array_api is not allowed, refactor?
-    ys_labels = set(chain.from_iterable(_unique_labels(y) for y in ys))
+    ys_labels = set(chain.from_iterable((i for i in _unique_labels(y)) for y in ys))
     # Check that we don't mix string type with number type
     if len(set(isinstance(label, str) for label in ys_labels)) > 1:
         raise ValueError("Mix of label input types (string and number)")
+
+    # print(ys_label)
+    # assert False
 
     return np.asarray(sorted(ys_labels))
 
