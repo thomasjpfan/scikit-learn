@@ -170,6 +170,8 @@ jobs:
                             OPENBLAS_NUM_THREADS=2
                             SKLEARN_SKIP_NETWORK_TESTS=1
                             SKLEARN_BUILD_PARALLEL=3
+          # Prevent race condition with rc.exe: https://github.com/pypa/setuptools/issues/2212
+          CIBW_ENVIRONMENT_WINDOWS: SETUPTOOLS_USE_DISTUTILS=local
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_ARCHS: all
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
