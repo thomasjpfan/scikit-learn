@@ -1327,7 +1327,7 @@ def test_gaussian_mixture_precisions_init_diag():
 
 
 def test_gaussian_mixture_array_api():
-    """Check that the array_api Array gives the same results as ndarrays"""
+    """Check that the array_api Array gives the same results as ndarrays."""
     pytest.importorskip("numpy", minversion="1.22", reason="Requires Array API")
     xp = pytest.importorskip("numpy.array_api")
 
