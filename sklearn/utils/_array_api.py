@@ -51,6 +51,7 @@ class _NumPyApiWrapper:
         return x.astype(dtype, *args, **kwargs)
 
     def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
+        # copy is in the ArrayAPI spec but not in NumPy's asarray
         if copy:
             return numpy.array(obj, dtype=dtype, order=order, copy=True)
         else:
