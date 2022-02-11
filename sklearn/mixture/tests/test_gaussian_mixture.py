@@ -12,6 +12,8 @@ import numpy as np
 from scipy import stats, linalg
 
 from sklearn.cluster import KMeans
+from sklearn.base import clone
+from sklearn._config import config_context
 from sklearn.covariance import EmpiricalCovariance
 from sklearn.datasets import make_spd_matrix
 from io import StringIO
@@ -1322,3 +1324,31 @@ def test_gaussian_mixture_precisions_init_diag():
     assert_allclose(
         gm_with_init.precisions_cholesky_, gm_without_init.precisions_cholesky_
     )
+
+
+def test_gaussian_mixture_array_api():
+    """Check that the array_api Array gives the same results as ndarrays"""
+    pytest.importorskip("numpy", minversion="1.22", reason="Requires Array API")
+    xp = pytest.importorskip("numpy.array_api")
+
+    rng = np.random.RandomState(0)
+    X = rng.rand(10, 4)
+    X_xp = xp.asarray(X)
+
+    gm = GaussianMixture(n_components=2, random_state=0, init_params="random")
+    gm.fit(X)
+
+    gm_xp = clone(gm)
+    with config_context(array_api_dispatch=True):
+        gm_xp.fit(X_xp)
+
+    gm_attributes_array = {
+        key: value for key, value in vars(gm).items() if isinstance(value, np.ndarray)
+    }
+    for key in gm_attributes_array:
+        gm_xp_param = getattr(gm_xp, key)
+        assert hasattr(gm_xp_param, "__array_namespace__")
+
+        assert_allclose(
+            gm_attributes_array[key], gm_xp_param, err_msg=f"{key} not the same"
+        )

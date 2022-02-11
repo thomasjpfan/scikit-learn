@@ -14,6 +14,7 @@ def test_config_context():
         "working_memory": 1024,
         "print_changed_only": True,
         "display": "text",
+        "array_api_dispatch": False,
     }
 
     # Not using as a context manager affects nothing
@@ -26,6 +27,7 @@ def test_config_context():
             "working_memory": 1024,
             "print_changed_only": True,
             "display": "text",
+            "array_api_dispatch": False,
         }
     assert get_config()["assume_finite"] is False
 
@@ -55,6 +57,7 @@ def test_config_context():
         "working_memory": 1024,
         "print_changed_only": True,
         "display": "text",
+        "array_api_dispatch": False,
     }
 
     # No positional arguments

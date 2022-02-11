@@ -85,6 +85,11 @@ def set_config(
 
         .. versionadded:: 0.23
 
+    array_api_dispatch : bool, default=None
+        Configure scikit-learn to use Array-API. Global default: False
+
+        .. versionadded:: 1.2
+
     See Also
     --------
     config_context : Context manager for global scikit-learn configuration.
@@ -149,6 +154,11 @@ def config_context(
         The default value is 'text'.
 
         .. versionadded:: 0.23
+
+    array_api_dispatch : bool, default=None
+        Configure scikit-learn to use Array-API. Global default: False
+
+        .. versionadded:: 1.2
 
     Yields
     ------

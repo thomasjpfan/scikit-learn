@@ -96,27 +96,26 @@ def _assert_all_finite(
     # validation is also imported in extmath
     from .extmath import _safe_accumulator_op
 
-    np, _ = get_namespace(X)
+    xp, _ = get_namespace(X)
 
     if _get_config()["assume_finite"]:
         return
 
-    X = np.asanyarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
     # false positives from overflow in sum method. The sum is also calculated
     # safely to reduce dtype induced overflows.
     is_float = X.dtype.kind in "fc"
-    if is_float and (np.isfinite(_safe_accumulator_op(np.sum, X))):
+    if is_float and (xp.isfinite(_safe_accumulator_op(xp.sum, X))):
         pass
     elif is_float:
         if (
             allow_nan
-            and np.isinf(X).any()
+            and xp.any(xp.isinf(X))
             or not allow_nan
-            and not np.isfinite(X).all()
+            and not xp.all(xp.isfinite(X))
         ):
-            if not allow_nan and np.isnan(X).any():
+            if not allow_nan and xp.any(xp.isnan(X)):
                 type_err = "NaN"
             else:
                 msg_dtype = msg_dtype if msg_dtype is not None else X.dtype
@@ -127,7 +126,7 @@ def _assert_all_finite(
                 not allow_nan
                 and estimator_name
                 and input_name == "X"
-                and np.isnan(X).any()
+                and xp.any(xp.isnan(X))
             ):
                 # Improve the error message on how to handle missing values in
                 # scikit-learn.
@@ -144,8 +143,8 @@ def _assert_all_finite(
             raise ValueError(msg_err)
 
     # for object dtype data, we only check for NaNs (GH-13254)
-    elif X.dtype == np.dtype("object") and not allow_nan:
-        if np.any(_object_dtype_isnan(X)):
+    elif X.dtype == xp.dtype("object") and not allow_nan:
+        if xp.any(_object_dtype_isnan(X)):
             raise ValueError("Input contains NaN")
 
 
@@ -700,7 +699,7 @@ def check_array(
     array_converted : object
         The converted and validated array.
     """
-    if isinstance(array, numpy.matrix):
+    if isinstance(array, np.matrix):
         warnings.warn(
             "np.matrix usage is deprecated in 1.0 and will raise a TypeError "
             "in 1.2. Please convert to a numpy array with np.asarray. For "
@@ -708,7 +707,7 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
-    np, _ = get_namespace(array)
+    xp, _ = get_namespace(array)
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -754,7 +753,7 @@ def check_array(
     if dtype_numeric:
         if dtype_orig is not None and dtype_orig.kind == "O":
             # if input is object, convert to float.
-            dtype = np.float64
+            dtype = xp.float64
         else:
             dtype = None
 
@@ -824,7 +823,7 @@ def check_array(
                     # Conversion float -> int should not contain NaN or
                     # inf (numpy#14412). We cannot use casting='safe' because
                     # then conversion float -> int would be disallowed.
-                    array = np.asarray(array, order=order)
+                    array = xp.asarray(array, order=order)
                     if array.dtype.kind == "f":
                         _assert_all_finite(
                             array,
@@ -833,9 +832,9 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    array = np.astype(dtype, casting="unsafe", copy=False)
+                    array = xp.astype(dtype, casting="unsafe", copy=False)
                 else:
-                    array = np.asarray(array, order=order, dtype=dtype)
+                    array = xp.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
                 raise ValueError(
                     "Complex data not supported\n{}\n".format(array)
@@ -876,7 +875,7 @@ def check_array(
                 stacklevel=2,
             )
             try:
-                array = array.astype(np.float64)
+                array = xp.astype(array, np.float64)
             except ValueError as e:
                 raise ValueError(
                     "Unable to convert array of bytes/strings "
@@ -914,8 +913,8 @@ def check_array(
                 % (n_features, array.shape, ensure_min_features, context)
             )
 
-    if copy and np.may_share_memory(array, array_orig):
-        array = np.array(array, dtype=dtype, order=order)
+    if copy and xp.may_share_memory(array, array_orig):
+        array = xp.asarray(array, dtype=dtype, order=order, copy=True)
 
     return array
 

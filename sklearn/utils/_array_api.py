@@ -1,43 +1,41 @@
 """Tools to support array_api."""
 import numpy
-from scipy.special import logsumexp as sp_logsumexp
+import scipy.special
 from .._config import get_config
-
-from contextlib import nullcontext
-
 
 # There are more clever ways to wrap the API to ignore kwargs, but I am writing them out
 # explicitly for demonstration purposes
 class _ArrayAPIWrapper:
     def __init__(self, array_namespace):
-        self._array_namespace = array_namespace
+        self._namespace = array_namespace
 
     def __getattr__(self, name):
-        return getattr(self._array_namespace, name)
+        return getattr(self._namespace, name)
 
-    def errstate(self, *args, **kwargs):
-        # errstate not in `array_api`
-        return nullcontext()
+    def astype(self, x, dtype, *, copy=True, casting="unsafe"):
+        # support casting for NumPy
+        if self._namespace.__name__ == "numpy.aray_api":
+            x_np = x.astype(dtype, casting=casting, copy=copy)
+            return self._namespace.asarray(x_np)
 
-    def astype(self, x, dtype, copy=True, **kwargs):
-        # ignore parameters that is not supported by array-api
-        f = self._array_namespace.astype
+        f = self._namespace.astype
         return f(x, dtype, copy=copy)
 
-    def asarray(self, obj, dtype=None, device=None, copy=None, **kwargs):
-        f = self._array_namespace.asarray
+    def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
+        # support order in NumPy
+        if self._namespace.__name__ == "numpy.aray_api":
+            x_np = numpy.asarray(obj, dtype=dtype, copy=copy, order=order)
+            return self._namespace(x_np)
+
+        f = self._namespace.asarray
         return f(obj, dtype=dtype, device=device, copy=copy)
 
-    def array(self, obj, dtype=None, device=None, copy=True, **kwargs):
-        f = self._array_namespace.asarray
-        return f(obj, dtype=dtype, device=device, copy=copy)
+    def may_share_memory(self, a, b):
+        # support may_share_memory in NumPy
+        if self._namespace.__name__ == "numpy.aray_api":
+            return numpy.may_share_memory(a, b)
 
-    def asanyarray(self, obj, *args, **kwargs):
-        # no-op for now
-        return obj
-
-    def may_share_memory(self, *args, **kwargs):
-        # The safe choice is to return True all the time
+        # The safe choice is to return True for all other array_api Arrays
         return True
 
 
@@ -46,7 +44,7 @@ class _NumPyApiWrapper:
         return getattr(numpy, name)
 
     def astype(self, x, dtype, *args, **kwargs):
-        # astype is not defined in the top level numpy namespace
+        # astype is not defined in the top level NumPy namespace
         return x.astype(dtype, *args, **kwargs)
 
 
@@ -81,42 +79,42 @@ def get_namespace(*xs):
 
 
 def logsumexp(a, axis=None, b=None, keepdims=False, return_sign=False):
-    np, is_array_api = get_namespace(a)
+    xp, is_array_api = get_namespace(a)
 
     # Use SciPy if a is an ndarray
     if not is_array_api:
-        return sp_logsumexp(
+        return scipy.special.logsumexp(
             a, axis=axis, b=b, keepdims=keepdims, return_sign=return_sign
         )
 
     if b is not None:
-        a, b = np.broadcast_arrays(a, b)
-        if np.any(b == 0):
+        a, b = xp.broadcast_arrays(a, b)
+        if xp.any(b == 0):
             a = a + 0.0  # promote to at least float
-            a[b == 0] = -np.inf
+            a[b == 0] = -xp.inf
 
-    a_max = np.max(a, axis=axis, keepdims=True)
+    a_max = xp.max(a, axis=axis, keepdims=True)
 
     if a_max.ndim > 0:
-        a_max[~np.isfinite(a_max)] = 0
-    elif not np.isfinite(a_max):
+        a_max[~xp.isfinite(a_max)] = 0
+    elif not xp.isfinite(a_max):
         a_max = 0
 
     if b is not None:
-        b = np.asarray(b)
-        tmp = b * np.exp(a - a_max)
+        b = xp.asarray(b)
+        tmp = b * xp.exp(a - a_max)
     else:
-        tmp = np.exp(a - a_max)
+        tmp = xp.exp(a - a_max)
 
     # suppress warnings about log of zero
-    s = np.sum(tmp, axis=axis, keepdims=keepdims)
+    s = xp.sum(tmp, axis=axis, keepdims=keepdims)
     if return_sign:
-        sgn = np.sign(s)
+        sgn = xp.sign(s)
         s *= sgn  # /= makes more sense but we need zero -> zero
-    out = np.log(s)
+    out = xp.log(s)
 
     if not keepdims:
-        a_max = np.squeeze(a_max, axis=axis)
+        a_max = xp.squeeze(a_max, axis=axis)
     out += a_max
 
     if return_sign:
