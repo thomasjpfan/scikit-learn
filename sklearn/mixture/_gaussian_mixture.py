@@ -186,7 +186,6 @@ def _estimate_gaussian_covariances_full(resp, X, nk, means, reg_covar):
                 covariances[k, i, i] += reg_covar
         else:
             covariances[k].flat[:: n_features + 1] += reg_covar
-
     return covariances
 
 
