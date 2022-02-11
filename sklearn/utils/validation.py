@@ -101,6 +101,7 @@ def _assert_all_finite(
     if _get_config()["assume_finite"]:
         return
 
+    X = xp.asarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
     # false positives from overflow in sum method. The sum is also calculated
@@ -832,7 +833,7 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    array = xp.astype(dtype, casting="unsafe", copy=False)
+                    array = xp.astype(array, dtype, casting="unsafe", copy=False)
                 else:
                     array = xp.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:

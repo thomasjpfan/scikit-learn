@@ -46,9 +46,9 @@ class _NumPyApiWrapper:
     def __getattr__(self, name):
         return getattr(numpy, name)
 
-    def astype(self, x, dtype, *args, **kwargs):
+    def astype(self, x, dtype, *, copy=True, casting="unsafe"):
         # astype is not defined in the top level NumPy namespace
-        return x.astype(dtype, *args, **kwargs)
+        return x.astype(dtype, copy=copy, casting=casting)
 
     def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
         # copy is in the ArrayAPI spec but not in NumPy's asarray

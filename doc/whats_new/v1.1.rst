@@ -148,7 +148,7 @@ Changelog
   :user:`Sebastian Pujalte <pujaltes>`.
 
 - |Enhancement| :func:`datasets.make_blobs` no longer copies data during the generation
-  process, therefore uses less memory. 
+  process, therefore uses less memory.
   :pr:`22412` by :user:`Zhehao Liu <MaxwellLZH>`.
 
 - |Enhancement| :func:`datasets.load_diabetes` now accepts the parameter
@@ -490,6 +490,9 @@ Changelog
 
 :mod:`sklearn.mixture`
 ......................
+
+- |Enhancement| Added ArrayAPI support for :class:`mixture.GaussianMixture`
+  for `init_params="random"` and `covariance_type="full"`. :pr:`xxxxx` by `Thomas Fan`_.
 
 - |Fix| Fix a bug that correctly initialize `precisions_cholesky_` in
   :class:`mixture.GaussianMixture` when providing `precisions_init` by taking
