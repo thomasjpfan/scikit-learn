@@ -24,7 +24,10 @@ class _ArrayAPIWrapper:
     def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
         # support order in NumPy
         if self._namespace.__name__ == "numpy.aray_api":
-            x_np = numpy.asarray(obj, dtype=dtype, copy=copy, order=order)
+            if copy:
+                x_np = numpy.array(obj, dtype=dtype, order=order, copy=True)
+            else:
+                x_np = numpy.asarray(obj, dtype=dtype, order=order)
             return self._namespace(x_np)
 
         f = self._namespace.asarray
@@ -46,6 +49,12 @@ class _NumPyApiWrapper:
     def astype(self, x, dtype, *args, **kwargs):
         # astype is not defined in the top level NumPy namespace
         return x.astype(dtype, *args, **kwargs)
+
+    def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
+        if copy:
+            return numpy.array(obj, dtype=dtype, order=order, copy=True)
+        else:
+            return numpy.asarray(obj, dtype=dtype, order=order)
 
 
 def get_namespace(*xs):
