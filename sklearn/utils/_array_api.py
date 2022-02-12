@@ -3,8 +3,6 @@ import numpy
 from .._config import get_config
 
 
-# There are more clever ways to wrap the API to ignore kwargs, but I am writing them out
-# explicitly for demonstration purposes
 class _ArrayAPIWrapper:
     def __init__(self, array_namespace):
         self._namespace = array_namespace
