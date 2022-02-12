@@ -113,13 +113,13 @@ def _class_means(X, y):
     means : array-like of shape (n_classes, n_features)
         Class means.
     """
-    np, is_array_api = get_namespace(X)
-    classes, y = np.unique(y, return_inverse=True)
-    means = np.zeros(shape=(classes.shape[0], X.shape[1]))
+    xp, is_array_api = get_namespace(X)
+    classes, y = xp.unique_inverse(y)
+    means = xp.zeros(shape=(classes.shape[0], X.shape[1]))
 
     if is_array_api:
         for i in range(classes.shape[0]):
-            means[i, :] = np.mean(X[y == i], axis=0)
+            means[i, :] = xp.mean(X[y == i], axis=0)
     else:
         cnt = np.bincount(y)
         np.add.at(means, y, X)
@@ -475,10 +475,10 @@ class LinearDiscriminantAnalysis(
         y : array-like of shape (n_samples,) or (n_samples, n_targets)
             Target values.
         """
-        np, is_array_api = get_namespace(X)
+        xp, is_array_api = get_namespace(X)
 
         if is_array_api:
-            svd = np.linalg.svd
+            svd = xp.linalg.svd
         else:
             svd = scipy.linalg.svd
 
@@ -496,10 +496,10 @@ class LinearDiscriminantAnalysis(
 
         self.xbar_ = self.priors_ @ self.means_
 
-        Xc = np.concatenate(Xc, axis=0)
+        Xc = xp.concat(Xc, axis=0)
 
         # 1) within (univariate) scaling by with classes std-dev
-        std = np.std(Xc, axis=0)
+        std = xp.std(Xc, axis=0)
         # avoid division by zero in normalization
         std[std == 0] = 1.0
         fac = 1.0 / (n_samples - n_classes)
@@ -509,14 +509,14 @@ class LinearDiscriminantAnalysis(
         # SVD of centered (within)scaled data
         U, S, Vt = svd(X, full_matrices=False)
 
-        rank = np.sum(np.astype(S > self.tol, np.int32))
+        rank = xp.sum(xp.astype(S > self.tol, xp.int32))
         # Scaling of within covariance is: V' 1/S
         scalings = (Vt[:rank, :] / std).T / S[:rank]
 
         # 3) Between variance scaling
         # Scale weighted centers
         X = (
-            (np.sqrt((n_samples * self.priors_) * fac)) * (self.means_ - self.xbar_).T
+            (xp.sqrt((n_samples * self.priors_) * fac)) * (self.means_ - self.xbar_).T
         ).T @ scalings
         # Centers are living in a space with n_classes-1 dim (maximum)
         # Use SVD to find projection in the space spanned by the
@@ -524,16 +524,16 @@ class LinearDiscriminantAnalysis(
         _, S, Vt = svd(X, full_matrices=False)
 
         if self._max_components == 0:
-            self.explained_variance_ratio_ = np.empty((0,), dtype=S.dtype)
+            self.explained_variance_ratio_ = xp.empty((0,), dtype=S.dtype)
         else:
-            self.explained_variance_ratio_ = (S ** 2 / np.sum(S ** 2))[
+            self.explained_variance_ratio_ = (S ** 2 / xp.sum(S ** 2))[
                 : self._max_components
             ]
 
-        rank = np.sum(np.astype(S > self.tol * S[0], np.int32))
+        rank = xp.sum(xp.astype(S > self.tol * S[0], xp.int32))
         self.scalings_ = scalings @ Vt.T[:, :rank]
         coef = (self.means_ - self.xbar_) @ self.scalings_
-        self.intercept_ = -0.5 * np.sum(coef ** 2, axis=1) + np.log(self.priors_)
+        self.intercept_ = -0.5 * xp.sum(coef ** 2, axis=1) + xp.log(self.priors_)
         self.coef_ = coef @ self.scalings_.T
         self.intercept_ -= self.xbar_ @ self.coef_.T
 
@@ -559,9 +559,9 @@ class LinearDiscriminantAnalysis(
         self : object
             Fitted estimator.
         """
-        np, _ = get_namespace(X)
+        xp, _ = get_namespace(X)
         X, y = self._validate_data(
-            X, y, ensure_min_samples=2, dtype=[np.float64, np.float32]
+            X, y, ensure_min_samples=2, dtype=[xp.float64, xp.float32]
         )
         self.classes_ = unique_labels(y)
         n_samples, _ = X.shape
@@ -573,12 +573,12 @@ class LinearDiscriminantAnalysis(
             )
 
         if self.priors is None:  # estimate priors from sample
-            _, y_t = np.unique(y, return_inverse=True)  # non-negative ints
-            self.priors_ = np.astype(np.bincount(y_t), np.float64) / float(y.shape[0])
+            _, cnts = xp.unique_counts(y)  # non-negative ints
+            self.priors_ = xp.astype(cnts, xp.float64) / float(y.shape[0])
         else:
-            self.priors_ = np.asarray(self.priors)
+            self.priors_ = xp.asarray(self.priors)
 
-        if np.any(self.priors_ < 0):
+        if xp.any(self.priors_ < 0):
             raise ValueError("priors must be non-negative")
 
         # TODO: implement isclose in wrapper?
@@ -629,12 +629,12 @@ class LinearDiscriminantAnalysis(
                 "'lsqr', and 'eigen').".format(self.solver)
             )
         if self.classes_.size == 2:  # treat binary case as a special case
-            coef_ = np.asarray(self.coef_[1, :] - self.coef_[0, :], dtype=X.dtype)
-            self.coef_ = np.reshape(coef_, (1, -1))
-            intercept_ = np.asarray(
+            coef_ = xp.asarray(self.coef_[1, :] - self.coef_[0, :], dtype=X.dtype)
+            self.coef_ = xp.reshape(coef_, (1, -1))
+            intercept_ = xp.asarray(
                 self.intercept_[1] - self.intercept_[0], dtype=X.dtype
             )
-            self.intercept_ = np.reshape(intercept_, 1)
+            self.intercept_ = xp.reshape(intercept_, 1)
         self._n_features_out = self._max_components
         return self
 

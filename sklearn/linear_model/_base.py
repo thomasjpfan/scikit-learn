@@ -406,9 +406,9 @@ class LinearClassifierMixin(ClassifierMixin):
         check_is_fitted(self)
 
         X = self._validate_data(X, accept_sparse="csr", reset=False)
-        np, _ = get_namespace(X)
+        xp, _ = get_namespace(X)
         scores = safe_sparse_dot(X, self.coef_.T, dense_output=True) + self.intercept_
-        return np.reshape(scores, -1) if scores.shape[1] == 1 else scores
+        return xp.reshape(scores, -1) if scores.shape[1] == 1 else scores
 
     def predict(self, X):
         """
@@ -424,10 +424,10 @@ class LinearClassifierMixin(ClassifierMixin):
         y_pred : ndarray of shape (n_samples,)
             Vector containing the class labels for each sample.
         """
-        np, _ = get_namespace(X)
+        xp, _ = get_namespace(X)
         scores = self.decision_function(X)
         if len(scores.shape) == 1:
-            indices = np.astype(scores > 0, int)
+            indices = xp.astype(scores > 0, int)
         else:
             indices = scores.argmax(axis=1)
         # Should really use `np.take`

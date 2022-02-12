@@ -21,9 +21,9 @@ from ..utils._array_api import get_namespace
 
 
 def _unique_multiclass(y):
-    np, is_array_api = get_namespace(y)
+    xp, is_array_api = get_namespace(y)
     if hasattr(y, "__array__") or is_array_api:
-        return np.unique(np.asarray(y))
+        return xp.unique_values(xp.asarray(y))
     else:
         return set(y)
 
@@ -72,7 +72,7 @@ def unique_labels(*ys):
     >>> unique_labels([1, 2, 10], [5, 11])
     array([ 1,  2,  5, 10, 11])
     """
-    np, is_array_api = get_namespace(*ys)
+    xp, is_array_api = get_namespace(*ys)
     if not ys:
         raise ValueError("No argument has been passed.")
     # Check that we don't mix label format
@@ -107,15 +107,15 @@ def unique_labels(*ys):
 
     if is_array_api:
         # array_api does not allow for mixed dtypes
-        unique_ys = np.concatenate([_unique_labels(y) for y in ys])
-        return np.unique(unique_ys)
+        unique_ys = xp.concat([_unique_labels(y) for y in ys])
+        return xp.unique_values(unique_ys)
 
     ys_labels = set(chain.from_iterable((i for i in _unique_labels(y)) for y in ys))
     # Check that we don't mix string type with number type
     if len(set(isinstance(label, str) for label in ys_labels)) > 1:
         raise ValueError("Mix of label input types (string and number)")
 
-    return np.asarray(sorted(ys_labels))
+    return xp.asarray(sorted(ys_labels))
 
 
 def _is_integral_float(y):
@@ -150,18 +150,18 @@ def is_multilabel(y):
     >>> is_multilabel(np.array([[1, 0, 0]]))
     True
     """
-    np, is_array_api = get_namespace(y)
+    xp, is_array_api = get_namespace(y)
     if hasattr(y, "__array__") or isinstance(y, Sequence) or is_array_api:
         # DeprecationWarning will be replaced by ValueError, see NEP 34
         # https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
         with warnings.catch_warnings():
             warnings.simplefilter("error", np.VisibleDeprecationWarning)
             try:
-                y = np.asarray(y)
+                y = xp.asarray(y)
             except np.VisibleDeprecationWarning:
                 # dtype=object should be provided explicitly for ragged arrays,
                 # see NEP 34
-                y = np.asarray(y, dtype=object)
+                y = xp.asarray(y, dtype=object)
 
     if not (hasattr(y, "shape") and y.ndim == 2 and y.shape[1] > 1):
         return False
@@ -171,14 +171,14 @@ def is_multilabel(y):
             y = y.tocsr()
         return (
             len(y.data) == 0
-            or np.unique(y.data).size == 1
+            or xp.unique_values(y.data).size == 1
             and (
                 y.dtype.kind in "biu"
-                or _is_integral_float(np.unique(y.data))  # bool, int, uint
+                or _is_integral_float(xp.unique_values(y.data))  # bool, int, uint
             )
         )
     else:
-        labels = np.unique(y)
+        labels = xp.unique_values(y)
 
         return len(labels) < 3 and (
             y.dtype.kind in "biu" or _is_integral_float(labels)  # bool, int, uint
@@ -277,7 +277,7 @@ def type_of_target(y, input_name=""):
     >>> type_of_target(np.array([[0, 1], [1, 1]]))
     'multilabel-indicator'
     """
-    np, is_array_api = get_namespace(y)
+    xp, is_array_api = get_namespace(y)
     valid = (
         (isinstance(y, Sequence) or issparse(y) or hasattr(y, "__array__"))
         and not isinstance(y, str)
@@ -301,11 +301,11 @@ def type_of_target(y, input_name=""):
     with warnings.catch_warnings():
         warnings.simplefilter("error", np.VisibleDeprecationWarning)
         try:
-            y = np.asarray(y)
+            y = xp.asarray(y)
         except np.VisibleDeprecationWarning:
             # dtype=object should be provided explicitly for ragged arrays,
             # see NEP 34
-            y = np.asarray(y, dtype=object)
+            y = xp.asarray(y, dtype=object)
 
     # The old sequence of sequences format
     try:
@@ -337,12 +337,12 @@ def type_of_target(y, input_name=""):
         suffix = ""  # [1, 2, 3] or [[1], [2], [3]]
 
     # check float and contains non-integer float values
-    if y.dtype.kind == "f" and np.any(y != y.astype(int)):
+    if y.dtype.kind == "f" and xp.any(y != y.astype(int)):
         # [.1, .2, 3] or [[.1, .2, 3]] or [[1., .2]] and not [1., 2., 3.]
         _assert_all_finite(y, input_name=input_name)
         return "continuous" + suffix
 
-    if (np.unique(y).shape[0] > 2) or (y.ndim >= 2 and len(y[0]) > 1):
+    if (xp.unique_values(y).shape[0] > 2) or (y.ndim >= 2 and len(y[0]) > 1):
         return "multiclass" + suffix  # [1, 2, 3] or [[1., 2., 3]] or [[1, 2]]
     else:
         return "binary"  # [1, 2] or [["a"], ["b"]]
