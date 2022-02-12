@@ -391,7 +391,9 @@ class LinearDiscriminantAnalysis(
         self.covariance_ = _class_cov(
             X, y, self.priors_, shrinkage, covariance_estimator
         )
-        self.coef_ = linalg.lstsq(self.covariance_, self.means_.T)[0].T
+        self.coef_ = linalg.lstsq(self.covariance_, self.means_.T, check_finite=False)[
+            0
+        ].T
         self.intercept_ = -0.5 * np.diag(np.dot(self.means_, self.coef_.T)) + np.log(
             self.priors_
         )
@@ -450,7 +452,7 @@ class LinearDiscriminantAnalysis(
         St = _cov(X, shrinkage, covariance_estimator)  # total scatter
         Sb = St - Sw  # between scatter
 
-        evals, evecs = linalg.eigh(Sb, Sw)
+        evals, evecs = linalg.eigh(Sb, Sw, check_finite=False)
         self.explained_variance_ratio_ = np.sort(evals / np.sum(evals))[::-1][
             : self._max_components
         ]
