@@ -138,7 +138,7 @@ def radius_neighbors_graph(
     include_self=False,
     n_jobs=None,
 ):
-    """Compute the (weighted) graph of Neighbors for points in X.
+    """Computes the (weighted) graph of Neighbors for points in X
 
     Neighborhoods are restricted the points at a distance lower than
     radius.
@@ -174,7 +174,7 @@ def radius_neighbors_graph(
         (l2) for p = 2. For arbitrary p, minkowski_distance (l_p) is used.
 
     metric_params : dict, default=None
-        Additional keyword arguments for the metric function.
+        additional keyword arguments for the metric function.
 
     include_self : bool or 'auto', default=False
         Whether or not to mark each sample as the first nearest neighbor to
@@ -193,10 +193,6 @@ def radius_neighbors_graph(
         Graph where A[i, j] is assigned the weight of edge that connects
         i to j. The matrix is of CSR format.
 
-    See Also
-    --------
-    kneighbors_graph: Compute the weighted graph of k-neighbors for points in X.
-
     Examples
     --------
     >>> X = [[0], [3], [1]]
@@ -207,6 +203,10 @@ def radius_neighbors_graph(
     array([[1., 0., 1.],
            [0., 1., 0.],
            [1., 0., 1.]])
+
+    See Also
+    --------
+    kneighbors_graph
     """
     if not isinstance(X, RadiusNeighborsMixin):
         X = NearestNeighbors(
