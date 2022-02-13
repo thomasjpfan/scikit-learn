@@ -15,6 +15,7 @@ import numbers
 import operator
 
 import numpy as np
+import numpy
 import scipy.sparse as sp
 from inspect import signature, isclass, Parameter
 
@@ -24,11 +25,12 @@ import joblib
 
 from contextlib import suppress
 
-from .fixes import _object_dtype_isnan, parse_version
+from .fixes import _object_dtype_isnan
 from .. import get_config as _get_config
 from ..exceptions import PositiveSpectrumWarning
 from ..exceptions import NotFittedError
 from ..exceptions import DataConversionWarning
+from ..utils._array_api import get_namespace
 
 FLOAT_DTYPES = (np.float64, np.float32, np.float16)
 
@@ -94,24 +96,27 @@ def _assert_all_finite(
     # validation is also imported in extmath
     from .extmath import _safe_accumulator_op
 
+    xp, _ = get_namespace(X)
+
     if _get_config()["assume_finite"]:
         return
-    X = np.asanyarray(X)
+
+    X = xp.asarray(X)
     # First try an O(n) time, O(1) space solution for the common case that
     # everything is finite; fall back to O(n) space np.isfinite to prevent
     # false positives from overflow in sum method. The sum is also calculated
     # safely to reduce dtype induced overflows.
     is_float = X.dtype.kind in "fc"
-    if is_float and (np.isfinite(_safe_accumulator_op(np.sum, X))):
+    if is_float and (xp.isfinite(_safe_accumulator_op(xp.sum, X))):
         pass
     elif is_float:
         if (
             allow_nan
-            and np.isinf(X).any()
+            and xp.any(xp.isinf(X))
             or not allow_nan
-            and not np.isfinite(X).all()
+            and not xp.all(xp.isfinite(X))
         ):
-            if not allow_nan and np.isnan(X).any():
+            if not allow_nan and xp.any(xp.isnan(X)):
                 type_err = "NaN"
             else:
                 msg_dtype = msg_dtype if msg_dtype is not None else X.dtype
@@ -122,7 +127,7 @@ def _assert_all_finite(
                 not allow_nan
                 and estimator_name
                 and input_name == "X"
-                and np.isnan(X).any()
+                and xp.any(xp.isnan(X))
             ):
                 # Improve the error message on how to handle missing values in
                 # scikit-learn.
@@ -139,8 +144,8 @@ def _assert_all_finite(
             raise ValueError(msg_err)
 
     # for object dtype data, we only check for NaNs (GH-13254)
-    elif X.dtype == np.dtype("object") and not allow_nan:
-        if _object_dtype_isnan(X).any():
+    elif X.dtype == xp.dtype("object") and not allow_nan:
+        if xp.any(_object_dtype_isnan(X)):
             raise ValueError("Input contains NaN")
 
 
@@ -344,10 +349,7 @@ def check_memory(memory):
     """
 
     if memory is None or isinstance(memory, str):
-        if parse_version(joblib.__version__) < parse_version("0.12"):
-            memory = joblib.Memory(cachedir=memory, verbose=0)
-        else:
-            memory = joblib.Memory(location=memory, verbose=0)
+        memory = joblib.Memory(location=memory, verbose=0)
     elif not hasattr(memory, "cache"):
         raise ValueError(
             "'memory' should be None, a string or have the same"
@@ -706,6 +708,7 @@ def check_array(
             "https://numpy.org/doc/stable/reference/generated/numpy.matrix.html",  # noqa
             FutureWarning,
         )
+    xp, _ = get_namespace(array)
 
     # store reference to original array to check if copy is needed when
     # function returns
@@ -751,7 +754,7 @@ def check_array(
     if dtype_numeric:
         if dtype_orig is not None and dtype_orig.kind == "O":
             # if input is object, convert to float.
-            dtype = np.float64
+            dtype = xp.float64
         else:
             dtype = None
 
@@ -821,7 +824,7 @@ def check_array(
                     # Conversion float -> int should not contain NaN or
                     # inf (numpy#14412). We cannot use casting='safe' because
                     # then conversion float -> int would be disallowed.
-                    array = np.asarray(array, order=order)
+                    array = xp.asarray(array, order=order)
                     if array.dtype.kind == "f":
                         _assert_all_finite(
                             array,
@@ -830,9 +833,9 @@ def check_array(
                             estimator_name=estimator_name,
                             input_name=input_name,
                         )
-                    array = array.astype(dtype, casting="unsafe", copy=False)
+                    array = xp.astype(array, dtype, casting="unsafe", copy=False)
                 else:
-                    array = np.asarray(array, order=order, dtype=dtype)
+                    array = xp.asarray(array, order=order, dtype=dtype)
             except ComplexWarning as complex_warning:
                 raise ValueError(
                     "Complex data not supported\n{}\n".format(array)
@@ -873,7 +876,7 @@ def check_array(
                 stacklevel=2,
             )
             try:
-                array = array.astype(np.float64)
+                array = xp.astype(array, np.float64)
             except ValueError as e:
                 raise ValueError(
                     "Unable to convert array of bytes/strings "
@@ -911,8 +914,8 @@ def check_array(
                 % (n_features, array.shape, ensure_min_features, context)
             )
 
-    if copy and np.may_share_memory(array, array_orig):
-        array = np.array(array, dtype=dtype, order=order)
+    if copy and xp.may_share_memory(array, array_orig):
+        array = xp.asarray(array, dtype=dtype, order=order, copy=True)
 
     return array
 
@@ -1406,16 +1409,50 @@ def check_scalar(
 
     ValueError
         If the parameter's value violates the given bounds.
+        If `min_val`, `max_val` and `include_boundaries` are inconsistent.
     """
 
+    def type_name(t):
+        """Convert type into humman readable string."""
+        module = t.__module__
+        qualname = t.__qualname__
+        if module == "builtins":
+            return qualname
+        elif t == numbers.Real:
+            return "float"
+        elif t == numbers.Integral:
+            return "int"
+        return f"{module}.{qualname}"
+
     if not isinstance(x, target_type):
-        raise TypeError(f"{name} must be an instance of {target_type}, not {type(x)}.")
+        if isinstance(target_type, tuple):
+            types_str = ", ".join(type_name(t) for t in target_type)
+            target_type_str = f"{{{types_str}}}"
+        else:
+            target_type_str = type_name(target_type)
+
+        raise TypeError(
+            f"{name} must be an instance of {target_type_str}, not"
+            f" {type(x).__qualname__}."
+        )
 
     expected_include_boundaries = ("left", "right", "both", "neither")
     if include_boundaries not in expected_include_boundaries:
         raise ValueError(
             f"Unknown value for `include_boundaries`: {repr(include_boundaries)}. "
             f"Possible values are: {expected_include_boundaries}."
+        )
+
+    if max_val is None and include_boundaries == "right":
+        raise ValueError(
+            "`include_boundaries`='right' without specifying explicitly `max_val` "
+            "is inconsistent."
+        )
+
+    if min_val is None and include_boundaries == "left":
+        raise ValueError(
+            "`include_boundaries`='left' without specifying explicitly `min_val` "
+            "is inconsistent."
         )
 
     comparison_operator = (
@@ -1797,9 +1834,8 @@ def _get_feature_names(X):
 
     types = sorted(t.__qualname__ for t in set(type(v) for v in feature_names))
 
-    # Warn when types are mixed.
-    # ints and strings do not warn
-    if len(types) > 1 or not (types[0].startswith("int") or types[0] == "str"):
+    # Warn when types are mixed and string is one of the types
+    if len(types) > 1 and "str" in types:
         # TODO: Convert to an error in 1.2
         warnings.warn(
             "Feature names only support names that are all strings. "
@@ -1810,12 +1846,14 @@ def _get_feature_names(X):
         return
 
     # Only feature names of all strings are supported
-    if types[0] == "str":
+    if len(types) == 1 and types[0] == "str":
         return feature_names
 
 
 def _check_feature_names_in(estimator, input_features=None, *, generate_names=True):
-    """Get output feature names for transformation.
+    """Check `input_features` and generate names if needed.
+
+    Commonly used in :term:`get_feature_names_out`.
 
     Parameters
     ----------
@@ -1829,8 +1867,10 @@ def _check_feature_names_in(estimator, input_features=None, *, generate_names=Tr
             match `feature_names_in_` if `feature_names_in_` is defined.
 
     generate_names : bool, default=True
-        Wether to generate names when `input_features` is `None` and
-        `estimator.feature_names_in_` is not defined.
+        Whether to generate names when `input_features` is `None` and
+        `estimator.feature_names_in_` is not defined. This is useful for transformers
+        that validates `input_features` but do not require them in
+        :term:`get_feature_names_out` e.g. `PCA`.
 
     Returns
     -------

@@ -9,13 +9,13 @@ from abc import ABCMeta, abstractmethod
 from time import time
 
 import numpy as np
-from scipy.special import logsumexp
 
 from .. import cluster
 from ..base import BaseEstimator
 from ..base import DensityMixin
 from ..exceptions import ConvergenceWarning
 from ..utils import check_random_state
+from ..utils._array_api import get_namespace, logsumexp
 from ..utils.validation import check_is_fitted
 
 
@@ -148,8 +148,10 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             )
             resp[np.arange(n_samples), label] = 1
         elif self.init_params == "random":
-            resp = random_state.rand(n_samples, self.n_components)
-            resp /= resp.sum(axis=1)[:, np.newaxis]
+            xp, _ = get_namespace(X)
+            resp = random_state.uniform(size=(n_samples, self.n_components))
+            resp = xp.asarray(resp)
+            resp /= xp.reshape(xp.sum(resp, axis=1), (-1, 1))
         else:
             raise ValueError(
                 "Unimplemented initialization method '%s'" % self.init_params
@@ -225,7 +227,8 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         labels : array, shape (n_samples,)
             Component labels.
         """
-        X = self._validate_data(X, dtype=[np.float64, np.float32], ensure_min_samples=2)
+        xp, _ = get_namespace(X)
+        X = self._validate_data(X, dtype=[xp.float64, xp.float32], ensure_min_samples=2)
         if X.shape[0] < self.n_components:
             raise ValueError(
                 "Expected n_samples >= n_components "
@@ -238,7 +241,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         do_init = not (self.warm_start and hasattr(self, "converged_"))
         n_init = self.n_init if do_init else 1
 
-        max_lower_bound = -np.inf
+        max_lower_bound = -xp.inf
         self.converged_ = False
 
         random_state = check_random_state(self.random_state)
@@ -250,7 +253,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             if do_init:
                 self._initialize_parameters(X, random_state)
 
-            lower_bound = -np.inf if do_init else self.lower_bound_
+            lower_bound = -xp.inf if do_init else self.lower_bound_
 
             for n_iter in range(1, self.max_iter + 1):
                 prev_lower_bound = lower_bound
@@ -268,7 +271,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
 
             self._print_verbose_msg_init_end(lower_bound)
 
-            if lower_bound > max_lower_bound or max_lower_bound == -np.inf:
+            if lower_bound > max_lower_bound or max_lower_bound == -xp.inf:
                 max_lower_bound = lower_bound
                 best_params = self._get_parameters()
                 best_n_iter = n_iter
@@ -291,7 +294,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         # for any value of max_iter and tol (and any random_state).
         _, log_resp = self._e_step(X)
 
-        return log_resp.argmax(axis=1)
+        return xp.argmax(log_resp, axis=1)
 
     def _e_step(self, X):
         """E step.
@@ -309,8 +312,9 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             Logarithm of the posterior probabilities (or responsibilities) of
             the point of each sample in X.
         """
+        xp, _ = get_namespace(X)
         log_prob_norm, log_resp = self._estimate_log_prob_resp(X)
-        return np.mean(log_prob_norm), log_resp
+        return xp.mean(log_prob_norm), log_resp
 
     @abstractmethod
     def _m_step(self, X, log_resp):
@@ -456,7 +460,9 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         else:
             X = np.vstack(
                 [
-                    mean + rng.randn(sample, n_features) * np.sqrt(covariance)
+                    mean
+                    + rng.standard_normal(size=(sample, n_features))
+                    * np.sqrt(covariance)
                     for (mean, covariance, sample) in zip(
                         self.means_, self.covariances_, n_samples_comp
                     )
@@ -527,11 +533,12 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         log_responsibilities : array, shape (n_samples, n_components)
             logarithm of the responsibilities
         """
+        xp, _ = get_namespace(X)
         weighted_log_prob = self._estimate_weighted_log_prob(X)
         log_prob_norm = logsumexp(weighted_log_prob, axis=1)
         with np.errstate(under="ignore"):
             # ignore underflow
-            log_resp = weighted_log_prob - log_prob_norm[:, np.newaxis]
+            log_resp = weighted_log_prob - xp.reshape(log_prob_norm, (-1, 1))
         return log_prob_norm, log_resp
 
     def _print_verbose_msg_init_beg(self, n_init):

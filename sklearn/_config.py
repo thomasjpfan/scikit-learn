@@ -9,6 +9,7 @@ _global_config = {
     "working_memory": int(os.environ.get("SKLEARN_WORKING_MEMORY", 1024)),
     "print_changed_only": True,
     "display": "text",
+    "array_api_dispatch": False,
 }
 _threadlocal = threading.local()
 
@@ -40,7 +41,11 @@ def get_config():
 
 
 def set_config(
-    assume_finite=None, working_memory=None, print_changed_only=None, display=None
+    assume_finite=None,
+    working_memory=None,
+    print_changed_only=None,
+    display=None,
+    array_api_dispatch=None,
 ):
     """Set global scikit-learn configuration
 
@@ -80,6 +85,11 @@ def set_config(
 
         .. versionadded:: 0.23
 
+    array_api_dispatch : bool, default=None
+        Configure scikit-learn to use Array-API. Global default: False
+
+        .. versionadded:: 1.2
+
     See Also
     --------
     config_context : Context manager for global scikit-learn configuration.
@@ -95,11 +105,18 @@ def set_config(
         local_config["print_changed_only"] = print_changed_only
     if display is not None:
         local_config["display"] = display
+    if array_api_dispatch is not None:
+        local_config["array_api_dispatch"] = array_api_dispatch
 
 
 @contextmanager
 def config_context(
-    *, assume_finite=None, working_memory=None, print_changed_only=None, display=None
+    *,
+    assume_finite=None,
+    working_memory=None,
+    print_changed_only=None,
+    display=None,
+    array_api_dispatch=None,
 ):
     """Context manager for global scikit-learn configuration.
 
@@ -138,6 +155,11 @@ def config_context(
 
         .. versionadded:: 0.23
 
+    array_api_dispatch : bool, default=None
+        Configure scikit-learn to use Array-API. Global default: False
+
+        .. versionadded:: 1.2
+
     Yields
     ------
     None.
@@ -171,6 +193,7 @@ def config_context(
         working_memory=working_memory,
         print_changed_only=print_changed_only,
         display=display,
+        array_api_dispatch=array_api_dispatch,
     )
 
     try:
