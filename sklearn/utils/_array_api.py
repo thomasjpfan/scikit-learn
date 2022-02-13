@@ -3,8 +3,7 @@ import numpy
 import scipy.special
 from .._config import get_config
 
-# There are more clever ways to wrap the API to ignore kwargs, but I am writing them out
-# explicitly for demonstration purposes
+
 class _ArrayAPIWrapper:
     def __init__(self, array_namespace):
         self._namespace = array_namespace
@@ -14,7 +13,7 @@ class _ArrayAPIWrapper:
 
     def astype(self, x, dtype, *, copy=True, casting="unsafe"):
         # support casting for NumPy
-        if self._namespace.__name__ == "numpy.aray_api":
+        if self._namespace.__name__ == "numpy.array_api":
             x_np = x.astype(dtype, casting=casting, copy=copy)
             return self._namespace.asarray(x_np)
 
@@ -23,7 +22,7 @@ class _ArrayAPIWrapper:
 
     def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
         # support order in NumPy
-        if self._namespace.__name__ == "numpy.aray_api":
+        if self._namespace.__name__ == "numpy.array_api":
             if copy:
                 x_np = numpy.array(obj, dtype=dtype, order=order, copy=True)
             else:
@@ -35,7 +34,7 @@ class _ArrayAPIWrapper:
 
     def may_share_memory(self, a, b):
         # support may_share_memory in NumPy
-        if self._namespace.__name__ == "numpy.aray_api":
+        if self._namespace.__name__ == "numpy.array_api":
             return numpy.may_share_memory(a, b)
 
         # The safe choice is to return True for all other array_api Arrays
