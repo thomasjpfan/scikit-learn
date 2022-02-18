@@ -204,6 +204,7 @@ def make_dataset(X, y, sample_weight, random_state=None):
         dataset = CSRData(X.data, X.indptr, X.indices, y, sample_weight, seed=seed)
         intercept_decay = SPARSE_INTERCEPT_DECAY
     else:
+        X = np.ascontiguousarray(X)
         dataset = ArrayData(X, y, sample_weight, seed=seed)
         intercept_decay = 1.0
 
