@@ -579,10 +579,9 @@ class LinearDiscriminantAnalysis(
         if xp.any(self.priors_ < 0):
             raise ValueError("priors must be non-negative")
 
-        # TODO: implement isclose in wrapper?
-        # if not np.isclose(np.sum(self.priors_), 1.0):
-        #     warnings.warn("The priors do not sum to 1. Renormalizing", UserWarning)
-        #     self.priors_ = self.priors_ / self.priors_.sum()
+        if xp.abs(xp.sum(self.priors_) - 1.0) > 1e-5:
+            warnings.warn("The priors do not sum to 1. Renormalizing", UserWarning)
+            self.priors_ = self.priors_ / self.priors_.sum()
 
         # Maximum number of components no matter what n_components is
         # specified:

@@ -13,22 +13,22 @@ class _ArrayAPIWrapper:
     def astype(self, x, dtype, *, copy=True, casting="unsafe"):
         # support casting for NumPy
         if self._namespace.__name__ == "numpy.array_api":
-            x_np = x.astype(dtype, casting=casting, copy=copy)
+            x_np = numpy.asarray(x).astype(dtype, casting=casting, copy=copy)
             return self._namespace.asarray(x_np)
 
         f = self._namespace.astype
         return f(x, dtype, copy=copy)
 
     def asarray(self, obj, *, dtype=None, device=None, copy=None, order=None):
+        f = self._namespace.asarray
+
         # support order in NumPy
         if self._namespace.__name__ == "numpy.array_api":
             if copy:
                 x_np = numpy.array(obj, dtype=dtype, order=order, copy=True)
             else:
                 x_np = numpy.asarray(obj, dtype=dtype, order=order)
-            return self._namespace(x_np)
-
-        f = self._namespace.asarray
+            return f(x_np)
         return f(obj, dtype=dtype, device=device, copy=copy)
 
     def may_share_memory(self, a, b):
