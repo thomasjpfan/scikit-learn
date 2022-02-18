@@ -1136,7 +1136,7 @@ def column_or_1d(y, *, warn=False):
     y = xp.asarray(y)
     shape = y.shape
     if len(shape) == 1:
-        return xp.reshape(y, -1)
+        return xp.asarray(xp.reshape(y, -1), order="C")
     if len(shape) == 2 and shape[1] == 1:
         if warn:
             warnings.warn(
@@ -1146,7 +1146,7 @@ def column_or_1d(y, *, warn=False):
                 DataConversionWarning,
                 stacklevel=2,
             )
-        return xp.reshape(y, -1)
+        return xp.asarray(xp.reshape(y, -1), order="C")
 
     raise ValueError(
         "y should be a 1d array, got an array of shape {} instead.".format(shape)

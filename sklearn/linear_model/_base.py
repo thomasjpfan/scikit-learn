@@ -204,7 +204,6 @@ def make_dataset(X, y, sample_weight, random_state=None):
         dataset = CSRData(X.data, X.indptr, X.indices, y, sample_weight, seed=seed)
         intercept_decay = SPARSE_INTERCEPT_DECAY
     else:
-        X = np.ascontiguousarray(X)
         dataset = ArrayData(X, y, sample_weight, seed=seed)
         intercept_decay = 1.0
 
@@ -424,16 +423,19 @@ class LinearClassifierMixin(ClassifierMixin):
         y_pred : ndarray of shape (n_samples,)
             Vector containing the class labels for each sample.
         """
-        xp, _ = get_namespace(X)
+        xp, is_array_api = get_namespace(X)
         scores = self.decision_function(X)
         if len(scores.shape) == 1:
             indices = xp.astype(scores > 0, int)
         else:
-            indices = scores.argmax(axis=1)
-        # Should really use `np.take`
-        # return np.take(self.classes_, indices, axis=0)
-        # assuming classes are [0, 1, 2, ....]
-        return indices
+            indices = xp.argmax(scores, axis=1)
+
+        if is_array_api:
+            return indices
+
+        # When array_api supports `take` we can use this directly
+        # https://github.com/data-apis/array-api/issues/177
+        return xp.take(self.classes_, indices, axis=0)
 
     def _predict_proba_lr(self, X):
         """Probability estimation for OvR logistic regression.
