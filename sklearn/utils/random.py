@@ -15,7 +15,7 @@ def _random_choice_csc(n_samples, classes, class_probability=None, random_state=
     """Generate a sparse random matrix given column class distributions
 
     Parameters
-    ----------
+----------
     n_samples : int,
         Number of samples to draw in each column.
 

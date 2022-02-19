@@ -113,7 +113,7 @@ def set_config(
 
     array_api_dispatch : bool, default=None
         Use Array API dispatching when inputs follow the Array API standard.
-        Default is False
+        Default is False.
 
         .. versionadded:: 1.1
 
@@ -210,7 +210,7 @@ def config_context(
 
     array_api_dispatch : bool, default=None
         Use Array API dispatching when inputs follow the Array API standard.
-        Default is False
+        Default is False.
 
         .. versionadded:: 1.1
 

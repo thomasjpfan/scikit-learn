@@ -68,8 +68,20 @@ class _NumPyApiWrapper:
         return numpy.concatenate(arrays, axis=axis)
 
 
-def get_namespace(*xs):
-    # `xs` contains one or more arrays, or possibly Python scalars (accepting
+def get_namespace(*arrays):
+    """Get namespace of arrays.
+
+    Parameters
+    ----------
+    *arrays : array objects
+        Array objects.
+
+    Returns
+    -------
+    namespace : module
+        Namespace shared by array objects.
+    """
+    # `arrays` contains one or more arrays, or possibly Python scalars (accepting
     # those is a matter of taste, but doesn't seem unreasonable).
     # Returns a tuple: (array_namespace, is_array_api)
 
@@ -78,7 +90,7 @@ def get_namespace(*xs):
 
     namespaces = {
         x.__array_namespace__() if hasattr(x, "__array_namespace__") else None
-        for x in xs
+        for x in arrays
         if not isinstance(x, (bool, int, float, complex))
     }
 
