@@ -9,11 +9,11 @@ _global_config = {
     "working_memory": int(os.environ.get("SKLEARN_WORKING_MEMORY", 1024)),
     "print_changed_only": True,
     "display": "text",
-    "array_api_dispatch": False,
     "pairwise_dist_chunk_size": int(
         os.environ.get("SKLEARN_PAIRWISE_DIST_CHUNK_SIZE", 256)
     ),
     "enable_cython_pairwise_dist": True,
+    "array_api_dispatch": False,
 }
 _threadlocal = threading.local()
 
@@ -49,9 +49,9 @@ def set_config(
     working_memory=None,
     print_changed_only=None,
     display=None,
-    array_api_dispatch=None,
     pairwise_dist_chunk_size=None,
     enable_cython_pairwise_dist=None,
+    array_api_dispatch=None,
 ):
     """Set global scikit-learn configuration
 
@@ -111,6 +111,12 @@ def set_config(
 
         .. versionadded:: 1.1
 
+    array_api_dispatch : bool, default=None
+        Use Array API dispatching when inputs follow the Array API standard.
+        Default is False
+
+        .. versionadded:: 1.1
+
     See Also
     --------
     config_context : Context manager for global scikit-learn configuration.
@@ -126,12 +132,12 @@ def set_config(
         local_config["print_changed_only"] = print_changed_only
     if display is not None:
         local_config["display"] = display
-    if array_api_dispatch is not None:
-        local_config["array_api_dispatch"] = array_api_dispatch
     if pairwise_dist_chunk_size is not None:
         local_config["pairwise_dist_chunk_size"] = pairwise_dist_chunk_size
     if enable_cython_pairwise_dist is not None:
         local_config["enable_cython_pairwise_dist"] = enable_cython_pairwise_dist
+    if array_api_dispatch is not None:
+        local_config["array_api_dispatch"] = array_api_dispatch
 
 
 @contextmanager
@@ -141,9 +147,9 @@ def config_context(
     working_memory=None,
     print_changed_only=None,
     display=None,
-    array_api_dispatch=None,
     pairwise_dist_chunk_size=None,
     enable_cython_pairwise_dist=None,
+    array_api_dispatch=None,
 ):
     """Context manager for global scikit-learn configuration.
 
@@ -202,6 +208,12 @@ def config_context(
 
         .. versionadded:: 1.1
 
+    array_api_dispatch : bool, default=None
+        Use Array API dispatching when inputs follow the Array API standard.
+        Default is False
+
+        .. versionadded:: 1.1
+
     Yields
     ------
     None.
@@ -235,9 +247,9 @@ def config_context(
         working_memory=working_memory,
         print_changed_only=print_changed_only,
         display=display,
-        array_api_dispatch=array_api_dispatch,
         pairwise_dist_chunk_size=pairwise_dist_chunk_size,
         enable_cython_pairwise_dist=enable_cython_pairwise_dist,
+        array_api_dispatch=array_api_dispatch,
     )
 
     try:
