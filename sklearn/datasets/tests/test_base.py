@@ -137,7 +137,7 @@ def test_load_files_allowed_extensions(tmp_path, allowed_extensions):
     paths = [d / f for f in files]
     for p in paths:
         p.write_text("hello world")
-    res = load_files(tmp_path, allowed_extensions=allowed_extensions)
+    res = load_files(str(tmp_path), allowed_extensions=allowed_extensions)
     assert set([str(p) for p in paths if p.suffix in allowed_extensions]) == set(
         res.filenames
     )
