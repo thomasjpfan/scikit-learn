@@ -147,6 +147,7 @@ jobs:
         BLAS: 'mkl'
         COVERAGE: 'true'
         SHOW_SHORT_SUMMARY: 'true'
+        CREATE_ISSUE_ON_TRACKER: 'true'
 
 # # Check compilation with Ubuntu bionic 18.04 LTS and scipy from conda-forge
 # - template: build_tools/azure/posix.yml
