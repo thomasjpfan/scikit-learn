@@ -2,6 +2,7 @@ on:
   workflow_call:
     secrets:
       BOT_GITHUB_TOKEN:
+        required: true
         type: string
 
 jobs:
@@ -15,11 +16,6 @@ jobs:
       - name: Update tracking issue on GitHub
         run: |
           set -ex
-          if [[${{ secrets.BOT_GITHUB_TOKEN }} == "" ]]; then
-            echo "GitHub Token is not set. Issue tracker will not be updated."
-            exit
-          fi
-
           if [[ ${{ job.status }} == "success" ]]; then
             TESTS_PASSED=true
           else
