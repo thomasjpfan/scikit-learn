@@ -1,5 +1,8 @@
 on:
   workflow_call:
+    inputs:
+      job_status:
+        required: true
     secrets:
       BOT_GITHUB_TOKEN:
         required: true
