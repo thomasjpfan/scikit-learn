@@ -18,9 +18,14 @@ jobs:
           pip install check-manifest scipy cython
       - run: |
           check-manifest -v
-      - name: Create or close issue or GitHub
+      - name: Update tracking issue on GitHub
         run: |
           set -ex
+          if [[ $BOT_GITHUB_TOKEN == "" ]]; then
+            echo "GitHub Token is not set. Issue tracker will not be updated."
+            exit
+          fi
+
           if [[ ${{ job.status }} == "success" ]]; then
             TESTS_PASSED=true
           else
@@ -32,7 +37,7 @@ jobs:
             $BOT_GITHUB_TOKEN \
             "$GITHUB_WORKFLOW" \
             "$GITHUB_REPOSITORY" \
-            https://github.com/$GITHUB_REPOSITORY/runs/$GITHUB_RUN_ID?check_suite_focus=true \
+            https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID \
             --tests-passed $TESTS_PASSED
         if: ${{ always() }}
         env:
