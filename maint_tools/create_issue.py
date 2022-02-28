@@ -31,10 +31,9 @@ parser.add_argument("--junit-file", help="JUnit file to determine if tests passe
 parser.add_argument(
     "--tests-passed",
     help=(
-        "If --tests-passed is True, then the original issue is closed if the issue "
-        "exists. If tests-passed is False, then the an issue is updated or created."
+        "If --tests-passed is true, then the original issue is closed if the issue "
+        "exists. If tests-passed is false, then the an issue is updated or created."
     ),
-    type=bool,
 )
 
 args = parser.parse_args()
@@ -96,7 +95,7 @@ def close_issue_if_opened():
 
 
 if args.tests_passed is not None:
-    if args.tests_passed:
+    if args.tests_passed.lower() == "true":
         close_issue_if_opened()
     else:
         create_or_update_issue()
