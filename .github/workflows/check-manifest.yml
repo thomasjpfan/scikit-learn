@@ -25,6 +25,6 @@ jobs:
 
   update_tracking_issue:
     if: github.repository == 'scikit-learn/scikit-learn'
-    uses: update_tracking_issue.yml@add_upstream_bot_to_check_manifest_v2
+    uses: .github/workflows/update_tracking_issue.yml@add_upstream_bot_to_check_manifest_v2
     with:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
