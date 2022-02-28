@@ -3,6 +3,7 @@ on:
     inputs:
       job_status:
         required: true
+        type: string
     secrets:
       BOT_GITHUB_TOKEN:
         required: true
