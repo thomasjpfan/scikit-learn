@@ -1,9 +1,14 @@
 name: "Check Manifest"
 
-on: [push]
+on:
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
-  check-manifest:
+  check:
+    # Don't run on forks
+    if: github.repository == 'scikit-learn/scikit-learn'
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

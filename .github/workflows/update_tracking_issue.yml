@@ -1,3 +1,16 @@
+# For workflows to use this workflow include the following:
+#
+# update-tracker:
+#   uses: ./.github/workflows/update_tracking_issue.yml
+#   if: ${{ always() }}
+#   needs: [JOB_NAME]
+#   with:
+#     job_status: ${{ needs.JOB_NAME.result }}
+#   secrets:
+#     BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
+# Where JOB_NAME is contains the status of the job you are interested in
+
+name: "Update tracking issue"
 on:
   workflow_call:
     inputs:
