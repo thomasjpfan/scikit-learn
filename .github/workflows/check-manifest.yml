@@ -1,13 +1,9 @@
 name: "Check Manifest"
 
-on:
-  schedule:
-    - cron: '0 0 * * *'
+on: [push]
 
 jobs:
   check:
-    # Don't run on forks
-    if: github.repository == 'scikit-learn/scikit-learn'
 
     runs-on: ubuntu-latest
     steps:
@@ -24,7 +20,6 @@ jobs:
           check-manifest -v
 
   update_tracking_issue:
-    if: github.repository == 'scikit-learn/scikit-learn'
     uses: .github/workflows/update_tracking_issue.yml@add_upstream_bot_to_check_manifest_v2
     with:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
