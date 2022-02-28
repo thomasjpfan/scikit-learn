@@ -18,8 +18,15 @@ jobs:
           pip install check-manifest scipy cython
       - run: |
           check-manifest -v
-      - name: Create issue if failed
+      - name: Create or close issue or GitHub
         run: |
+          set -ex
+          if [[ ${{ job.status }} == "success" ]]; then
+            TESTS_PASSED=true
+          else
+            TESTS_PASSED=false
+          fi
+
           pip install defusedxml PyGithub
           python maint_tools/create_issue.py \
             ${{ secrets.GITHUB_TOKEN }} \
@@ -28,5 +35,3 @@ jobs:
             https://github.com/$GITHUB_REPOSITORY/runs/$GITHUB_RUN_ID?check_suite_focus=true \
             --tests-passed $TESTS_PASSED
         if: ${{ always() }}
-        env:
-          TESTS_PASSED: ${{ success() }}
