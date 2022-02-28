@@ -3,8 +3,7 @@ name: "Check Manifest"
 on: [push]
 
 jobs:
-  check:
-
+  check-manifest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -19,7 +18,7 @@ jobs:
       - run: |
           check-manifest -v
 
-  update_tracking_issue:
+  update-tracker:
     uses: ./.github/workflows/update_tracking_issue.yml
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
