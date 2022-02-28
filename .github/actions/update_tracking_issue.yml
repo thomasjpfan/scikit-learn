@@ -1,0 +1,35 @@
+on:
+  workflow_call:
+    secrets:
+      BOT_GITHUB_TOKEN:
+        type: string
+
+jobs:
+  update_tracking_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: Update tracking issue on GitHub
+        run: |
+          set -ex
+          if [[${{ secrets.BOT_GITHUB_TOKEN }} == "" ]]; then
+            echo "GitHub Token is not set. Issue tracker will not be updated."
+            exit
+          fi
+
+          if [[ ${{ job.status }} == "success" ]]; then
+            TESTS_PASSED=true
+          else
+            TESTS_PASSED=false
+          fi
+
+          pip install defusedxml PyGithub
+          python maint_tools/update_tracking_issue.py \
+            $BOT_GITHUB_TOKEN \
+            "$GITHUB_WORKFLOW" \
+            "$GITHUB_REPOSITORY" \
+            https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID \
+            --tests-passed $TESTS_PASSED
