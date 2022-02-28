@@ -20,6 +20,6 @@ jobs:
           check-manifest -v
 
   update_tracking_issue:
-    uses: .github/workflows/update_tracking_issue.yml@add_upstream_bot_to_check_manifest_v2
+    uses: ./.github/workflows/update_tracking_issue.yml@add_upstream_bot_to_check_manifest_v2
     with:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
