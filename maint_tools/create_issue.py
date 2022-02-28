@@ -101,8 +101,10 @@ if args.tests_passed is not None:
     else:
         create_or_update_issue()
 
-if args.junit_file is None or not Path(args.junit_file).exists():
-    create_or_update_issue()
+junit_path = Path(args.junit_file)
+if not junit_path.exists():
+    body = "Unable to find junit file. Please see link for details."
+    create_or_update_issue(body)
 
 # Find failures in junit file
 tree = ET.parse(args.junit_file)
