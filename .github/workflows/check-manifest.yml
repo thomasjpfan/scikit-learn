@@ -25,6 +25,6 @@ jobs:
 
   update_tracking_issue:
     if: github.repository == 'scikit-learn/scikit-learn'
-    uses: .github/actions/update_tracking_issue.yml@main
+    uses: update_tracking_issue.yml
     with:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
