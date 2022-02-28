@@ -18,7 +18,7 @@ jobs:
       - name: Update tracking issue on GitHub
         run: |
           set -ex
-          if [[ ${{ job.status }} == "success" ]]; then
+          if [[ ${{ inputs.job_status }} == "success" ]]; then
             TESTS_PASSED=true
           else
             TESTS_PASSED=false

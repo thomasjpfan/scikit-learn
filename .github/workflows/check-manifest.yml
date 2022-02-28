@@ -23,6 +23,6 @@ jobs:
     if: ${{ always() }}
     needs: [check-manifest]
     with:
-      job_status: ${{ needs.check-manifest.status }}
+      job_status: ${{ needs.check-manifest.result }}
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
