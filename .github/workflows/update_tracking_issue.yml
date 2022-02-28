@@ -3,7 +3,6 @@ on:
     secrets:
       BOT_GITHUB_TOKEN:
         required: true
-        type: string
 
 jobs:
   update_tracking_issue:
