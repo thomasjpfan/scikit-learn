@@ -22,3 +22,27 @@ jobs:
           pip install check-manifest scipy cython
       - run: |
           check-manifest -v
+      - name: Update tracking issue on GitHub
+        run: |
+          set -ex
+          if [[ $BOT_GITHUB_TOKEN == "" ]]; then
+            echo "GitHub Token is not set. Issue tracker will not be updated."
+            exit
+          fi
+
+          if [[ ${{ job.status }} == "success" ]]; then
+            TESTS_PASSED=true
+          else
+            TESTS_PASSED=false
+          fi
+
+          pip install defusedxml PyGithub
+          python maint_tools/create_issue.py \
+            $BOT_GITHUB_TOKEN \
+            "$GITHUB_WORKFLOW" \
+            "$GITHUB_REPOSITORY" \
+            https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID \
+            --tests-passed $TESTS_PASSED
+        if: ${{ always() }}
+        env:
+          BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
