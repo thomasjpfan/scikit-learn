@@ -233,7 +233,6 @@ def assert_tree_equal(d, s, message):
     assert_array_almost_equal(
         d.value[external], s.value[external], err_msg=message + ": inequal value"
     )
-    assert False
 
 
 def test_classification_toy():
