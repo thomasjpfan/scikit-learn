@@ -91,10 +91,10 @@ cdef class StdVectorSentinelDTYPE(StdVectorSentinel):
     cdef vector[DTYPE_t] vec
 
     @staticmethod
-    cdef StdVectorSentinel create_for(vector[DTYPE_t] * vec_ptr):
+    cdef StdVectorSentinel create_for(vector[DTYPE_t]& vec_ptr):
         # This initializes the object directly without calling __init__
         cdef StdVectorSentinelDTYPE sentinel = StdVectorSentinelDTYPE.__new__(StdVectorSentinelDTYPE)
-        sentinel.vec.swap(deref(vec_ptr))
+        sentinel.vec.swap(vec_ptr)
         return sentinel
 
 
@@ -102,10 +102,10 @@ cdef class StdVectorSentinelITYPE(StdVectorSentinel):
     cdef vector[ITYPE_t] vec
 
     @staticmethod
-    cdef StdVectorSentinel create_for(vector[ITYPE_t] * vec_ptr):
+    cdef StdVectorSentinel create_for(vector[ITYPE_t]& vec_ptr):
         # This initializes the object directly without calling __init__
         cdef StdVectorSentinelITYPE sentinel = StdVectorSentinelITYPE.__new__(StdVectorSentinelITYPE)
-        sentinel.vec.swap(deref(vec_ptr))
+        sentinel.vec.swap(vec_ptr)
         return sentinel
 
 
@@ -118,15 +118,15 @@ cdef np.ndarray vector_to_nd_array(vector_DITYPE_t * vect_ptr):
     """
     typenum = DTYPECODE if vector_DITYPE_t is vector[DTYPE_t] else ITYPECODE
     cdef:
-        np.npy_intp size = deref(vect_ptr).size()
-        np.ndarray arr = np.PyArray_SimpleNewFromData(1, &size, typenum,
-                                                      deref(vect_ptr).data())
+        vector_DITYPE_t vect = deref(vect_ptr)
+        np.npy_intp size = vect.size()
+        np.ndarray arr = np.PyArray_SimpleNewFromData(1, &size, typenum, vect.data())
         StdVectorSentinel sentinel
 
     if vector_DITYPE_t is vector[DTYPE_t]:
-        sentinel = StdVectorSentinelDTYPE.create_for(vect_ptr)
+        sentinel = StdVectorSentinelDTYPE.create_for(vect)
     else:
-        sentinel = StdVectorSentinelITYPE.create_for(vect_ptr)
+        sentinel = StdVectorSentinelITYPE.create_for(vect)
 
     # Makes the numpy array responsible of the life-cycle of its buffer.
     # A reference to the StdVectorSentinel will be stolen by the call bellow,
@@ -138,16 +138,17 @@ cdef np.ndarray vector_to_nd_array(vector_DITYPE_t * vect_ptr):
 
 
 cdef np.ndarray[object, ndim=1] coerce_vectors_to_nd_arrays(
-    shared_ptr[vector_vector_DITYPE_t] vecs
+    shared_ptr[vector_vector_DITYPE_t] vects_ptr
 ):
     """Coerce a std::vector of std::vector to a ndarray of ndarray."""
     cdef:
-        ITYPE_t n = deref(vecs).size()
+        vector_vector_DITYPE_t vects = deref(vects_ptr)
+        ITYPE_t n = vects.size()
         np.ndarray[object, ndim=1] nd_arrays_of_nd_arrays = np.empty(n,
                                                                      dtype=np.ndarray)
 
     for i in range(n):
-        nd_arrays_of_nd_arrays[i] = vector_to_nd_array(&(deref(vecs)[i]))
+        nd_arrays_of_nd_arrays[i] = vector_to_nd_array(&(vects[i]))
 
     return nd_arrays_of_nd_arrays
 
