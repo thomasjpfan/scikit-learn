@@ -30,7 +30,6 @@ from numpy.testing import assert_array_equal
 from sklearn.utils import IS_PYPY
 from sklearn.utils._testing import (
     assert_almost_equal,
-    fails_if_pypy,
     assert_allclose_dense_sparse,
     skip_if_32bit,
 )
@@ -644,7 +643,6 @@ def test_tfidf_vectorizer_setters():
     assert tv._tfidf.sublinear_tf == tv.sublinear_tf
 
 
-@fails_if_pypy
 def test_hashing_vectorizer():
     v = HashingVectorizer()
     X = v.transform(ALL_FOOD_DOCS)
@@ -903,7 +901,6 @@ def test_count_binary_occurrences(get_names):
     assert X_sparse.dtype == np.float32
 
 
-@fails_if_pypy
 def test_hashed_binary_occurrences():
     # by default multiple occurrences are counted as longs
     test_data = ["aaabc", "abbde"]
@@ -1050,7 +1047,6 @@ def test_vectorizer_pipeline_cross_validation():
     assert_array_equal(cv_scores, [1.0, 1.0, 1.0])
 
 
-@fails_if_pypy
 def test_vectorizer_unicode():
     # tests that the count vectorizer works with cyrillic.
     document = (
@@ -1267,7 +1263,6 @@ def test_non_unique_vocab():
         vect.fit([])
 
 
-@fails_if_pypy
 def test_hashingvectorizer_nan_in_docs():
     # np.nan can appear when using pandas to load text fields from a csv file
     # with missing values.
@@ -1404,7 +1399,6 @@ def _check_stop_words_consistency(estimator):
     return estimator._check_stop_words_consistency(stop_words, preprocess, tokenize)
 
 
-@fails_if_pypy
 def test_vectorizer_stop_words_inconsistent():
     lstr = r"\['and', 'll', 've'\]"
     message = (
@@ -1457,7 +1451,6 @@ def test_countvectorizer_sort_features_64bit_sparse_indices():
     assert INDICES_DTYPE == Xs.indices.dtype
 
 
-@fails_if_pypy
 @pytest.mark.parametrize(
     "Estimator", [CountVectorizer, TfidfVectorizer, HashingVectorizer]
 )
@@ -1509,7 +1502,7 @@ def test_callable_analyzer_error(Estimator, input_type, err_type, err_msg):
     [
         CountVectorizer,
         TfidfVectorizer,
-        pytest.param(HashingVectorizer, marks=fails_if_pypy),
+        HashingVectorizer,
     ],
 )
 @pytest.mark.parametrize(
@@ -1680,7 +1673,6 @@ def test_get_feature_names_deprecated():
         cv.get_feature_names()
 
 
-@fails_if_pypy
 def test_nonnegative_hashing_vectorizer_result_indices():
     # add test for pr 19035
     hashing = HashingVectorizer(n_features=1000000, ngram_range=(2, 3))

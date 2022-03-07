@@ -3,9 +3,6 @@ from numpy.testing import assert_array_equal
 import pytest
 
 from sklearn.feature_extraction import FeatureHasher
-from sklearn.utils._testing import fails_if_pypy
-
-pytestmark = fails_if_pypy
 
 
 def test_feature_hasher_dicts():
