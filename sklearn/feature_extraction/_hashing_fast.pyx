@@ -8,9 +8,10 @@ cimport cython
 from libc.stdlib cimport abs
 cimport numpy as np
 import numpy as np
+from libcpp.utility cimport move
 
 from ..utils.murmurhash cimport murmurhash3_bytes_s32
-from ..utils._typedefs cimport FTYPE_t, ITYPE_t, LONGLONGTYPE_t
+from ..utils._typedefs cimport FTYPE_t, ITYPE_t, INT64_t, INT32_t
 from ..utils._vector_sentinel cimport vector_to_nd_array
 
 np.import_array()
@@ -33,7 +34,7 @@ def transform(raw_X, Py_ssize_t n_features, dtype,
     cdef double value
 
     cdef vector[ITYPE_t] indices
-    cdef vector[LONGLONGTYPE_t] indptr
+    cdef vector[INT64_t] indptr
     indptr.push_back(0)
 
     # Since Python array does not understand Numpy dtypes, we grow the indices
@@ -82,13 +83,21 @@ def transform(raw_X, Py_ssize_t n_features, dtype,
 
         indptr.push_back(size)
 
-    indices_a = vector_to_nd_array(&indices)
-    indptr_a = vector_to_nd_array(&indptr)
+    cdef:
+        vector[INT64_t] indicies_
+        vector[INT32_t] indptr_
 
     if indptr[len(indptr) - 1] > np.iinfo(np.int32).max:  # = 2**31 - 1
         # both indices and indptr have the same dtype in CSR arrays
-        indices_a = indices_a.astype(np.int64, copy=False)
+        indicies_(move(indices))
+
+        indices_a = vector_to_nd_array(&indicies_)
+        indptr_a = vector_to_nd_array(&indptr)
     else:
-        indptr_a = indptr_a.astype(np.int32, copy=False)
+        indptr_(move(indptr))
+
+        indices_a = vector_to_nd_array(&indices)
+        indptr_a = vector_to_nd_array(&indptr_)
+
 
     return (indices_a, indptr_a, values[:size])
