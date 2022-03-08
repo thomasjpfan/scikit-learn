@@ -3,7 +3,7 @@ name: "Check Manifest"
 on: [push]
 
 jobs:
-  check:
+  check-manifest:
     # Don't run on forks
     runs-on: ubuntu-latest
     steps:
@@ -22,8 +22,8 @@ jobs:
   update-tracker:
     uses: ./.github/workflows/update_tracking_issue.yml
     if: ${{ always() }}
-    needs: [check]
+    needs: [check-manifest]
     with:
-      job_status: ${{ needs.check.result }}
+      job_status: ${{ needs.check-manifest.result }}
     secrets:
       BOT_GITHUB_TOKEN: ${{ secrets.BOT_GITHUB_TOKEN }}
