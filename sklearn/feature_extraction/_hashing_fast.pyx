@@ -11,7 +11,7 @@ import numpy as np
 from libcpp.utility cimport move
 
 from ..utils.murmurhash cimport murmurhash3_bytes_s32
-from ..utils._typedefs cimport FTYPE_t, ITYPE_t, INT64_t, INT32_t
+from ..utils._typedefs cimport INT64_t
 from ..utils._vector_sentinel cimport vector_to_nd_array
 
 np.import_array()
@@ -33,7 +33,7 @@ def transform(raw_X, Py_ssize_t n_features, dtype,
     cdef np.int32_t h
     cdef double value
 
-    cdef vector[ITYPE_t] indices
+    cdef vector[INT64_t] indices
     cdef vector[INT64_t] indptr
     indptr.push_back(0)
 
@@ -83,21 +83,7 @@ def transform(raw_X, Py_ssize_t n_features, dtype,
 
         indptr.push_back(size)
 
-    cdef:
-        vector[INT64_t] indicies_
-        vector[INT32_t] indptr_
-
-    if indptr[len(indptr) - 1] > np.iinfo(np.int32).max:  # = 2**31 - 1
-        # both indices and indptr have the same dtype in CSR arrays
-        indicies_(move(indices))
-
-        indices_a = vector_to_nd_array(&indicies_)
-        indptr_a = vector_to_nd_array(&indptr)
-    else:
-        indptr_(move(indptr))
-
-        indices_a = vector_to_nd_array(&indices)
-        indptr_a = vector_to_nd_array(&indptr_)
-
+    indices_a = vector_to_nd_array(&indices)
+    indptr_a = vector_to_nd_array(&indptr)
 
     return (indices_a, indptr_a, values[:size])
