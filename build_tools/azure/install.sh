@@ -63,6 +63,7 @@ python_environment_install() {
     if [[ -z "$CONDA_ENV" ]]; then
         conda env create -n $VIRTUALENV -f $CONDA_ENV
         source activate $VIRTUALENV
+
     elif [[ "$DISTRIB" == "conda" || "$DISTRIB" == *"mamba"* ]]; then
 
         if [[ "$CONDA_CHANNEL" != "" ]]; then

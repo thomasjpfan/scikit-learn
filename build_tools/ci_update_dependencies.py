@@ -74,8 +74,8 @@ with tempfile.TemporaryDirectory() as tmp_file:
         lock_file_yaml = yaml.load(lock_file_contents)
 
 
+# Create a environment.yml with pinned versions
 name_to_package = {package["name"]: package for package in lock_file_yaml["package"]}
-
 dependencies = env_yaml["dependencies"]
 pip_dependencies = None
 for i, dependency in enumerate(dependencies):
