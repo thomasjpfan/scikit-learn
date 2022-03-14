@@ -194,6 +194,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         # create unique pointer to split, which is passed
         # around the methods of TreeBuilder and Tree
         cdef shared_ptr[SplitRecord] split_ptr = make_shared[SplitRecord](split)
+        split_ptr.get()[0] = split
 
         cdef double impurity = INFINITY
         cdef SIZE_t n_constant_features
@@ -243,9 +244,19 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
                 # impurity == 0 with tolerance due to rounding errors
                 is_leaf = is_leaf or impurity <= EPSILON
 
+                with gil:
+                    print('Inside builder...')
+
                 if not is_leaf:
+                    with gil:
+                        print('Trying to node split...')
+
                     splitter.node_split(impurity, &split,
-                                    &n_constant_features)
+                                       &n_constant_features)
+
+                    with gil:
+                        print('node split!')
+                        print(split.feature, split.pos, split.improvement)
 
                     # If EPSILON=0 in the below comparison, float precision
                     # issues stop splitting, producing trees that are
@@ -253,11 +264,14 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
                     is_leaf = (is_leaf or split.pos >= end or
                                (split.improvement + EPSILON <
                                 min_impurity_decrease))
-
+                with gil:
+                    print('Now trying to add node with tree', tree)
+                    
                 node_id = tree._add_node(parent, is_left, is_leaf, &split,
                                          impurity, n_node_samples,
                                          weighted_n_node_samples)
-
+                with gil:
+                    print('Finished adding node...')
                 if node_id == SIZE_MAX:
                     rc = -1
                     break

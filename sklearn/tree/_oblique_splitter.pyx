@@ -249,8 +249,13 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         # and also set oblique data
         # cdef ObliqueSplitRecord* oblique_split = (<ObliqueSplitRecord*>(split_ptr))#[0]
         # cdef SplitRecord* split_record = split_ptr.get()
-
-        cdef ObliqueSplitRecord* oblique_split = (<ObliqueSplitRecord*>(split))#[0]
+        with gil:
+            print('At the beginning of oblique node split...')
+        cdef ObliqueSplitRecord oblique_split = (<ObliqueSplitRecord*>(split))[0]
+        oblique_split.split_record = split[0]
+        # cdef ObliqueSplitRecord* oblique_split = <ObliqueSplitRecord*>(split)#[0]
+        with gil:
+            print('Issuer here...')
         # cdef SplitRecord* split_record 
         # oblique_split.split_record = split_record
         
@@ -274,6 +279,9 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         # keep track of split record for current node and the best split
         # found among the sampled projection vectors
         cdef ObliqueSplitRecord best, current
+        cdef SplitRecord best_split, current_split
+        best.split_record = best_split
+        current.split_record = current_split
 
         cdef double current_proxy_improvement = -INFINITY
         cdef double best_proxy_improvement = -INFINITY
@@ -282,6 +290,8 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         cdef SIZE_t partition_end
         cdef DTYPE_t temp_d
 
+        with gil:
+            print('Try to initialize.')
         # instantiate the split records
         _init_split(&best, end)
 
@@ -291,6 +301,9 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         # cdef DTYPE_t** X_proj = self.X_proj
         cdef vector[DTYPE_t]* proj_vec_weights
         cdef vector[SIZE_t]* proj_vec_indices
+
+        with gil:
+            print('about to sample...')
 
         # For every vector in the projection matrix
         # TODO: should be while, since projection matrix could be empty...
@@ -376,7 +389,19 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
                 impurity, best.split_record.impurity_left, best.split_record.impurity_right)
 
         # Return values
-        oblique_split[0] = best
+        oblique_split.proj_vec_indices = best.proj_vec_indices
+        oblique_split.proj_vec_weights = best.proj_vec_weights
+        # split[0] = best.split_record[0]
+        oblique_split.split_record = best.split_record
+        # split = &oblique_split.split_record
+        split[0] = oblique_split.split_record
+        with gil:
+            print('Inside oblique node split')
+            print(best.split_record.feature, best.split_record.pos, best.split_record.improvement)
+            print(oblique_split.split_record.feature, oblique_split.split_record.pos, oblique_split.split_record.improvement)
+            print(deref(best.proj_vec_weights))
+            print(deref(best.proj_vec_indices))
+        # split[0] = best.split_record[0]
         # split_ptr = make_shared[SplitRecord](best.split_record)#.get()
         # n_constant_features[0] = n_total_constants
         return 0

@@ -29,7 +29,7 @@ from libcpp.memory cimport shared_ptr, make_shared
 cdef struct ObliqueSplitRecord:
     # Pointer for a normal split record see _splitter.pxd
     # shared_ptr[SplitRecord] split_record
-    SplitRecord* split_record
+    SplitRecord split_record
 
     # the following are only used for oblique trees
     vector[DTYPE_t]* proj_vec_weights   # weights of the vector

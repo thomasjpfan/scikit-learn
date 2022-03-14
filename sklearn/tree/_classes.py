@@ -434,6 +434,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
                 np.array([1] * self.n_outputs_, dtype=np.intp),
                 self.n_outputs_,
             )
+        print('Instantiated tree...')
 
         # Use BestFirst if max_leaf_nodes given; use DepthFirst otherwise
         if max_leaf_nodes < 0:
@@ -455,7 +456,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
                 max_leaf_nodes,
                 self.min_impurity_decrease,
             )
-
+        print('Instantiated builder..')
         builder.build(self.tree_, X, y, sample_weight)
 
         if self.n_outputs_ == 1 and is_classifier(self):
