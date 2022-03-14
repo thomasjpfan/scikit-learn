@@ -211,9 +211,10 @@ cdef class ObliqueTree(Tree):
         self.capacity = capacity
         return 0
 
-    cdef int _set_node_values(self, SplitRecord split_node, Node *node) nogil except -1:
+    cdef int _set_node_values(self, SplitRecord *split_node, Node *node) nogil except -1:
         """Set node data.
         """
+        cdef ObliqueSplitRecord oblique_split_node = (<ObliqueSplitRecord*>(split_node))[0]
         cdef SIZE_t node_id = self.node_count
 
         node.feature = split_node.feature

@@ -13,16 +13,16 @@
 import numpy as np
 cimport numpy as np
 
-from libcpp.vector cimport vector
 ctypedef np.npy_float32 DTYPE_t          # Type of X
 ctypedef np.npy_float64 DOUBLE_t         # Type of y, sample_weight
 ctypedef np.npy_intp SIZE_t              # Type for indices and counters
 ctypedef np.npy_int32 INT32_t            # Signed 32 bit integer
 ctypedef np.npy_uint32 UINT32_t          # Unsigned 32 bit integer
 
-from ._splitter cimport Splitter
-from ._split_record cimport SplitRecord
+from libcpp.memory cimport shared_ptr, make_shared
 
+from ._splitter cimport Splitter
+from ._splitter cimport SplitRecord
 
 cdef struct Node:
     # Base storage structure for the nodes in a Tree object
@@ -58,14 +58,12 @@ cdef class Tree:
 
     # Methods
     cdef SIZE_t _add_node(self, SIZE_t parent, bint is_left, bint is_leaf,
-                          SplitRecord split_node,
-                          double impurity,
-                          SIZE_t n_node_samples,
+                          SplitRecord* split_node,
+                          double impurity, SIZE_t n_node_samples,
                           double weighted_n_node_samples) nogil except -1
-    cdef int _set_node_values(self, SplitRecord split_node,
+    cdef int _set_node_values(self, SplitRecord *split_node,
                               Node *node)  nogil except -1
-    cdef DTYPE_t _compute_feature(self, const DTYPE_t[:] X_ndarray,
-                            Node *node, SIZE_t node_id) nogil
+    cdef DTYPE_t _compute_feature(self, const DTYPE_t[:] X_ndarray, Node* node, SIZE_t node_id) nogil
     cdef int _resize(self, SIZE_t capacity) nogil except -1
     cdef int _resize_c(self, SIZE_t capacity=*) nogil except -1
 

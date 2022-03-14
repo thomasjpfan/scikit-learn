@@ -21,8 +21,19 @@ from ._tree cimport UINT32_t         # Unsigned 32 bit integer
 
 from ._splitter cimport Splitter
 from ._splitter cimport sort
-from ._split_record cimport SplitRecord
+from ._splitter cimport SplitRecord
+
 from libcpp.vector cimport vector
+from libcpp.memory cimport shared_ptr, make_shared
+
+cdef struct ObliqueSplitRecord:
+    # Pointer for a normal split record see _splitter.pxd
+    # shared_ptr[SplitRecord] split_record
+    SplitRecord* split_record
+
+    # the following are only used for oblique trees
+    vector[DTYPE_t]* proj_vec_weights   # weights of the vector
+    vector[SIZE_t]* proj_vec_indices    # indices of the features
 
 
 cdef class ObliqueSplitter(Splitter):
@@ -50,5 +61,6 @@ cdef class ObliqueSplitter(Splitter):
                         
     cdef int node_split(self,
                         double impurity,   # Impurity of the node
+                        # shared_ptr[SplitRecord] split_ptr,
                         SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1
