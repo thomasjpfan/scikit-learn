@@ -1,0 +1,20 @@
+channels:
+  - conda-forge
+dependencies:
+  - python=3.8
+  - numpy  # latest
+  - blas[build=openblas]
+  - scipy  # latest
+  - cython  # latest
+  - joblib  # latest
+  - threadpoolctl  # latest
+  - pandas  # latest
+  - matplotlib  # latest
+  - pyamg  # latest
+  - pillow  # latest
+  - pytest=6.2.5
+  - pytest-xdist  # latest
+  - codecov  # latest
+  - pytest-cov  # latest
+  - coverage=6.2
+  - ccache
