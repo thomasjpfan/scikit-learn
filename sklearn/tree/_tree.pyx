@@ -23,6 +23,8 @@ from libcpp.algorithm cimport pop_heap
 from libcpp.algorithm cimport push_heap
 from libcpp cimport bool
 from libcpp.vector cimport vector
+from cython.operator cimport dereference as deref
+from libc.stdlib cimport malloc, free
 
 import struct
 
@@ -88,7 +90,7 @@ NODE_DTYPE = np.asarray(<Node[:1]>(&dummy)).dtype
 cdef class TreeBuilder:
     """Interface for different tree building strategies."""
 
-    cpdef build(self, Tree tree, object X, np.ndarray y, 
+    cpdef build(self, Tree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None):
         """Build a decision tree from the training set (X, y)."""
         pass
@@ -147,7 +149,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         self.max_depth = max_depth
         self.min_impurity_decrease = min_impurity_decrease
 
-    cpdef build(self, Tree tree, object X, np.ndarray y, 
+    cpdef build(self, Tree tree, object X, np.ndarray y,
                 np.ndarray sample_weight=None):
         """Build a decision tree from the training set (X, y)."""
 
@@ -189,12 +191,9 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         cdef double weighted_n_node_samples
         cdef SIZE_t node_id
 
-        cdef SplitRecord split
-        
         # create unique pointer to split, which is passed
         # around the methods of TreeBuilder and Tree
-        cdef shared_ptr[SplitRecord] split_ptr = make_shared[SplitRecord](split)
-        split_ptr.get()[0] = split
+        cdef SplitRecord * split_ptr = <SplitRecord *>malloc(splitter.pointer_size())
 
         cdef double impurity = INFINITY
         cdef SIZE_t n_constant_features
@@ -251,23 +250,24 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
                     with gil:
                         print('Trying to node split...')
 
-                    splitter.node_split(impurity, &split,
+                    splitter.node_split(impurity, split_ptr,
                                        &n_constant_features)
 
                     with gil:
                         print('node split!')
-                        print(split.feature, split.pos, split.improvement)
+                        print("first split")
+                        print(deref(split_ptr).feature, deref(split_ptr).pos, deref(split_ptr).improvement)
 
                     # If EPSILON=0 in the below comparison, float precision
                     # issues stop splitting, producing trees that are
                     # dissimilar to v0.18
-                    is_leaf = (is_leaf or split.pos >= end or
-                               (split.improvement + EPSILON <
+                    is_leaf = (is_leaf or deref(split_ptr).pos >= end or
+                               (deref(split_ptr).improvement + EPSILON <
                                 min_impurity_decrease))
                 with gil:
                     print('Now trying to add node with tree', tree)
-                    
-                node_id = tree._add_node(parent, is_left, is_leaf, &split,
+
+                node_id = tree._add_node(parent, is_left, is_leaf, split_ptr,
                                          impurity, n_node_samples,
                                          weighted_n_node_samples)
                 with gil:
@@ -283,22 +283,22 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
                 if not is_leaf:
                     # Push right child on stack
                     builder_stack.push({
-                        "start": split.pos,
+                        "start": deref(split_ptr).pos,
                         "end": end,
                         "depth": depth + 1,
                         "parent": node_id,
                         "is_left": 0,
-                        "impurity": split.impurity_right,
+                        "impurity": deref(split_ptr).impurity_right,
                         "n_constant_features": n_constant_features})
 
                     # Push left child on stack
                     builder_stack.push({
                         "start": start,
-                        "end": split.pos,
+                        "end": deref(split_ptr).pos,
                         "depth": depth + 1,
                         "parent": node_id,
                         "is_left": 1,
-                        "impurity": split.impurity_left,
+                        "impurity": deref(split_ptr).impurity_left,
                         "n_constant_features": n_constant_features})
 
                 if depth > max_depth_seen:
@@ -309,7 +309,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
 
             if rc >= 0:
                 tree.max_depth = max_depth_seen
-                
+        free(split_ptr)
         if rc == -1:
             raise MemoryError()
 
@@ -501,7 +501,7 @@ cdef class BestFirstTreeBuilder(TreeBuilder):
                    )
 
         if not is_leaf:
-            splitter.node_split(impurity, &split, 
+            splitter.node_split(impurity, &split,
                 &n_constant_features)
             # If EPSILON=0 in the below comparison, float precision issues stop
             # splitting early, producing trees that are dissimilar to v0.18
@@ -771,7 +771,7 @@ cdef class Tree:
 
         self.capacity = capacity
         return 0
-    
+
     cdef int _set_node_values(self, SplitRecord *split_node,
             Node *node) nogil except -1:
         """Set node data.
@@ -780,7 +780,7 @@ cdef class Tree:
         node.threshold = split_node.threshold
 
         return 1
-    
+
     cdef DTYPE_t _compute_feature(self, const DTYPE_t[:] X_ndarray,
             Node *node, SIZE_t node_id) nogil:
         """Compute feature from a given data matrix, X.
@@ -889,7 +889,7 @@ cdef class Tree:
                 # While node not a leaf
                 while node.left_child != _TREE_LEAF:
                     # ... and node.right_child != _TREE_LEAF:
-                    
+
                     # compute the feature value to compare against threshold
                     X_vector = X_ndarray[i, :]
                     feature = self._compute_feature(X_vector, node, node_id)

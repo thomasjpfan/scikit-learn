@@ -27,9 +27,15 @@ from libcpp.vector cimport vector
 from libcpp.memory cimport shared_ptr, make_shared
 
 cdef struct ObliqueSplitRecord:
-    # Pointer for a normal split record see _splitter.pxd
-    # shared_ptr[SplitRecord] split_record
-    SplitRecord split_record
+    # Data to track sample split
+    SIZE_t feature         # Which feature to split on.
+    SIZE_t pos             # Split samples array at the given position,
+                           # i.e. count of samples below threshold for feature.
+                           # pos is >= end if the node is a leaf.
+    double threshold       # Threshold to split at.
+    double improvement     # Impurity improvement given parent node.
+    double impurity_left   # Impurity of the left split.
+    double impurity_right  # Impurity of the right split.
 
     # the following are only used for oblique trees
     vector[DTYPE_t]* proj_vec_weights   # weights of the vector

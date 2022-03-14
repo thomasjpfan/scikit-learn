@@ -43,18 +43,18 @@ cdef DTYPE_t EXTRACT_NNZ_SWITCH = 0.1
 
 
 cdef inline void _init_split(ObliqueSplitRecord* self, SIZE_t start_pos) nogil:
-    self.split_record.impurity_left = INFINITY
-    self.split_record.impurity_right = INFINITY
-    self.split_record.pos = start_pos
-    self.split_record.feature = 0
-    self.split_record.threshold = 0.
-    self.split_record.improvement = -INFINITY
+    self.impurity_left = INFINITY
+    self.impurity_right = INFINITY
+    self.pos = start_pos
+    self.feature = 0
+    self.threshold = 0.
+    self.improvement = -INFINITY
 
 
 cdef class ObliqueSplitter(Splitter):
     """Abstract oblique splitter class.
 
-    Splitters are called by tree builders to find the best splits on 
+    Splitters are called by tree builders to find the best splits on
     both sparse and dense data, one split at a time.
     """
 
@@ -79,9 +79,9 @@ cdef class ObliqueSplitter(Splitter):
         min_weight_leaf : double
             The minimal weight each leaf can have, where the weight is the sum
             of the weights of each sample in it.
-        
+
         feature_combinations : double
-            The average number of features to combine in an oblique split. 
+            The average number of features to combine in an oblique split.
             Each feature is independently included with probability
             ``feature_combination`` / ``n_features``.
 
@@ -154,20 +154,22 @@ cdef class ObliqueSplitter(Splitter):
             self.proj_mat_weights[i].clear()
             self.proj_mat_indices[i].clear()
 
-    cdef void sample_proj_mat(self, 
-                              vector[vector[DTYPE_t]]& proj_mat_weights, 
+    cdef void sample_proj_mat(self,
+                              vector[vector[DTYPE_t]]& proj_mat_weights,
                               vector[vector[SIZE_t]]& proj_mat_indices) nogil:
-        """ Sample the projection vector. 
-        
-        This is a placeholder method. 
+        """ Sample the projection vector.
+
+        This is a placeholder method.
 
         """
 
         pass
 
+    cdef int pointer_size(self) nogil:
+        return sizeof(ObliqueSplitRecord)
 
 cdef class BaseDenseObliqueSplitter(ObliqueSplitter):
-    
+
     cdef const DTYPE_t[:, :] X
     cdef np.ndarray X_idx_sorted
     cdef INT32_t* X_idx_sorted_ptr
@@ -212,15 +214,15 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
                                self.random_state), self.__getstate__())
 
     # NOTE: vectors are passed by value, so & is needed to pass by reference
-    cdef void sample_proj_mat(self, 
+    cdef void sample_proj_mat(self,
                               vector[vector[DTYPE_t]]& proj_mat_weights,
                               vector[vector[SIZE_t]]& proj_mat_indices) nogil:
         """
         Sparse Oblique Projection matrix.
         Randomly sample features to put in randomly sampled projection vectors
-        weight = 1 or -1 with probability 0.5 
+        weight = 1 or -1 with probability 0.5
         """
- 
+
         cdef SIZE_t n_features = self.n_features
         cdef SIZE_t max_features = self.max_features
         cdef SIZE_t n_non_zeros = self.n_non_zeros
@@ -251,14 +253,13 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         # cdef SplitRecord* split_record = split_ptr.get()
         with gil:
             print('At the beginning of oblique node split...')
-        cdef ObliqueSplitRecord oblique_split = (<ObliqueSplitRecord*>(split))[0]
-        oblique_split.split_record = split[0]
+        cdef ObliqueSplitRecord * oblique_split = <ObliqueSplitRecord*>(split)
         # cdef ObliqueSplitRecord* oblique_split = <ObliqueSplitRecord*>(split)#[0]
         with gil:
             print('Issuer here...')
-        # cdef SplitRecord* split_record 
+        # cdef SplitRecord* split_record
         # oblique_split.split_record = split_record
-        
+
         cdef SIZE_t* samples = self.samples
         cdef SIZE_t start = self.start
         cdef SIZE_t end = self.end
@@ -279,9 +280,6 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
         # keep track of split record for current node and the best split
         # found among the sampled projection vectors
         cdef ObliqueSplitRecord best, current
-        cdef SplitRecord best_split, current_split
-        best.split_record = best_split
-        current.split_record = current_split
 
         cdef double current_proxy_improvement = -INFINITY
         cdef double best_proxy_improvement = -INFINITY
@@ -312,7 +310,7 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
             if self.proj_mat_weights[f].empty():
                 continue
 
-            current.split_record.feature = f
+            current.feature = f
             current.proj_vec_weights = &self.proj_mat_weights[f]
             current.proj_vec_indices = &self.proj_mat_indices[f]
 
@@ -333,14 +331,14 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
                 if (Xf[p + 1] <= Xf[p] + FEATURE_THRESHOLD):
                     continue
 
-                current.split_record.pos = p
+                current.pos = p
 
                 # reject if min_samples_leaf not guaranteed
-                if ((current.split_record.pos - start) < min_samples_leaf or 
-                    (end - current.split_record.pos) < min_samples_leaf):
+                if ((current.pos - start) < min_samples_leaf or
+                    (end - current.pos) < min_samples_leaf):
                     continue
 
-                self.criterion.update(current.split_record.pos)
+                self.criterion.update(current.pos)
 
                 # reject if min_weight_leaf not satisfied
                 if (self.criterion.weighted_n_left < min_weight_leaf or
@@ -348,33 +346,33 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
                     continue
 
                 current_proxy_improvement = self.criterion.proxy_impurity_improvement()
-                
+
                 if current_proxy_improvement > best_proxy_improvement:
                     best_proxy_improvement = current_proxy_improvement
                     # sum of halves is used to avoid infinite value
-                    current.split_record.threshold = Xf[p - 1] / 2.0 + Xf[p] / 2.0
+                    current.threshold = Xf[p - 1] / 2.0 + Xf[p] / 2.0
 
-                    if (current.split_record.threshold == Xf[p] or
-                        current.split_record.threshold == INFINITY or
-                        current.split_record.threshold == -INFINITY):
-                        
-                        current.split_record.threshold = Xf[p-1]
+                    if (current.threshold == Xf[p] or
+                        current.threshold == INFINITY or
+                        current.threshold == -INFINITY):
+
+                        current.threshold = Xf[p-1]
 
                     best = current
 
         # Reorganize into samples[start:best.pos] + samples[best.pos:end]
-        if best.split_record.pos < end:
+        if best.pos < end:
             partition_end = end
             p = start
 
             while p < partition_end:
-                
+
                 # Account for projection vector
                 temp_d = 0
                 for j in range(best.proj_vec_indices.size()):
                     temp_d += self.X[samples[p], deref(best.proj_vec_indices)[j]] * deref(best.proj_vec_weights)[j]
 
-                if temp_d <= best.split_record.threshold:
+                if temp_d <= best.threshold:
                     p += 1
 
                 else:
@@ -382,26 +380,30 @@ cdef class BestObliqueSplitter(BaseDenseObliqueSplitter):
                     samples[p], samples[partition_end] = samples[partition_end], samples[p]
 
             self.criterion.reset()
-            self.criterion.update(best.split_record.pos)
-            self.criterion.children_impurity(&best.split_record.impurity_left,
-                                             &best.split_record.impurity_right)
-            best.split_record.improvement = self.criterion.impurity_improvement(
-                impurity, best.split_record.impurity_left, best.split_record.impurity_right)
+            self.criterion.update(best.pos)
+            self.criterion.children_impurity(&best.impurity_left,
+                                             &best.impurity_right)
+            best.improvement = self.criterion.impurity_improvement(
+                impurity, best.impurity_left, best.impurity_right)
 
         # Return values
-        oblique_split.proj_vec_indices = best.proj_vec_indices
-        oblique_split.proj_vec_weights = best.proj_vec_weights
-        # split[0] = best.split_record[0]
-        oblique_split.split_record = best.split_record
-        # split = &oblique_split.split_record
-        split[0] = oblique_split.split_record
+        deref(oblique_split).proj_vec_indices = best.proj_vec_indices
+        deref(oblique_split).proj_vec_weights = best.proj_vec_weights
+        # split[0] = best[0]
+        deref(oblique_split).feature = best.feature
+        deref(oblique_split).pos = best.pos
+        deref(oblique_split).threshold = best.threshold
+        deref(oblique_split).improvement = best.improvement
+        deref(oblique_split).impurity_left = best.impurity_left
+        deref(oblique_split).impurity_right = best.impurity_right
+
         with gil:
             print('Inside oblique node split')
-            print(best.split_record.feature, best.split_record.pos, best.split_record.improvement)
-            print(oblique_split.split_record.feature, oblique_split.split_record.pos, oblique_split.split_record.improvement)
-            print(deref(best.proj_vec_weights))
-            print(deref(best.proj_vec_indices))
-        # split[0] = best.split_record[0]
-        # split_ptr = make_shared[SplitRecord](best.split_record)#.get()
+            # print(best.feature, best.pos, best.improvement)
+            # print(oblique_split.feature, oblique_split.pos, oblique_split.improvement)
+            print(deref(oblique_split).proj_vec_weights == NULL)
+            # print(deref(oblique_split.proj_vec_indices))
+        # split[0] = best[0]
+        # split_ptr = make_shared[SplitRecord](best)#.get()
         # n_constant_features[0] = n_total_constants
         return 0

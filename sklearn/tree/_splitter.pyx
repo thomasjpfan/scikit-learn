@@ -29,6 +29,8 @@ from ._utils cimport rand_int
 from ._utils cimport rand_uniform
 from ._utils cimport RAND_R_MAX
 from ._utils cimport safe_realloc
+from libcpp.memory cimport make_unique, unique_ptr
+from libc.stdlib cimport malloc
 
 cdef double INFINITY = np.inf
 
@@ -226,6 +228,9 @@ cdef class Splitter:
         """Return the impurity of the current node."""
 
         return self.criterion.node_impurity()
+
+    cdef int pointer_size(self) nogil:
+        return sizeof(SplitRecord)
 
 
 cdef class BaseDenseSplitter(Splitter):
