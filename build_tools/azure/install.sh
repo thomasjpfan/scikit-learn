@@ -60,7 +60,7 @@ pre_python_environment_install() {
 }
 
 python_environment_install() {
-    if [[ -z "$CONDA_ENV" ]]; then
+    if [[ "$CONDA_ENV" ]]; then
         conda env create -n $VIRTUALENV -f $CONDA_ENV
         source activate $VIRTUALENV
 
