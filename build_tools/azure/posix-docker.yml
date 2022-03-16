@@ -110,8 +110,7 @@ jobs:
       inputs:
         versionSpec: '3.9'
       displayName: Place Python into path to update issue tracker
-      condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'),
-                     eq(variables['Build.Reason'], 'Schedule'))
+      condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'))
     - bash: |
         set -ex
         if [[ $(BOT_GITHUB_TOKEN) == "" ]]; then
@@ -133,5 +132,4 @@ jobs:
       displayName: 'Update issue tracker'
       env:
         JUNIT_FILE: $(TEST_DIR)/$(JUNITXML)
-      condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'),
-                     eq(variables['Build.Reason'], 'Schedule'))
+      condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'))
