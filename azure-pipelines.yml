@@ -105,6 +105,7 @@ jobs:
         BLAS: 'mkl'
         COVERAGE: 'false'
         BUILD_WITH_ICC: 'true'
+        CREATE_ISSUE_ON_TRACKER: 'true'
 
 - template: build_tools/azure/posix-docker.yml
   parameters:
