@@ -531,6 +531,7 @@ class LinearDiscriminantAnalysis(
             ]
 
         rank = xp.sum(xp.astype(S > self.tol * S[0], xp.int32))
+        print(np.isscalar(rank))
         self.scalings_ = scalings @ Vt.T[:, :rank]
         coef = (self.means_ - self.xbar_) @ self.scalings_
         self.intercept_ = -0.5 * xp.sum(coef**2, axis=1) + xp.log(self.priors_)

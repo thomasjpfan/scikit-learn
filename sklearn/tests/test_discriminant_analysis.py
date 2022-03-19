@@ -671,11 +671,11 @@ def test_get_feature_names_out():
     assert_array_equal(names_out, expected_names_out)
 
 
+@pytest.mark.parametrize("array_api_namespace", ["numpy.array_api", "cupy.array_api"])
 @pytest.mark.parametrize("X, y", [(X, y), (X, y3)])
-def test_lda_array_api(X, y):
+def test_lda_array_api(X, y, array_api_namespace):
     """Check that the array_api Array gives the same results as ndarrays."""
-    pytest.importorskip("numpy", minversion="1.22", reason="Requires Array API")
-    xp = pytest.importorskip("numpy.array_api")
+    xp = pytest.importorskip(array_api_namespace)
 
     X_xp = xp.asarray(X)
     y_xp = xp.asarray(y)
