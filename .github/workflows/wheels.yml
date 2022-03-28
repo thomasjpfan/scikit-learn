@@ -17,6 +17,11 @@ on:
   # Manual run
   workflow_dispatch:
 
+# Cancel in-progress jobs or runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Check whether to build the wheels and the source tarball
   check_build_trigger:
