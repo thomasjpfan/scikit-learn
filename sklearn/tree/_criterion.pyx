@@ -75,13 +75,6 @@ cdef class Criterion:
         """
         pass
 
-    cdef int reverse_reset(self) nogil except -1:
-        """Reset the criterion at pos=end.
-
-        This method must be implemented by the subclass.
-        """
-        pass
-
     cdef int update(self, SIZE_t new_pos) nogil except -1:
         """Updated statistics by moving samples[pos:new_pos] to the left child.
 
@@ -325,23 +318,6 @@ cdef class ClassificationCriterion(Criterion):
             memcpy(&self.sum_right[k, 0], &self.sum_total[k, 0], self.n_classes[k] * sizeof(double))
         return 0
 
-    cdef int reverse_reset(self) nogil except -1:
-        """Reset the criterion at pos=end.
-
-        Returns -1 in case of failure to allocate memory (and raise MemoryError)
-        or 0 otherwise.
-        """
-        self.pos = self.end
-
-        self.weighted_n_left = self.weighted_n_node_samples
-        self.weighted_n_right = 0.0
-        cdef SIZE_t k
-
-        for k in range(self.n_outputs):
-            memset(&self.sum_right[k, 0], 0, self.n_classes[k] * sizeof(double))
-            memcpy(&self.sum_left[k, 0],  &self.sum_total[k, 0], self.n_classes[k] * sizeof(double))
-        return 0
-
     cdef int update(self, SIZE_t new_pos) nogil except -1:
         """Updated statistics by moving samples[pos:new_pos] to the left child.
 
@@ -374,31 +350,16 @@ cdef class ClassificationCriterion(Criterion):
         # and that sum_total is known, we are going to update
         # sum_left from the direction that require the least amount
         # of computations, i.e. from pos to new_pos or from end to new_po.
-        if (new_pos - pos) <= (end - new_pos):
-            for p in range(pos, new_pos):
-                i = samples[p]
+        for p in range(pos, new_pos):
+            i = samples[p]
 
-                if sample_weight != NULL:
-                    w = sample_weight[i]
+            if sample_weight != NULL:
+                w = sample_weight[i]
 
-                for k in range(self.n_outputs):
-                    self.sum_left[k, <SIZE_t> self.y[i, k]] += w
+            for k in range(self.n_outputs):
+                self.sum_left[k, <SIZE_t> self.y[i, k]] += w
 
-                self.weighted_n_left += w
-
-        else:
-            self.reverse_reset()
-
-            for p in range(end - 1, new_pos - 1, -1):
-                i = samples[p]
-
-                if sample_weight != NULL:
-                    w = sample_weight[i]
-
-                for k in range(self.n_outputs):
-                    self.sum_left[k, <SIZE_t> self.y[i, k]] -= w
-
-                self.weighted_n_left -= w
+            self.weighted_n_left += w
 
         # Update right part statistics
         self.weighted_n_right = self.weighted_n_node_samples - self.weighted_n_left
@@ -692,17 +653,6 @@ cdef class RegressionCriterion(Criterion):
         self.pos = self.start
         return 0
 
-    cdef int reverse_reset(self) nogil except -1:
-        """Reset the criterion at pos=end."""
-        cdef SIZE_t n_bytes = self.n_outputs * sizeof(double)
-        memset(&self.sum_right[0], 0, n_bytes)
-        memcpy(&self.sum_left[0], &self.sum_total[0], n_bytes)
-
-        self.weighted_n_right = 0.0
-        self.weighted_n_left = self.weighted_n_node_samples
-        self.pos = self.end
-        return 0
-
     cdef int update(self, SIZE_t new_pos) nogil except -1:
         """Updated statistics by moving samples[pos:new_pos] to the left."""
         cdef double* sample_weight = self.sample_weight
@@ -720,32 +670,16 @@ cdef class RegressionCriterion(Criterion):
         # Given that
         #           sum_left[x] +  sum_right[x] = sum_total[x]
         # and that sum_total is known, we are going to update
-        # sum_left from the direction that require the least amount
-        # of computations, i.e. from pos to new_pos or from end to new_pos.
-        if (new_pos - pos) <= (end - new_pos):
-            for p in range(pos, new_pos):
-                i = samples[p]
+        for p in range(pos, new_pos):
+            i = samples[p]
 
-                if sample_weight != NULL:
-                    w = sample_weight[i]
+            if sample_weight != NULL:
+                w = sample_weight[i]
 
-                for k in range(self.n_outputs):
-                    self.sum_left[k] += w * self.y[i, k]
+            for k in range(self.n_outputs):
+                self.sum_left[k] += w * self.y[i, k]
 
-                self.weighted_n_left += w
-        else:
-            self.reverse_reset()
-
-            for p in range(end - 1, new_pos - 1, -1):
-                i = samples[p]
-
-                if sample_weight != NULL:
-                    w = sample_weight[i]
-
-                for k in range(self.n_outputs):
-                    self.sum_left[k] -= w * self.y[i, k]
-
-                self.weighted_n_left -= w
+            self.weighted_n_left += w
 
         self.weighted_n_right = (self.weighted_n_node_samples -
                                  self.weighted_n_left)
@@ -996,34 +930,6 @@ cdef class MAE(RegressionCriterion):
                                                                  weight)
         return 0
 
-    cdef int reverse_reset(self) nogil except -1:
-        """Reset the criterion at pos=end.
-
-        Returns -1 in case of failure to allocate memory (and raise MemoryError)
-        or 0 otherwise.
-        """
-        self.weighted_n_right = 0.0
-        self.weighted_n_left = self.weighted_n_node_samples
-        self.pos = self.end
-
-        cdef DOUBLE_t value
-        cdef DOUBLE_t weight
-        cdef void** left_child = <void**> self.left_child.data
-        cdef void** right_child = <void**> self.right_child.data
-
-        # reverse reset the WeightedMedianCalculators, right should have no
-        # elements and left should have all elements.
-        for k in range(self.n_outputs):
-            # if right has no elements, it's already reset
-            for i in range((<WeightedMedianCalculator> right_child[k]).size()):
-                # remove everything from right and put it into left
-                (<WeightedMedianCalculator> right_child[k]).pop(&value,
-                                                                &weight)
-                # push method ends up calling safe_realloc, hence `except -1`
-                (<WeightedMedianCalculator> left_child[k]).push(value,
-                                                                weight)
-        return 0
-
     cdef int update(self, SIZE_t new_pos) nogil except -1:
         """Updated statistics by moving samples[pos:new_pos] to the left.
 
@@ -1046,35 +952,19 @@ cdef class MAE(RegressionCriterion):
         # We are going to update right_child and left_child
         # from the direction that require the least amount of
         # computations, i.e. from pos to new_pos or from end to new_pos.
-        if (new_pos - pos) <= (end - new_pos):
-            for p in range(pos, new_pos):
-                i = samples[p]
+        for p in range(pos, new_pos):
+            i = samples[p]
 
-                if sample_weight != NULL:
-                    w = sample_weight[i]
+            if sample_weight != NULL:
+                w = sample_weight[i]
 
-                for k in range(self.n_outputs):
-                    # remove y_ik and its weight w from right and add to left
-                    (<WeightedMedianCalculator> right_child[k]).remove(self.y[i, k], w)
-                    # push method ends up calling safe_realloc, hence except -1
-                    (<WeightedMedianCalculator> left_child[k]).push(self.y[i, k], w)
+            for k in range(self.n_outputs):
+                # remove y_ik and its weight w from right and add to left
+                (<WeightedMedianCalculator> right_child[k]).remove(self.y[i, k], w)
+                # push method ends up calling safe_realloc, hence except -1
+                (<WeightedMedianCalculator> left_child[k]).push(self.y[i, k], w)
 
-                self.weighted_n_left += w
-        else:
-            self.reverse_reset()
-
-            for p in range(end - 1, new_pos - 1, -1):
-                i = samples[p]
-
-                if sample_weight != NULL:
-                    w = sample_weight[i]
-
-                for k in range(self.n_outputs):
-                    # remove y_ik and its weight w from left and add to right
-                    (<WeightedMedianCalculator> left_child[k]).remove(self.y[i, k], w)
-                    (<WeightedMedianCalculator> right_child[k]).push(self.y[i, k], w)
-
-                self.weighted_n_left -= w
+            self.weighted_n_left += w
 
         self.weighted_n_right = (self.weighted_n_node_samples -
                                  self.weighted_n_left)
