@@ -347,9 +347,7 @@ cdef class ClassificationCriterion(Criterion):
         #
         # Given that
         #   sum_left[x] +  sum_right[x] = sum_total[x]
-        # and that sum_total is known, we are going to update
-        # sum_left from the direction that require the least amount
-        # of computations, i.e. from pos to new_pos or from end to new_po.
+        # and that sum_total is known
         for p in range(pos, new_pos):
             i = samples[p]
 
@@ -948,10 +946,6 @@ cdef class MAE(RegressionCriterion):
         cdef DOUBLE_t w = 1.0
 
         # Update statistics up to new_pos
-        #
-        # We are going to update right_child and left_child
-        # from the direction that require the least amount of
-        # computations, i.e. from pos to new_pos or from end to new_pos.
         for p in range(pos, new_pos):
             i = samples[p]
 
