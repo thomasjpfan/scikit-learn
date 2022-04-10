@@ -1,7 +1,6 @@
 from contextlib import closing
 from contextlib import suppress
 from io import StringIO
-from string import Template
 import uuid
 import html
 
@@ -166,17 +165,17 @@ def _write_estimator_html(
 
 
 _STYLE = """
-#$id {
+div.sk-top-container {
   color: black;
   background-color: white;
 }
-#$id pre{
+div.sk-top-container pre {
   padding: 0;
 }
-#$id div.sk-toggleable {
+div.sk-toggleable {
   background-color: white;
 }
-#$id label.sk-toggleable__label {
+label.sk-toggleable__label {
   cursor: pointer;
   display: block;
   width: 100%;
@@ -185,46 +184,46 @@ _STYLE = """
   box-sizing: border-box;
   text-align: center;
 }
-#$id label.sk-toggleable__label-arrow:before {
+label.sk-toggleable__label-arrow:before {
   content: "▸";
   float: left;
   margin-right: 0.25em;
   color: #696969;
 }
-#$id label.sk-toggleable__label-arrow:hover:before {
+label.sk-toggleable__label-arrow:hover:before {
   color: black;
 }
-#$id div.sk-estimator:hover label.sk-toggleable__label-arrow:before {
+div.sk-estimator:hover label.sk-toggleable__label-arrow:before {
   color: black;
 }
-#$id div.sk-toggleable__content {
+div.sk-toggleable__content {
   max-height: 0;
   max-width: 0;
   overflow: hidden;
   text-align: left;
   background-color: #f0f8ff;
 }
-#$id div.sk-toggleable__content pre {
+div.sk-toggleable__content pre {
   margin: 0.2em;
   color: black;
   border-radius: 0.25em;
   background-color: #f0f8ff;
 }
-#$id input.sk-toggleable__control:checked~div.sk-toggleable__content {
+input.sk-toggleable__control:checked~div.sk-toggleable__content {
   max-height: 200px;
   max-width: 100%;
   overflow: auto;
 }
-#$id input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
   content: "▾";
 }
-#$id div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
   background-color: #d4ebff;
 }
-#$id div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
   background-color: #d4ebff;
 }
-#$id input.sk-hidden--visually {
+input.sk-hidden--visually {
   border: 0;
   clip: rect(1px 1px 1px 1px);
   clip: rect(1px, 1px, 1px, 1px);
@@ -235,7 +234,7 @@ _STYLE = """
   position: absolute;
   width: 1px;
 }
-#$id div.sk-estimator {
+div.sk-estimator {
   font-family: monospace;
   background-color: #f0f8ff;
   border: 1px dotted black;
@@ -243,19 +242,19 @@ _STYLE = """
   box-sizing: border-box;
   margin-bottom: 0.5em;
 }
-#$id div.sk-estimator:hover {
+div.sk-estimator:hover {
   background-color: #d4ebff;
 }
-#$id div.sk-parallel-item::after {
+div.sk-parallel-item::after {
   content: "";
   width: 100%;
   border-bottom: 1px solid gray;
   flex-grow: 1;
 }
-#$id div.sk-label:hover label.sk-toggleable__label {
+div.sk-label:hover label.sk-toggleable__label {
   background-color: #d4ebff;
 }
-#$id div.sk-serial::before {
+div.sk-serial::before {
   content: "";
   position: absolute;
   border-left: 1px solid gray;
@@ -264,7 +263,7 @@ _STYLE = """
   bottom: 0;
   left: 50%;
 }
-#$id div.sk-serial {
+div.sk-serial {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -272,16 +271,16 @@ _STYLE = """
   padding-right: 0.2em;
   padding-left: 0.2em;
 }
-#$id div.sk-item {
+div.sk-item {
   z-index: 1;
 }
-#$id div.sk-parallel {
+div.sk-parallel {
   display: flex;
   align-items: stretch;
   justify-content: center;
   background-color: white;
 }
-#$id div.sk-parallel::before {
+div.sk-parallel::before {
   content: "";
   position: absolute;
   border-left: 1px solid gray;
@@ -290,24 +289,24 @@ _STYLE = """
   bottom: 0;
   left: 50%;
 }
-#$id div.sk-parallel-item {
+div.sk-parallel-item {
   display: flex;
   flex-direction: column;
   position: relative;
   background-color: white;
 }
-#$id div.sk-parallel-item:first-child::after {
+div.sk-parallel-item:first-child::after {
   align-self: flex-end;
   width: 50%;
 }
-#$id div.sk-parallel-item:last-child::after {
+div.sk-parallel-item:last-child::after {
   align-self: flex-start;
   width: 50%;
 }
-#$id div.sk-parallel-item:only-child::after {
+div.sk-parallel-item:only-child::after {
   width: 0;
 }
-#$id div.sk-dashed-wrapped {
+div.sk-dashed-wrapped {
   border: 1px dashed gray;
   margin: 0 0.4em 0.5em 0.4em;
   box-sizing: border-box;
@@ -315,19 +314,19 @@ _STYLE = """
   background-color: white;
   position: relative;
 }
-#$id div.sk-label label {
+div.sk-label label {
   font-family: monospace;
   font-weight: bold;
   background-color: white;
   display: inline-block;
   line-height: 1.2em;
 }
-#$id div.sk-label-container {
+div.sk-label-container {
   position: relative;
   z-index: 2;
   text-align: center;
 }
-#$id div.sk-container {
+div.sk-container {
   /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
      but bootstrap.min.css set `[hidden] { display: none !important; }`
      so we also need the `!important` here to be able to override the
@@ -336,7 +335,7 @@ _STYLE = """
   display: inline-block !important;
   position: relative;
 }
-#$id div.sk-text-repr-fallback {
+div.sk-text-repr-fallback {
   display: none;
 }
 """.replace(
@@ -362,9 +361,6 @@ def estimator_html_repr(estimator):
         HTML representation of estimator.
     """
     with closing(StringIO()) as out:
-        container_id = "sk-" + str(uuid.uuid4())
-        style_template = Template(_STYLE)
-        style_with_id = style_template.substitute(id=container_id)
         estimator_str = str(estimator)
 
         # The fallback message is shown by default and loading the CSS sets
@@ -383,8 +379,8 @@ def estimator_html_repr(estimator):
             " with nbviewer.org."
         )
         out.write(
-            f"<style>{style_with_id}</style>"
-            f'<div id="{container_id}" class="sk-top-container">'
+            f"<style>{_STYLE}</style>"
+            '<div class="sk-top-container">'
             '<div class="sk-text-repr-fallback">'
             f"<pre>{html.escape(estimator_str)}</pre><b>{fallback_msg}</b>"
             "</div>"
