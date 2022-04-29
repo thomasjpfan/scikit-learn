@@ -311,7 +311,7 @@ class IncrementalPCA(_BasePCA):
             last_variance=self.var_,
             last_sample_count=np.repeat(self.n_samples_seen_, X.shape[1]),
         )
-        n_total_samples = n_total_samples[0]
+        n_total_samples = int(n_total_samples[0])
 
         # Whitening
         if self.n_samples_seen_ == 0:

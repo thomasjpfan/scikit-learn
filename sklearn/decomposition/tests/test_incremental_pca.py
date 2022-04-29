@@ -445,4 +445,4 @@ def test_incremental_pca_n_samples_seen():
     for _ in range(3):
         X = rng.rand(50, 10)
         ipca.partial_fit(X)
-        assert ipca.n_samples_seen_.dtype == np.int64
+        assert isinstance(ipca.n_samples_seen_, int)

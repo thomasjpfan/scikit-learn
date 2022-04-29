@@ -33,7 +33,7 @@ jobs:
     PYTEST_VERSION: '6.2.5'
     PYTEST_XDIST_VERSION: 'latest'
     THREADPOOLCTL_VERSION: 'latest'
-    COVERAGE: 'true'
+    COVERAGE: 'false'
     TEST_DOCSTRINGS: 'false'
     CREATE_ISSUE_ON_TRACKER: 'true'
     SHOW_SHORT_SUMMARY: 'false'
