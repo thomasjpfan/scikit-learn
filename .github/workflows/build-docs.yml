@@ -1,0 +1,108 @@
+# Workflow to build the documentation
+name: Documentation builder
+
+on:
+  push:
+    branches:
+      - main
+      # Release branches
+      - "[0-9]+.[0-9]+.X"
+  pull_request:
+    branches:
+      - main
+      - "[0-9]+.[0-9]+.X"
+
+jobs:
+  # Build the documentation against the minimum version of the dependencies
+  doc-min-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scikit-learn
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Build documentation
+        run: bash build_tools/github/build_doc.sh
+        env:
+          OMP_NUM_THREADS: 2
+          MKL_NUM_THREADS: 2
+          CONDA_ENV_NAME: testenv
+          PYTHON_VERSION: 3.8
+          NUMPY_VERSION: min
+          SCIPY_VERSION: min
+          MATPLOTLIB_VERSION: min
+          CYTHON_VERSION: min
+          SCIKIT_IMAGE_VERSION: min
+          SPHINX_VERSION: min
+          PANDAS_VERSION: min
+          SPHINX_GALLERY_VERSION: min
+          NUMPYDOC_VERSION: min
+          SPHINX_PROMPT_VERSION: min
+          SPHINXEXT_OPENGRAPH_VERSION: min
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v2
+        with:
+          name: doc-min-dependencies
+          path: doc/_build/html/stable
+
+  # Build the documentation against the latest version of the dependencies
+  doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scikit-learn
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Build documentation
+        run: bash build_tools/github/build_doc.sh
+        env:
+          OMP_NUM_THREADS: 2
+          MKL_NUM_THREADS: 2
+          CONDA_ENV_NAME: testenv
+          NUMPY_VERSION: latest
+          SCIPY_VERSION: latest
+          MATPLOTLIB_VERSION: latest
+          CYTHON_VERSION: latest
+          SCIKIT_IMAGE_VERSION: latest
+          # Bump the version from time to time because the
+          # latest version tends to break things too often
+          SPHINX_VERSION: 4.2.0
+          PANDAS_VERSION: latest
+          SPHINX_GALLERY_VERSION: latest
+          NUMPYDOC_VERSION: latest
+          SPHINX_PROMPT_VERSION: latest
+          SPHINXEXT_OPENGRAPH_VERSION: latest
+
+      - name: Upload documentation
+        uses: actions/upload-artifact@v2
+        with:
+          name: doc
+          path: doc/_build/html/stable
+
+  # Store the branch reference that triggered the
+  # workflow run because we must specify the same
+  # branch when triggering the pipeline that will
+  # host the documentation in the current service
+  store-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scikit-learn
+        uses: actions/checkout@v2
+
+      - name: Store branch reference
+        run: bash build_tools/github/store_branch.sh
+
+      - name: Upload branch reference
+        uses: actions/upload-artifact@v2
+        with:
+          name: branch
+          path: branch.txt
