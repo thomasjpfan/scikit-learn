@@ -1,0 +1,23 @@
+# Workflow to trigger the jobs that will host the documentation
+name: Documentation push trigger
+on:
+  workflow_run:
+    # Run the workflow after the separate "Documentation builder" workflow completes
+    workflows: [Documentation builder]
+    types:
+      - completed
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    # Run the job only if the "Documentation builder" workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout scikit-learn
+        uses: actions/checkout@v2
+
+      - name: Trigger hosting jobs
+        run: bash build_tools/github/trigger_hosting.sh
+        env:
+          CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
