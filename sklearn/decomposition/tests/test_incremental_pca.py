@@ -436,3 +436,13 @@ def test_incremental_pca_feature_names_out():
 
     names = ipca.get_feature_names_out()
     assert_array_equal([f"incrementalpca{i}" for i in range(2)], names)
+
+
+def test_incremental_pca_n_samples_seen():
+    """Non regression test for"""
+    rng = np.random.RandomState(42)
+    ipca = IncrementalPCA(n_components=2)
+    for _ in range(3):
+        X = rng.rand(50, 10)
+        ipca.partial_fit(X)
+        assert ipca.n_samples_seen_.dtype == np.int64
