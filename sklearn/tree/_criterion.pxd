@@ -24,10 +24,10 @@ cdef class Criterion:
     # such as the mean in regression and class probabilities in classification.
 
     # Internal structures
-    cdef const DOUBLE_t[:, ::1] y        # Values of y
-    cdef DOUBLE_t* sample_weight         # Sample weights
+    cdef const DOUBLE_t[:, ::1] y           # Values of y
+    cdef const DOUBLE_t[::1] sample_weight  # Sample weights
 
-    cdef SIZE_t* samples                 # Sample indices in X, y
+    cdef SIZE_t[::1] samples             # Sample indices in X, y
     cdef SIZE_t start                    # samples[start:pos] are the samples in the left node
     cdef SIZE_t pos                      # samples[pos:end] are the samples in the right node
     cdef SIZE_t end
@@ -44,8 +44,8 @@ cdef class Criterion:
     # statistics correspond to samples[start:pos] and samples[pos:end].
 
     # Methods
-    cdef int init(self, const DOUBLE_t[:, ::1] y, DOUBLE_t* sample_weight,
-                  double weighted_n_samples, SIZE_t* samples, SIZE_t start,
+    cdef int init(self, const DOUBLE_t[:, ::1] y, const DOUBLE_t[::1] sample_weight,
+                  double weighted_n_samples, SIZE_t[::1] samples, SIZE_t start,
                   SIZE_t end) nogil except -1
     cdef int reset(self) nogil except -1
     cdef int reverse_reset(self) nogil except -1

@@ -150,11 +150,8 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         """Build a decision tree from the training set (X, y)."""
 
         # check input
-        X, y, sample_weight = self._check_input(X, y, sample_weight)
-
-        cdef DOUBLE_t* sample_weight_ptr = NULL
-        if sample_weight is not None:
-            sample_weight_ptr = <DOUBLE_t*> sample_weight.data
+        cdef DOUBLE_t[::1] sample_weight_mv
+        X, y, sample_weight_mv = self._check_input(X, y, sample_weight)
 
         # Initial capacity
         cdef int init_capacity
@@ -175,7 +172,7 @@ cdef class DepthFirstTreeBuilder(TreeBuilder):
         cdef double min_impurity_decrease = self.min_impurity_decrease
 
         # Recursive partition (without actual recursion)
-        splitter.init(X, y, sample_weight_ptr)
+        splitter.init(X, y, sample_weight_mv)
 
         cdef SIZE_t start
         cdef SIZE_t end
@@ -346,11 +343,8 @@ cdef class BestFirstTreeBuilder(TreeBuilder):
         """Build a decision tree from the training set (X, y)."""
 
         # check input
-        X, y, sample_weight = self._check_input(X, y, sample_weight)
-
-        cdef DOUBLE_t* sample_weight_ptr = NULL
-        if sample_weight is not None:
-            sample_weight_ptr = <DOUBLE_t*> sample_weight.data
+        cdef DOUBLE_t[::1] sample_weight_mv
+        X, y, sample_weight_mv = self._check_input(X, y, sample_weight)
 
         # Parameters
         cdef Splitter splitter = self.splitter
@@ -360,7 +354,7 @@ cdef class BestFirstTreeBuilder(TreeBuilder):
         cdef SIZE_t min_samples_split = self.min_samples_split
 
         # Recursive partition (without actual recursion)
-        splitter.init(X, y, sample_weight_ptr)
+        splitter.init(X, y, sample_weight)
 
         cdef vector[FrontierRecord] frontier
         cdef FrontierRecord record
