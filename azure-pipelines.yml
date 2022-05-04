@@ -230,7 +230,6 @@ jobs:
       pylatest_pip_openblas_pandas:
         DISTRIB: 'conda-pip-latest'
         PYTHON_VERSION: '3.9'
-        PYTEST_VERSION: '6.2.5'
         CHECK_PYTEST_SOFT_DEPENDENCY: 'true'
         TEST_DOCSTRINGS: 'true'
         CHECK_WARNINGS: 'true'
@@ -297,8 +296,6 @@ jobs:
         PYTHON_VERSION: '3.8'
         CHECK_WARNINGS: 'true'
         PYTHON_ARCH: '64'
-        # Unpin when pytest stalling issue is fixed
-        PYTEST_VERSION: '6.2.5'
         COVERAGE: 'true'
         SKLEARN_TESTS_GLOBAL_RANDOM_SEED: '7'  # non-default seed
       py38_pip_openblas_32bit:
