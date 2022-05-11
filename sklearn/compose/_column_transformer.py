@@ -24,6 +24,12 @@ from ..utils.deprecation import deprecated
 from ..utils.metaestimators import _BaseComposition
 from ..utils.validation import check_array, check_is_fitted, _check_feature_names_in
 from ..utils.fixes import delayed
+from ..utils.output_type import (
+    _safe_set_output,
+    _set_outout_helper,
+    _get_output_type_config,
+    _wrap_output,
+)
 
 
 __all__ = ["ColumnTransformer", "make_column_transformer", "make_column_selector"]
@@ -212,6 +218,22 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
         self.verbose_feature_names_out = verbose_feature_names_out
+
+    def set_output(self, transform=None):
+        if hasattr(self, "transformers_"):
+            transformers = self.transformers_
+        else:
+            transformers = self.transformers
+
+        for _, trans, _ in transformers:
+            if trans not in ("passthrough", "drop"):
+                _safe_set_output(trans, transform=transform)
+
+        if self.remainder not in (None, "passthrough", "drop"):
+            _safe_set_output(self.remainder, transform=transform)
+
+        _set_outout_helper(self, transform=transform)
+        return self
 
     @property
     def _transformers(self):
@@ -663,6 +685,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         """
         self._check_feature_names(X, reset=True)
 
+        X_orig = X
         X = _check_X(X)
         # set n_features_in_ attribute
         self._check_n_features(X, reset=True)
@@ -694,7 +717,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         self._validate_output(Xs)
         self._record_output_indices(Xs)
 
-        return self._hstack(list(Xs))
+        return self._hstack(list(Xs), X_orig)
 
     def transform(self, X):
         """Transform X separately by each transformer, concatenate results.
@@ -714,6 +737,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
             sparse matrices.
         """
         check_is_fitted(self)
+        X_orig = X
         X = _check_X(X)
 
         fit_dataframe_and_transform_dataframe = hasattr(
@@ -756,9 +780,9 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
             # All transformers are None
             return np.zeros((X.shape[0], 0))
 
-        return self._hstack(list(Xs))
+        return self._hstack(list(Xs), X_orig)
 
-    def _hstack(self, Xs):
+    def _hstack(self, Xs, X_orig):
         """Stacks Xs horizontally.
 
         This allows subclasses to control the stacking behavior, while reusing
@@ -782,11 +806,23 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
                     "For a sparse output, all columns should "
                     "be a numeric or convertible to a numeric."
                 ) from e
-
-            return sparse.hstack(converted_Xs).tocsr()
+            output = sparse.hstack(converted_Xs).tocsr()
+            return _wrap_output(self, X_orig, output)
         else:
-            Xs = [f.toarray() if sparse.issparse(f) else f for f in Xs]
-            return np.hstack(Xs)
+            output = _get_output_type_config(self, "transform")
+            if output["dense"] == "pandas":
+                all_dataframes = all(hasattr(X, "iloc") for X in Xs)
+                if all_dataframes:
+                    import pandas as pd
+
+                    return pd.concat(Xs, axis="columns")
+
+                # not all dataframes
+                Xs = [f.toarray() if sparse.issparse(f) else f for f in Xs]
+                return _wrap_output(self, X_orig, np.hstack(Xs))
+            else:
+                Xs = [f.toarray() if sparse.issparse(f) else f for f in Xs]
+                return np.hstack(Xs)
 
     def _sk_visual_block_(self):
         if isinstance(self.remainder, str) and self.remainder == "drop":

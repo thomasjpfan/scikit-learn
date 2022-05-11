@@ -172,7 +172,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
                 "monotonic constraints are not supported for multiclass classification."
             )
 
-    def _check_categories(self, X):
+    def _check_categories(self, X, X_orig):
         """Check and validate categorical features in X
 
         Return
@@ -189,7 +189,18 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         if self.categorical_features is None:
             return None, None
 
-        categorical_features = np.asarray(self.categorical_features)
+        if self.categorical_features == "pandas_category":
+            import pandas as pd
+
+            categorical_features = np.asarray(
+                [
+                    i
+                    for i, dtype in enumerate(X_orig.dtypes)
+                    if pd.api.types.is_categorical_dtype(dtype)
+                ]
+            )
+        else:
+            categorical_features = np.asarray(self.categorical_features)
 
         if categorical_features.size == 0:
             return None, None
@@ -284,6 +295,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         acc_compute_hist_time = 0.0  # time spent computing histograms
         # time spent predicting X for gradient and hessians update
         acc_prediction_time = 0.0
+        X_orig = X
         X, y = self._validate_data(X, y, dtype=[X_DTYPE], force_all_finite=False)
         y = self._encode_y(y)
         check_consistent_length(X, y)
@@ -307,7 +319,7 @@ class BaseHistGradientBoosting(BaseEstimator, ABC):
         # used for validation in predict
         n_samples, self._n_features = X.shape
 
-        self.is_categorical_, known_categories = self._check_categories(X)
+        self.is_categorical_, known_categories = self._check_categories(X, X_orig)
 
         # we need this stateful variable to tell raw_predict() that it was
         # called from fit() (this current method), and that the data it has

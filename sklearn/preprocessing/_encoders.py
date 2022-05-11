@@ -16,6 +16,7 @@ from ..utils.validation import _check_feature_names_in
 from ..utils._mask import _get_mask
 
 from ..utils._encode import _encode, _check_unknown, _unique, _get_counts
+from ..utils.output_type import _wrap_output
 
 
 __all__ = ["OneHotEncoder", "OrdinalEncoder"]
@@ -1372,7 +1373,8 @@ class OrdinalEncoder(_OneToOneFeatureMixin, _BaseEncoder):
         # create separate category for unknown values
         if self.handle_unknown == "use_encoded_value":
             X_trans[~X_mask] = self.unknown_value
-        return X_trans
+
+        return _wrap_output(self, X, X_trans, dtype="category")
 
     def inverse_transform(self, X):
         """
