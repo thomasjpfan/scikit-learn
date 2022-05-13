@@ -810,7 +810,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
             return _wrap_output(self, X_orig, output)
         else:
             output = _get_output_type_config(self, "transform")
-            if output["dense"] == "pandas":
+            if output["dense"] == "frame":
                 all_dataframes = all(hasattr(X, "iloc") for X in Xs)
                 if all_dataframes:
                     import pandas as pd

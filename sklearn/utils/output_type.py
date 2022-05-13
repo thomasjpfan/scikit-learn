@@ -73,7 +73,7 @@ def _set_outout_helper(self, transform=None):
 
     if isinstance(transform, str):
         if "/" in transform:
-            dense, sparse = transform.split("/")
+            dense, sparse = transform.split("_or_")
         else:
             dense, sparse = transform, transform
 
