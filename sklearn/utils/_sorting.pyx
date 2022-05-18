@@ -115,51 +115,63 @@ cdef inline int _simultaneous_sort(
         ITYPE_t pivot_idx, i, store_idx
         floating pivot_val
 
-    # in the small-array case, do things efficiently
     if size <= 1:
-        pass
-    elif size == 2:
-        if values[0] > values[1]:
-            dual_swap(values, indices, 0, 1)
-    elif size == 3:
-        if values[0] > values[1]:
-            dual_swap(values, indices, 0, 1)
-        if values[1] > values[2]:
-            dual_swap(values, indices, 1, 2)
+        return 0
+
+    # in the small-array case, do things efficiently
+    while size > 1:
+        if size == 2:
             if values[0] > values[1]:
                 dual_swap(values, indices, 0, 1)
-    elif use_introsort and max_depth <= 0:
-        heapsort(values, indices, size)
-    else:
-        # Determine the pivot using the median-of-three rule.
-        # The smallest of the three is moved to the beginning of the array,
-        # the middle (the pivot value) is moved to the end, and the largest
-        # is moved to the pivot index.
-        pivot_idx = size // 2
-        if values[0] > values[size - 1]:
-            dual_swap(values, indices, 0, size - 1)
-        if values[size - 1] > values[pivot_idx]:
-            dual_swap(values, indices, size - 1, pivot_idx)
+            return 0
+        elif size == 3:
+            if values[0] > values[1]:
+                dual_swap(values, indices, 0, 1)
+            if values[1] > values[2]:
+                dual_swap(values, indices, 1, 2)
+                if values[0] > values[1]:
+                    dual_swap(values, indices, 0, 1)
+            return 0
+        elif use_introsort and max_depth <= 0:
+            heapsort(values, indices, size)
+            return 0
+        else:
+            # Determine the pivot using the median-of-three rule.
+            # The smallest of the three is moved to the beginning of the array,
+            # the middle (the pivot value) is moved to the end, and the largest
+            # is moved to the pivot index.
+            max_depth -= 1
+            pivot_idx = size // 2
             if values[0] > values[size - 1]:
                 dual_swap(values, indices, 0, size - 1)
-        pivot_val = values[size - 1]
+            if values[size - 1] > values[pivot_idx]:
+                dual_swap(values, indices, size - 1, pivot_idx)
+                if values[0] > values[size - 1]:
+                    dual_swap(values, indices, 0, size - 1)
+            pivot_val = values[size - 1]
 
-        # Partition indices about pivot.  At the end of this operation,
-        # pivot_idx will contain the pivot value, everything to the left
-        # will be smaller, and everything to the right will be larger.
-        store_idx = 0
-        for i in range(size - 1):
-            if values[i] < pivot_val:
-                dual_swap(values, indices, i, store_idx)
-                store_idx += 1
-        dual_swap(values, indices, store_idx, size - 1)
-        pivot_idx = store_idx
+            # Partition indices about pivot.  At the end of this operation,
+            # pivot_idx will contain the pivot value, everything to the left
+            # will be smaller, and everything to the right will be larger.
+            store_idx = 0
+            for i in range(size - 1):
+                if values[i] < pivot_val:
+                    dual_swap(values, indices, i, store_idx)
+                    store_idx += 1
+            dual_swap(values, indices, store_idx, size - 1)
+            pivot_idx = store_idx
 
-        # Recursively sort each side of the pivot
-        if pivot_idx > 1:
-            _simultaneous_sort(values, indices, pivot_idx, max_depth - 1, use_introsort)
-        if pivot_idx + 2 < size:
-            _simultaneous_sort(values + pivot_idx + 1,
-                               indices + pivot_idx + 1,
-                               size - pivot_idx - 1, max_depth - 1, use_introsort)
+            # Recursively sort the left side of the pivot
+            if pivot_idx > 1:
+                _simultaneous_sort(values, indices, pivot_idx, max_depth, use_introsort)
+
+            # Manual implementation of tail-call elimination, the while loop is
+            # equivalent to recursively sorting the right side:
+            #
+            # _simultaneous_sort(values + pivot_idx + 1,
+            #                    indices + pivot_idx + 1,
+            #                    size - pivot_idx - 1, max_depth, use_introsort)
+            size -= pivot_idx + 1
+            values += pivot_idx + 1
+            indices += pivot_idx + 1
     return 0
