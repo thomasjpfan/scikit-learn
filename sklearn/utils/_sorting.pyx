@@ -104,6 +104,26 @@ cdef inline int simultaneous_sort(
         _simultaneous_sort(values, indices, size, -1, 0)
 
 
+cdef inline floating median3(floating* values, ITYPE_t size) nogil:
+    # Median of three pivot selection, after Bentley and McIlroy (1993).
+    # Engineering a sort function. SP&E. Requires 8/3 comparisons on average.
+    cdef floating a = values[0], b = values[size / 2], c = values[size - 1]
+    if a < b:
+        if b < c:
+            return b
+        elif a < c:
+            return c
+        else:
+            return a
+    elif b < c:
+        if a < c:
+            return a
+        else:
+            return c
+    else:
+        return b
+
+
 cdef inline int _simultaneous_sort(
     floating* values,
     ITYPE_t* indices,
@@ -112,7 +132,7 @@ cdef inline int _simultaneous_sort(
     bint use_introsort,
 ) nogil:
     cdef:
-        ITYPE_t pivot_idx, i, store_idx
+        ITYPE_t l, r, i
         floating pivot_val
 
     # in the small-array case, do things efficiently
@@ -135,31 +155,29 @@ cdef inline int _simultaneous_sort(
         # The smallest of the three is moved to the beginning of the array,
         # the middle (the pivot value) is moved to the end, and the largest
         # is moved to the pivot index.
-        pivot_idx = size // 2
-        if values[0] > values[size - 1]:
-            dual_swap(values, indices, 0, size - 1)
-        if values[size - 1] > values[pivot_idx]:
-            dual_swap(values, indices, size - 1, pivot_idx)
-            if values[0] > values[size - 1]:
-                dual_swap(values, indices, 0, size - 1)
-        pivot_val = values[size - 1]
+        pivot_val = median3(values, size)
 
-        # Partition indices about pivot.  At the end of this operation,
-        # pivot_idx will contain the pivot value, everything to the left
-        # will be smaller, and everything to the right will be larger.
-        store_idx = 0
-        for i in range(size - 1):
+        # Three-way partition indices about pivot. At the end of this operation,
+        # pivot_idx will contain the pivot value, everything to the left will be
+        # smaller, and everything to the right will be larger.
+        i = l = 0
+        r = size
+        while i < r:
             if values[i] < pivot_val:
-                dual_swap(values, indices, i, store_idx)
-                store_idx += 1
-        dual_swap(values, indices, store_idx, size - 1)
-        pivot_idx = store_idx
+                dual_swap(values, indices, i, l)
+                i += 1
+                l += 1
+            elif values[i] > pivot_val:
+                r -= 1
+                dual_swap(values, indices, i, r)
+            else:
+                i += 1
 
         # Recursively sort each side of the pivot
-        if pivot_idx > 1:
-            _simultaneous_sort(values, indices, pivot_idx, max_depth - 1, use_introsort)
-        if pivot_idx + 2 < size:
-            _simultaneous_sort(values + pivot_idx + 1,
-                               indices + pivot_idx + 1,
-                               size - pivot_idx - 1, max_depth - 1, use_introsort)
+        if l > 1:
+            _simultaneous_sort(values, indices, l, max_depth - 1, use_introsort)
+        if l + 2 < size:
+            _simultaneous_sort(values + l + 1,
+                               indices + l + 1,
+                               size - l - 1, max_depth - 1, use_introsort)
     return 0
