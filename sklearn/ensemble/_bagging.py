@@ -471,7 +471,8 @@ class BaseBagging(BaseEnsemble, metaclass=ABCMeta):
     def _validate_y(self, y):
         if len(y.shape) == 1 or y.shape[1] == 1:
             return column_or_1d(y, warn=True)
-        return y
+        else:
+            return y
 
     def _get_estimators_indices(self):
         # Get drawn indices along both sample and feature axes
@@ -820,7 +821,9 @@ class BaggingClassifier(ClassifierMixin, BaseBagging):
         )
 
         # Parallel loop
-        n_jobs, _, starts = _partition_estimators(self.n_estimators, self.n_jobs)
+        n_jobs, n_estimators, starts = _partition_estimators(
+            self.n_estimators, self.n_jobs
+        )
 
         all_proba = Parallel(
             n_jobs=n_jobs, verbose=self.verbose, **self._parallel_args()
@@ -870,7 +873,9 @@ class BaggingClassifier(ClassifierMixin, BaseBagging):
             )
 
             # Parallel loop
-            n_jobs, _, starts = _partition_estimators(self.n_estimators, self.n_jobs)
+            n_jobs, n_estimators, starts = _partition_estimators(
+                self.n_estimators, self.n_jobs
+            )
 
             all_log_proba = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
                 delayed(_parallel_predict_log_proba)(
@@ -890,10 +895,10 @@ class BaggingClassifier(ClassifierMixin, BaseBagging):
 
             log_proba -= np.log(self.n_estimators)
 
-        else:
-            log_proba = np.log(self.predict_proba(X))
+            return log_proba
 
-        return log_proba
+        else:
+            return np.log(self.predict_proba(X))
 
     @available_if(_estimator_has("decision_function"))
     def decision_function(self, X):
@@ -925,7 +930,9 @@ class BaggingClassifier(ClassifierMixin, BaseBagging):
         )
 
         # Parallel loop
-        n_jobs, _, starts = _partition_estimators(self.n_estimators, self.n_jobs)
+        n_jobs, n_estimators, starts = _partition_estimators(
+            self.n_estimators, self.n_jobs
+        )
 
         all_decisions = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
             delayed(_parallel_decision_function)(
@@ -1159,7 +1166,9 @@ class BaggingRegressor(RegressorMixin, BaseBagging):
         )
 
         # Parallel loop
-        n_jobs, _, starts = _partition_estimators(self.n_estimators, self.n_jobs)
+        n_jobs, n_estimators, starts = _partition_estimators(
+            self.n_estimators, self.n_jobs
+        )
 
         all_y_hat = Parallel(n_jobs=n_jobs, verbose=self.verbose)(
             delayed(_parallel_predict_regression)(

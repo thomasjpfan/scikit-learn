@@ -54,6 +54,7 @@ from sklearn.utils.estimator_checks import (
     check_param_validation,
     check_transformer_get_feature_names_out,
     check_transformer_get_feature_names_out_pandas,
+    check_set_output,
 )
 
 
@@ -653,3 +654,13 @@ def test_check_param_validation(estimator):
         )
     _set_checking_parameters(estimator)
     check_param_validation(name, estimator)
+
+
+@pytest.mark.parametrize(
+    "estimator",
+    [est for est in _tested_estimators("transformer")],
+    ids=_get_check_estimator_ids,
+)
+def test_set_output(estimator):
+    _set_checking_parameters(estimator)
+    check_set_output(estimator.__class__.__name__, estimator)

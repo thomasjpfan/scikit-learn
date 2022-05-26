@@ -16,6 +16,7 @@ from ..utils.validation import _check_feature_names_in
 from ..utils._mask import _get_mask
 
 from ..utils._encode import _encode, _check_unknown, _unique, _get_counts
+from ..utils.output_container import _wrap_output
 
 
 __all__ = ["OneHotEncoder", "OrdinalEncoder"]
@@ -664,7 +665,7 @@ class OneHotEncoder(_BaseEncoder):
         to a single output:
         `_default_to_infrequent_mappings[7] = array([0, 3, 1, 3, 2, 3])`
 
-        Defines private attribute: `_infrequent_indices`. `_infrequent_indices[i]`
+        Defines private attrite: `_infrequent_indices`. `_infrequent_indices[i]`
         is an array of indices such that
         `categories_[i][_infrequent_indices[i]]` are all the infrequent category
         labels. If the feature `i` has no infrequent categories
@@ -1372,7 +1373,9 @@ class OrdinalEncoder(_OneToOneFeatureMixin, _BaseEncoder):
         # create separate category for unknown values
         if self.handle_unknown == "use_encoded_value":
             X_trans[~X_mask] = self.unknown_value
-        return X_trans
+
+        # TODO: Just for demo
+        return _wrap_output(self, X, X_trans, "transform", dtype="category")
 
     def inverse_transform(self, X):
         """

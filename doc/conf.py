@@ -15,7 +15,7 @@ import os
 import warnings
 import re
 from datetime import datetime
-from sklearn.externals._packaging.version import parse
+from packaging.version import parse
 from pathlib import Path
 from io import StringIO
 

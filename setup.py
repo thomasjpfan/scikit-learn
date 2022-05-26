@@ -233,12 +233,14 @@ def setup_package():
 
     # TODO: Require Python 3.8 for PyPy when PyPy3.8 is ready
     # https://github.com/conda-forge/conda-forge-pinning-feedstock/issues/2089
-    if platform.python_implementation() == "PyPy":
-        python_requires = ">=3.7"
-        required_python_version = (3, 7)
-    else:
-        python_requires = ">=3.8"
-        required_python_version = (3, 8)
+    # if platform.python_implementation() == "PyPy":
+
+    # TODO: Used to build wheel so demo works. Revert
+    python_requires = ">=3.7"
+    required_python_version = (3, 7)
+    # else:
+    #     python_requires = ">=3.8"
+    #     required_python_version = (3, 8)
 
     metadata = dict(
         name=DISTNAME,
@@ -254,7 +256,7 @@ def setup_package():
         classifiers=[
             "Intended Audience :: Science/Research",
             "Intended Audience :: Developers",
-            "License :: OSI Approved :: BSD License",
+            "License :: OSI Approved",
             "Programming Language :: C",
             "Programming Language :: Python",
             "Topic :: Software Development",

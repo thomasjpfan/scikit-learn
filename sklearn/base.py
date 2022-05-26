@@ -26,6 +26,7 @@ from .utils.validation import _check_feature_names_in
 from .utils.validation import _generate_get_feature_names_out
 from .utils.validation import check_is_fitted
 from .utils.validation import _get_feature_names
+from .utils.output_container import OutputTypeMixin
 from .utils._estimator_html_repr import estimator_html_repr
 from .utils._param_validation import validate_parameter_constraints
 
@@ -87,8 +88,11 @@ def clone(estimator, *, safe=True):
     for name, param in new_object_params.items():
         new_object_params[name] = clone(param, safe=False)
     new_object = klass(**new_object_params)
-    params_set = new_object.get_params(deep=False)
 
+    if hasattr(estimator, "_output_containers"):
+        new_object._output_containers = copy.deepcopy(estimator._output_containers)
+
+    params_set = new_object.get_params(deep=False)
     # quick sanity check of the parameters of the clone
     for name in new_object_params:
         param1 = new_object_params[name]
@@ -848,7 +852,7 @@ class BiclusterMixin:
         return data[row_ind[:, np.newaxis], col_ind]
 
 
-class TransformerMixin:
+class TransformerMixin(OutputTypeMixin):
     """Mixin class for all transformers in scikit-learn."""
 
     def fit_transform(self, X, y=None, **fit_params):

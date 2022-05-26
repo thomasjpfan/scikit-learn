@@ -29,6 +29,7 @@ from .utils._tags import _safe_tags
 from .utils.validation import check_memory
 from .utils.validation import check_is_fitted
 from .utils.fixes import delayed
+from .utils.output_container import safe_set_output
 from .exceptions import NotFittedError
 
 from .utils.metaestimators import _BaseComposition
@@ -146,6 +147,23 @@ class Pipeline(_BaseComposition):
         self.steps = steps
         self.memory = memory
         self.verbose = verbose
+
+    def set_output(self, transform=None):
+        """Set output container.
+
+        Parameters
+        ----------
+        transform : {"default", "pandas_or_namedsparse"}, default=None
+            Configure output of `transform` and `fit_transform`.
+
+        Returns
+        -------
+        self : estimator instance
+            Estimator instance.
+        """
+        for _, _, step in self._iter():
+            safe_set_output(step, transform=transform)
+        return self
 
     def get_params(self, deep=True):
         """Get parameters for this estimator.

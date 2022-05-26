@@ -24,6 +24,11 @@ from ..utils.deprecation import deprecated
 from ..utils.metaestimators import _BaseComposition
 from ..utils.validation import check_array, check_is_fitted, _check_feature_names_in
 from ..utils.fixes import delayed
+from ..utils.output_container import (
+    safe_set_output,
+    set_output_helper,
+    get_output_container_config,
+)
 
 
 __all__ = ["ColumnTransformer", "make_column_transformer", "make_column_selector"]
@@ -212,6 +217,34 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         self.transformer_weights = transformer_weights
         self.verbose = verbose
         self.verbose_feature_names_out = verbose_feature_names_out
+
+    def set_output(self, transform=None):
+        """Set output container.
+
+        Parameters
+        ----------
+        transform : {"default", "pandas_or_namedsparse"}, default=None
+            Configure output of `transform` and `fit_transform`.
+
+        Returns
+        -------
+        self : estimator instance
+            Estimator instance.
+        """
+        if hasattr(self, "transformers_"):
+            transformers = self.transformers_
+        else:
+            transformers = self.transformers
+
+        for _, trans, _ in transformers:
+            if trans not in ("passthrough", "drop"):
+                safe_set_output(trans, transform=transform)
+
+        if self.remainder not in (None, "passthrough", "drop"):
+            safe_set_output(self.remainder, transform=transform)
+
+        set_output_helper(self, transform=transform)
+        return self
 
     @property
     def _transformers(self):
@@ -663,6 +696,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         """
         self._check_feature_names(X, reset=True)
 
+        X_orig = X
         X = _check_X(X)
         # set n_features_in_ attribute
         self._check_n_features(X, reset=True)
@@ -694,7 +728,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
         self._validate_output(Xs)
         self._record_output_indices(Xs)
 
-        return self._hstack(list(Xs))
+        return self._hstack(list(Xs), X_orig)
 
     def transform(self, X):
         """Transform X separately by each transformer, concatenate results.
@@ -714,6 +748,7 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
             sparse matrices.
         """
         check_is_fitted(self)
+        X_orig = X
         X = _check_X(X)
 
         fit_dataframe_and_transform_dataframe = hasattr(
@@ -756,9 +791,9 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
             # All transformers are None
             return np.zeros((X.shape[0], 0))
 
-        return self._hstack(list(Xs))
+        return self._hstack(list(Xs), X_orig)
 
-    def _hstack(self, Xs):
+    def _hstack(self, Xs, X_orig):
         """Stacks Xs horizontally.
 
         This allows subclasses to control the stacking behavior, while reusing
@@ -782,9 +817,17 @@ class ColumnTransformer(TransformerMixin, _BaseComposition):
                     "For a sparse output, all columns should "
                     "be a numeric or convertible to a numeric."
                 ) from e
-
             return sparse.hstack(converted_Xs).tocsr()
         else:
+            output = get_output_container_config("transform", estimator=self)
+            if output["dense"] == "pandas":
+                all_dataframes = all(hasattr(X, "iloc") for X in Xs)
+                if all_dataframes:
+                    import pandas as pd
+
+                    return pd.concat(Xs, axis="columns")
+
+            # not all DataFrames
             Xs = [f.toarray() if sparse.issparse(f) else f for f in Xs]
             return np.hstack(Xs)
 

@@ -32,6 +32,7 @@ from ..utils.validation import check_is_fitted, check_array, FLOAT_DTYPES, check
 from ..utils.deprecation import deprecated
 from ..utils import _IS_32BIT
 from ..exceptions import NotFittedError
+from ..utils.output_container import OutputTypeMixin
 
 
 __all__ = [
@@ -889,7 +890,7 @@ def _document_frequency(X):
         return np.diff(X.indptr)
 
 
-class CountVectorizer(_VectorizerMixin, BaseEstimator):
+class CountVectorizer(OutputTypeMixin, _VectorizerMixin, BaseEstimator):
     r"""Convert a collection of text documents to a matrix of token counts.
 
     This implementation produces a sparse representation of the counts using

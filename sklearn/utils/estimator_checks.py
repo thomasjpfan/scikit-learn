@@ -4090,3 +4090,31 @@ def check_param_validation(name, estimator_orig):
             for method in methods:
                 with raises(ValueError, match=match, err_msg=err_msg):
                     getattr(estimator, method)(X, y)
+
+
+def check_set_output(name, transformer_orig):
+    # Check transformer.set_output configures the output of `transform`
+    tags = transformer_orig._get_tags()
+    if "2darray" not in tags["X_types"] or tags["no_validation"]:
+        return
+
+    rng = np.random.RandomState(0)
+    transformer = clone(transformer_orig)
+
+    X = rng.uniform(size=(20, 5))
+    X = _pairwise_estimator_convert_X(X, transformer_orig)
+    y = rng.randint(0, 2, size=20)
+    y = _enforce_estimator_tags_y(transformer_orig, y)
+    set_random_state(transformer)
+
+    y_ = y
+    if name in CROSS_DECOMPOSITION:
+        y_ = np.c_[np.asarray(y), np.asarray(y)]
+        y_[::2, 1] *= 2
+
+    transformer.set_output(transform="pandas_or_namedsparse")
+
+    X_trans = transformer.fit_transform(X, y_)
+    if isinstance(X_trans, tuple):
+        X_trans = X_trans[0]
+    assert hasattr(X_trans, "columns")

@@ -12,7 +12,9 @@ import argparse
 if platform.python_implementation() == "PyPy":
     NUMPY_MIN_VERSION = "1.19.2"
 else:
-    NUMPY_MIN_VERSION = "1.17.3"
+    # TODO: Used to build wheel so demo works. Revert
+    # NUMPY_MIN_VERSION = "1.17.3"
+    NUMPY_MIN_VERSION = "1.14.5"
 
 SCIPY_MIN_VERSION = "1.3.2"
 JOBLIB_MIN_VERSION = "1.0.0"
@@ -31,7 +33,7 @@ dependent_packages = {
     "threadpoolctl": (THREADPOOLCTL_MIN_VERSION, "install"),
     "cython": (CYTHON_MIN_VERSION, "build"),
     "matplotlib": ("3.1.2", "benchmark, docs, examples, tests"),
-    "scikit-image": ("0.16.2", "docs, examples, tests"),
+    "scikit-image": ("0.14.5", "docs, examples, tests"),
     "pandas": ("1.0.5", "benchmark, docs, examples, tests"),
     "seaborn": ("0.9.0", "docs, examples"),
     "memory_profiler": ("0.57.0", "benchmark, docs"),
