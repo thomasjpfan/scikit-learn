@@ -168,13 +168,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             # We can't pass multi_output=True because that would allow y to be
             # csr.
 
-            if (
-                not issparse(X)
-                and isinstance(self.splitter, str)
-                and self.splitter == "best"
-                and isinstance(self.criterion, str)
-                and self.criterion not in {"mae", "absolute_error"}
-            ):
+            if not issparse(X) and self._get_tags()["allow_nan"]:
                 force_all_finite = "allow-nan"
             else:
                 force_all_finite = True
@@ -482,13 +476,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     def _validate_X_predict(self, X, check_input):
         """Validate the training data on predict (probabilities)."""
         if check_input:
-            if (
-                not issparse(X)
-                and isinstance(self.splitter, str)
-                and self.splitter == "best"
-                and isinstance(self.criterion, str)
-                and self.criterion not in {"mae", "absolute_error"}
-            ):
+            if not issparse(X) and self._get_tags()["allow_nan"]:
                 force_all_finite = "allow-nan"
             else:
                 force_all_finite = True
@@ -1089,7 +1077,15 @@ class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
         return self.n_features_in_
 
     def _more_tags(self):
-        return {"multilabel": True}
+        # XXX: nan is only support for dense arrays, but we set this for common test to
+        # pass
+        allow_nan = (
+            isinstance(self.splitter, str)
+            and self.splitter == "best"
+            and isinstance(self.criterion, str)
+            and self.criterion not in {"mae", "absolute_error"}
+        )
+        return {"multilabel": True, "allow_nan": allow_nan}
 
 
 class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
@@ -1411,6 +1407,17 @@ class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
     @property
     def n_features_(self):
         return self.n_features_in_
+
+    def _more_tags(self):
+        # XXX: nan is only support for dense arrays, but we set this for common test to
+        # pass
+        allow_nan = (
+            isinstance(self.splitter, str)
+            and self.splitter == "best"
+            and isinstance(self.criterion, str)
+            and self.criterion not in {"mae", "absolute_error"}
+        )
+        return {"allow_nan": allow_nan}
 
 
 class ExtraTreeClassifier(DecisionTreeClassifier):
