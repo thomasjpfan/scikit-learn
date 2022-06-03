@@ -947,7 +947,7 @@ class BaggingClassifier(ClassifierMixin, BaseBagging):
             base_estimator = DecisionTreeClassifier()
         else:
             base_estimator = self.base_estimator
-        return {"allow_nan": _safe_tags(base_estimator)}
+        return {"allow_nan": _safe_tags(base_estimator, "allow_nan")}
 
 
 class BaggingRegressor(RegressorMixin, BaseBagging):
@@ -1220,4 +1220,4 @@ class BaggingRegressor(RegressorMixin, BaseBagging):
             base_estimator = DecisionTreeRegressor()
         else:
             base_estimator = self.base_estimator
-        return {"allow_nan": _safe_tags(base_estimator)}
+        return {"allow_nan": _safe_tags(base_estimator, "allow_nan")}
