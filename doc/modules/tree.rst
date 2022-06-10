@@ -515,7 +515,7 @@ Log Loss or Entropy:
   computed on a dataset :math:`D` is defined as follows:
 
   .. math::
-  
+
       \mathrm{LL}(D, T) = -\frac{1}{n} \sum_{(x_i, y_i) \in D} \sum_k I(y_i = k) \log(T_k(x_i))
 
   where :math:`D` is a training dataset of :math:`n` pairs :math:`(x_i, y_i)`.
@@ -529,7 +529,7 @@ Log Loss or Entropy:
   the number of training data points that reached each leaf:
 
   .. math::
-  
+
       \mathrm{LL}(D, T) = \sum_{m \in T} \frac{n_m}{n} H(Q_m)
 
 Regression criteria
@@ -573,6 +573,32 @@ Mean Absolute Error:
 
 Note that it fits much slower than the MSE criterion.
 
+.. _tree_missing_value_support:
+
+Missing Values Support
+======================
+
+:class:`~tree.DecisionTreeClassifier` and :class:`~tree.DecisionTreeRegressor`
+have built-in support for missing values when `splitter='best'` and criterion is
+`'gini'`, `'entropy`', or `'log_loss'`, for classification' or
+`squared_error'`, `'friedman_mse'`, or `'poisson'` for regression.
+
+For each potential threshold, the splitter will evaluate the split with all the
+missing values going to the left child or the right child. When predicting, the
+samples with missing values are assigned according::
+
+    >>> from sklearn.tree import DecisionTreeClassifier
+    >>> import numpy as np
+
+    >>> X = np.array([0, 1, 6, np.nan]).reshape(-1, 1)
+    >>> y = [0, 0, 1, 1]
+
+    >>> tree = DecisionTreeClassifier(random_state=0).fit(X, y)
+    >>> tree.predict(X)
+    array([0, 0, 1, 1])
+
+For a given feature, if no missing values are seen during training, then missing
+values are mapped to the child with the most samples.
 
 .. _minimal_cost_complexity_pruning:
 
