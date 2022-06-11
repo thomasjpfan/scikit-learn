@@ -40,6 +40,9 @@ File types:
 
 <img src="favicon.ico" width="100"  style="border:1px solid red">
 
+#### Logo 3
+
+<img src="scikit-learn-logo-without-subtitle.svg" width="100">
 
 ---
 
