@@ -42,7 +42,7 @@ File types:
 
 #### Logo 3
 
-<img src="scikit-learn-logo-without-subtitle.svg" width="100">
+<img src="scikit-learn-logo-without-subtitle.svg" width="300px">
 
 ---
 
