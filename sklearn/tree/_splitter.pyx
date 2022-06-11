@@ -163,7 +163,7 @@ cdef class Splitter:
         self.sample_weight = sample_weight
         if issparse(X):
             # Missing values does not support sparse yet
-            self.n_missings = np.zeros(X.shape[1], dtype=np.uint8)
+            self.n_missings = np.zeros(X.shape[1], dtype=np.intp)
         else:
             self.n_missings = np.isnan(X).sum(axis=0)
         return 0
