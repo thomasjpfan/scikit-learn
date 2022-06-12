@@ -163,9 +163,9 @@ cdef class Splitter:
         self.sample_weight = sample_weight
         if issparse(X):
             # Missing values does not support sparse yet
-            self.n_missings = np.zeros(X.shape[1], dtype=np.intp)
+            self.has_missings = np.zeros(X.shape[1], dtype=np.bool_)
         else:
-            self.n_missings = np.isnan(X).sum(axis=0)
+            self.has_missings = np.isnan(X).any(axis=0)
         return 0
 
     cdef int node_reset(self, SIZE_t start, SIZE_t end,
@@ -273,7 +273,7 @@ cdef class BestSplitter(BaseDenseSplitter):
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
         cdef double min_weight_leaf = self.min_weight_leaf
         cdef UINT32_t* random_state = &self.rand_r_state
-        cdef SIZE_t[::1] n_missings = self.n_missings
+        cdef unsigned char[::1] has_missings = self.has_missings
 
         cdef SplitRecord best, current
         cdef double current_proxy_improvement = -INFINITY
@@ -288,7 +288,6 @@ cdef class BestSplitter(BaseDenseSplitter):
         cdef SIZE_t j
         cdef SIZE_t n_missing
         cdef SIZE_t directions
-        cdef SIZE_t has_missing
         cdef SIZE_t end_non_missing
         cdef SIZE_t n_left, n_right
         cdef bint missing_go_to_left
@@ -350,21 +349,23 @@ cdef class BestSplitter(BaseDenseSplitter):
             # f_j in the interval [n_total_constants, f_i[
             current.feature = features[f_j]
 
-            n_missing = n_missings[current.feature]
+            n_missing = 0
             # Sort samples along that feature; by copying the values into an array and
             # sorting the array in a manner which utilizes the cache more
             # effectively.
             # Missing values are placed at the end and do not participate in the sorting.
-            if n_missing > 0:
+            if has_missings[current.feature]:
                 i, j = start, end - 1
                 while i <= j:
                     if isnan(self.X[samples[j], current.feature]):
+                        n_missing += 1
                         j -= 1
                         continue
 
                     if isnan(self.X[samples[i], current.feature]):
                         # nan samples are moved to the end
                         samples[i], samples[j] = samples[j], samples[i]
+                        n_missing += 1
                         j -= 1
                     Xf[i] = self.X[samples[i], current.feature]
                     i += 1
@@ -446,6 +447,7 @@ cdef class BestSplitter(BaseDenseSplitter):
                         ):
                             current.threshold = Xf[p - 1]
 
+                        current.n_missing = n_missing
                         if n_missing == 0:
                             current.missing_go_to_left = n_left > n_right
                         else:
@@ -485,7 +487,7 @@ cdef class BestSplitter(BaseDenseSplitter):
         if best.pos < end or best_split_on_edge:
             # Places missing values at the end for criterion to compute impurities
             p = 0
-            n_missing = n_missings[best.feature]
+            n_missing = best.n_missing
             i, j = start, end - 1
             while i < j and p < n_missing:
                 if isnan(self.X[samples[j], best.feature]):

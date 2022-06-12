@@ -55,7 +55,7 @@ cdef class Splitter:
 
     cdef SIZE_t start                    # Start position for the current node
     cdef SIZE_t end                      # End position for the current node
-    cdef SIZE_t[::1] n_missings # Missing features per feature
+    cdef unsigned char[::1] has_missings # Missing features per feature
 
     cdef const DOUBLE_t[:, ::1] y
     cdef DOUBLE_t* sample_weight
