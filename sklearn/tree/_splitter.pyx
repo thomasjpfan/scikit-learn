@@ -11,7 +11,15 @@
 #
 # License: BSD 3 clause
 
+cimport cython
 from ._criterion cimport Criterion
+from ._feature_tracker cimport FeatureStatus
+from ._feature_tracker cimport FeatureSample
+from ._feature_tracker cimport init_tracker
+from ._feature_tracker cimport sample_feature
+from ._feature_tracker cimport update_found_constant
+from ._feature_tracker cimport update_drawn_feature
+from ._feature_tracker cimport update_constant_features
 
 from libc.stdlib cimport free
 from libc.stdlib cimport qsort
@@ -23,7 +31,6 @@ import numpy as np
 from scipy.sparse import csc_matrix
 
 from ._utils cimport log
-from ._utils cimport rand_int
 from ._utils cimport rand_uniform
 from ._utils cimport RAND_R_MAX
 
@@ -80,7 +87,6 @@ cdef class Splitter:
         self.criterion = criterion
 
         self.n_samples = 0
-        self.n_features = 0
 
         self.sample_weight = NULL
 
@@ -149,7 +155,6 @@ cdef class Splitter:
 
         cdef SIZE_t n_features = X.shape[1]
         self.features = np.arange(n_features, dtype=np.intp)
-        self.n_features = n_features
 
         self.feature_values = np.empty(n_samples, dtype=np.float32)
         self.constant_features = np.empty(n_features, dtype=np.intp)
@@ -255,10 +260,6 @@ cdef class BestSplitter(BaseDenseSplitter):
         cdef SIZE_t start = self.start
         cdef SIZE_t end = self.end
 
-        cdef SIZE_t[::1] features = self.features
-        cdef SIZE_t[::1] constant_features = self.constant_features
-        cdef SIZE_t n_features = self.n_features
-
         cdef DTYPE_t[::1] Xf = self.feature_values
         cdef SIZE_t max_features = self.max_features
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
@@ -269,70 +270,27 @@ cdef class BestSplitter(BaseDenseSplitter):
         cdef double current_proxy_improvement = -INFINITY
         cdef double best_proxy_improvement = -INFINITY
 
-        cdef SIZE_t f_i = n_features
-        cdef SIZE_t f_j
+        cdef FeatureTracker feature_tracker
+        cdef FeatureSample feature_sample
         cdef SIZE_t p
         cdef SIZE_t feature_idx_offset
         cdef SIZE_t feature_offset
         cdef SIZE_t i
         cdef SIZE_t j
 
-        cdef SIZE_t n_visited_features = 0
-        # Number of features discovered to be constant during the split search
-        cdef SIZE_t n_found_constants = 0
-        # Number of features known to be constant and drawn without replacement
-        cdef SIZE_t n_drawn_constants = 0
-        cdef SIZE_t n_known_constants = n_constant_features[0]
-        # n_total_constants = n_known_constants + n_found_constants
-        cdef SIZE_t n_total_constants = n_known_constants
-        cdef DTYPE_t current_feature_value
         cdef SIZE_t partition_end
 
         _init_split(&best, end)
-
-        # Sample up to max_features without replacement using a
-        # Fisher-Yates-based algorithm (using the local variables `f_i` and
-        # `f_j` to compute a permutation of the `features` array).
-        #
-        # Skip the CPU intensive evaluation of the impurity criterion for
-        # features that were already detected as constant (hence not suitable
-        # for good splitting) by ancestor nodes and save the information on
-        # newly discovered constant features to spare computation on descendant
-        # nodes.
-        while (f_i > n_total_constants and  # Stop early if remaining features
-                                            # are constant
-                (n_visited_features < max_features or
-                 # At least one drawn features must be non constant
-                 n_visited_features <= n_found_constants + n_drawn_constants)):
-
-            n_visited_features += 1
-
-            # Loop invariant: elements of features in
-            # - [:n_drawn_constant[ holds drawn and known constant features;
-            # - [n_drawn_constant:n_known_constant[ holds known constant
-            #   features that haven't been drawn yet;
-            # - [n_known_constant:n_total_constant[ holds newly found constant
-            #   features;
-            # - [n_total_constant:f_i[ holds features that haven't been drawn
-            #   yet and aren't constant apriori.
-            # - [f_i:n_features[ holds features that have been drawn
-            #   and aren't constant.
-
-            # Draw a feature at random
-            f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                           random_state)
-
-            if f_j < n_known_constants:
-                # f_j in the interval [n_drawn_constants, n_known_constants[
-                features[n_drawn_constants], features[f_j] = features[f_j], features[n_drawn_constants]
-
-                n_drawn_constants += 1
+        init_tracker(&feature_tracker, self.features, self.constant_features,
+                     self.max_features, n_constant_features[0])
+        while True:
+            feature_sample = sample_feature(&feature_tracker, random_state)
+            if feature_sample.status == FeatureStatus.STOP:
+                break
+            if feature_sample.status == FeatureStatus.CONTINUE:
                 continue
 
-            # f_j in the interval [n_known_constants, f_i - n_found_constants[
-            f_j += n_found_constants
-            # f_j in the interval [n_total_constants, f_i[
-            current.feature = features[f_j]
+            current.feature = feature_sample.feature
 
             # Sort samples along that feature; by
             # copying the values into an array and
@@ -344,14 +302,9 @@ cdef class BestSplitter(BaseDenseSplitter):
             sort(&Xf[start], &samples[start], end - start)
 
             if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
-                features[f_j], features[n_total_constants] = features[n_total_constants], features[f_j]
-
-                n_found_constants += 1
-                n_total_constants += 1
+                update_found_constant(&feature_tracker)
                 continue
-
-            f_i -= 1
-            features[f_i], features[f_j] = features[f_j], features[f_i]
+            update_drawn_feature(&feature_tracker)
 
             # Evaluate all splits
             self.criterion.reset()
@@ -421,19 +374,10 @@ cdef class BestSplitter(BaseDenseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        # Respect invariant for constant features: the original order of
-        # element in features[:n_known_constants] must be preserved for sibling
-        # and child nodes
-        memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
-
-        # Copy newly found constant features
-        memcpy(&constant_features[n_known_constants],
-               &features[n_known_constants],
-               sizeof(SIZE_t) * n_found_constants)
-
+        update_constant_features(&feature_tracker)
         # Return values
         split[0] = best
-        n_constant_features[0] = n_total_constants
+        n_constant_features[0] = feature_tracker.n_total_constants
         return 0
 
 
@@ -572,10 +516,6 @@ cdef class RandomSplitter(BaseDenseSplitter):
         cdef SIZE_t start = self.start
         cdef SIZE_t end = self.end
 
-        cdef SIZE_t[::1] features = self.features
-        cdef SIZE_t[::1] constant_features = self.constant_features
-        cdef SIZE_t n_features = self.n_features
-
         cdef DTYPE_t[::1] Xf = self.feature_values
         cdef SIZE_t max_features = self.max_features
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
@@ -586,67 +526,26 @@ cdef class RandomSplitter(BaseDenseSplitter):
         cdef double current_proxy_improvement = - INFINITY
         cdef double best_proxy_improvement = - INFINITY
 
-        cdef SIZE_t f_i = n_features
-        cdef SIZE_t f_j
+        cdef FeatureTracker feature_tracker
+        cdef FeatureSample feature_sample
         cdef SIZE_t p
         cdef SIZE_t partition_end
         cdef SIZE_t feature_stride
-        # Number of features discovered to be constant during the split search
-        cdef SIZE_t n_found_constants = 0
-        # Number of features known to be constant and drawn without replacement
-        cdef SIZE_t n_drawn_constants = 0
-        cdef SIZE_t n_known_constants = n_constant_features[0]
-        # n_total_constants = n_known_constants + n_found_constants
-        cdef SIZE_t n_total_constants = n_known_constants
-        cdef SIZE_t n_visited_features = 0
         cdef DTYPE_t min_feature_value
         cdef DTYPE_t max_feature_value
         cdef DTYPE_t current_feature_value
 
         _init_split(&best, end)
-
-        # Sample up to max_features without replacement using a
-        # Fisher-Yates-based algorithm (using the local variables `f_i` and
-        # `f_j` to compute a permutation of the `features` array).
-        #
-        # Skip the CPU intensive evaluation of the impurity criterion for
-        # features that were already detected as constant (hence not suitable
-        # for good splitting) by ancestor nodes and save the information on
-        # newly discovered constant features to spare computation on descendant
-        # nodes.
-        while (f_i > n_total_constants and  # Stop early if remaining features
-                                            # are constant
-                (n_visited_features < max_features or
-                 # At least one drawn features must be non constant
-                 n_visited_features <= n_found_constants + n_drawn_constants)):
-            n_visited_features += 1
-
-            # Loop invariant: elements of features in
-            # - [:n_drawn_constant[ holds drawn and known constant features;
-            # - [n_drawn_constant:n_known_constant[ holds known constant
-            #   features that haven't been drawn yet;
-            # - [n_known_constant:n_total_constant[ holds newly found constant
-            #   features;
-            # - [n_total_constant:f_i[ holds features that haven't been drawn
-            #   yet and aren't constant apriori.
-            # - [f_i:n_features[ holds features that have been drawn
-            #   and aren't constant.
-
-            # Draw a feature at random
-            f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                           random_state)
-
-            if f_j < n_known_constants:
-                # f_j in the interval [n_drawn_constants, n_known_constants[
-                features[n_drawn_constants], features[f_j] = features[f_j], features[n_drawn_constants]
-                n_drawn_constants += 1
+        init_tracker(&feature_tracker, self.features, self.constant_features,
+                     self.max_features, n_constant_features[0])
+        while True:
+            feature_sample = sample_feature(&feature_tracker, random_state)
+            if feature_sample.status == FeatureStatus.STOP:
+                break
+            if feature_sample.status == FeatureStatus.CONTINUE:
                 continue
 
-            # f_j in the interval [n_known_constants, f_i - n_found_constants[
-            f_j += n_found_constants
-            # f_j in the interval [n_total_constants, f_i[
-
-            current.feature = features[f_j]
+            current.feature = feature_sample.feature
 
             # Find min, max
             min_feature_value = self.X[samples[start], current.feature]
@@ -663,14 +562,9 @@ cdef class RandomSplitter(BaseDenseSplitter):
                     max_feature_value = current_feature_value
 
             if max_feature_value <= min_feature_value + FEATURE_THRESHOLD:
-                features[f_j], features[n_total_constants] = features[n_total_constants], current.feature
-
-                n_found_constants += 1
-                n_total_constants += 1
+                update_found_constant(&feature_tracker)
                 continue
-
-            f_i -= 1
-            features[f_i], features[f_j] = features[f_j], features[f_i]
+            update_drawn_feature(&feature_tracker)
 
             # Draw a random threshold
             current.threshold = rand_uniform(min_feature_value,
@@ -733,19 +627,10 @@ cdef class RandomSplitter(BaseDenseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        # Respect invariant for constant features: the original order of
-        # element in features[:n_known_constants] must be preserved for sibling
-        # and child nodes
-        memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
-
-        # Copy newly found constant features
-        memcpy(&constant_features[n_known_constants],
-               &features[n_known_constants],
-               sizeof(SIZE_t) * n_found_constants)
-
+        update_constant_features(&feature_tracker)
         # Return values
         split[0] = best
-        n_constant_features[0] = n_total_constants
+        n_constant_features[0] = feature_tracker.n_total_constants
         return 0
 
 
@@ -1076,10 +961,6 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start = self.start
         cdef SIZE_t end = self.end
 
-        cdef SIZE_t[::1] features = self.features
-        cdef SIZE_t[::1] constant_features = self.constant_features
-        cdef SIZE_t n_features = self.n_features
-
         cdef DTYPE_t[::1] Xf = self.feature_values
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t max_features = self.max_features
@@ -1092,16 +973,9 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
         cdef double current_proxy_improvement = - INFINITY
         cdef double best_proxy_improvement = - INFINITY
 
-        cdef SIZE_t f_i = n_features
-        cdef SIZE_t f_j, p
-        cdef SIZE_t n_visited_features = 0
-        # Number of features discovered to be constant during the split search
-        cdef SIZE_t n_found_constants = 0
-        # Number of features known to be constant and drawn without replacement
-        cdef SIZE_t n_drawn_constants = 0
-        cdef SIZE_t n_known_constants = n_constant_features[0]
-        # n_total_constants = n_known_constants + n_found_constants
-        cdef SIZE_t n_total_constants = n_known_constants
+        cdef FeatureTracker feature_tracker
+        cdef FeatureSample feature_sample
+        cdef SIZE_t p
         cdef DTYPE_t current_feature_value
 
         cdef SIZE_t p_next
@@ -1114,50 +988,17 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start_positive
         cdef SIZE_t end_negative
 
-        # Sample up to max_features without replacement using a
-        # Fisher-Yates-based algorithm (using the local variables `f_i` and
-        # `f_j` to compute a permutation of the `features` array).
-        #
-        # Skip the CPU intensive evaluation of the impurity criterion for
-        # features that were already detected as constant (hence not suitable
-        # for good splitting) by ancestor nodes and save the information on
-        # newly discovered constant features to spare computation on descendant
-        # nodes.
-        while (f_i > n_total_constants and  # Stop early if remaining features
-                                            # are constant
-                (n_visited_features < max_features or
-                 # At least one drawn features must be non constant
-                 n_visited_features <= n_found_constants + n_drawn_constants)):
-
-            n_visited_features += 1
-
-            # Loop invariant: elements of features in
-            # - [:n_drawn_constant[ holds drawn and known constant features;
-            # - [n_drawn_constant:n_known_constant[ holds known constant
-            #   features that haven't been drawn yet;
-            # - [n_known_constant:n_total_constant[ holds newly found constant
-            #   features;
-            # - [n_total_constant:f_i[ holds features that haven't been drawn
-            #   yet and aren't constant apriori.
-            # - [f_i:n_features[ holds features that have been drawn
-            #   and aren't constant.
-
-            # Draw a feature at random
-            f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                           random_state)
-
-            if f_j < n_known_constants:
-                # f_j in the interval [n_drawn_constants, n_known_constants[
-                features[f_j], features[n_drawn_constants] = features[n_drawn_constants], features[f_j]
-
-                n_drawn_constants += 1
+        init_tracker(&feature_tracker, self.features, self.constant_features,
+                     self.max_features, n_constant_features[0])
+        while True:
+            feature_sample = sample_feature(&feature_tracker, random_state)
+            if feature_sample.status == FeatureStatus.STOP:
+                break
+            if feature_sample.status == FeatureStatus.CONTINUE:
                 continue
 
-            # f_j in the interval [n_known_constants, f_i - n_found_constants[
-            f_j += n_found_constants
-            # f_j in the interval [n_total_constants, f_i[
+            current.feature = feature_sample.feature
 
-            current.feature = features[f_j]
             self.extract_nnz(current.feature, &end_negative, &start_positive,
                              &is_samples_sorted)
             # Sort the positive and negative parts of `Xf`
@@ -1182,14 +1023,10 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
                     end_negative += 1
 
             if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
-                features[f_j], features[n_total_constants] = features[n_total_constants], features[f_j]
-
-                n_found_constants += 1
-                n_total_constants += 1
+                update_found_constant(&feature_tracker)
                 continue
 
-            f_i -= 1
-            features[f_i], features[f_j] = features[f_j], features[f_i]
+            update_drawn_feature(&feature_tracker)
 
             # Evaluate all splits
             self.criterion.reset()
@@ -1265,19 +1102,10 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        # Respect invariant for constant features: the original order of
-        # element in features[:n_known_constants] must be preserved for sibling
-        # and child nodes
-        memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
-
-        # Copy newly found constant features
-        memcpy(&constant_features[n_known_constants],
-               &features[n_known_constants],
-               sizeof(SIZE_t) * n_found_constants)
-
+        update_constant_features(&feature_tracker)
         # Return values
         split[0] = best
-        n_constant_features[0] = n_total_constants
+        n_constant_features[0] = feature_tracker.n_total_constants
         return 0
 
 
@@ -1303,10 +1131,6 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start = self.start
         cdef SIZE_t end = self.end
 
-        cdef SIZE_t[::1] features = self.features
-        cdef SIZE_t[::1] constant_features = self.constant_features
-        cdef SIZE_t n_features = self.n_features
-
         cdef DTYPE_t[::1] Xf = self.feature_values
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t max_features = self.max_features
@@ -1321,16 +1145,9 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
 
         cdef DTYPE_t current_feature_value
 
-        cdef SIZE_t f_i = n_features
-        cdef SIZE_t f_j, p
-        cdef SIZE_t n_visited_features = 0
-        # Number of features discovered to be constant during the split search
-        cdef SIZE_t n_found_constants = 0
-        # Number of features known to be constant and drawn without replacement
-        cdef SIZE_t n_drawn_constants = 0
-        cdef SIZE_t n_known_constants = n_constant_features[0]
-        # n_total_constants = n_known_constants + n_found_constants
-        cdef SIZE_t n_total_constants = n_known_constants
+        cdef FeatureTracker feature_tracker
+        cdef FeatureSample feature_sample
+        cdef SIZE_t p
         cdef SIZE_t partition_end
 
         cdef DTYPE_t min_feature_value
@@ -1344,50 +1161,16 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start_positive
         cdef SIZE_t end_negative
 
-        # Sample up to max_features without replacement using a
-        # Fisher-Yates-based algorithm (using the local variables `f_i` and
-        # `f_j` to compute a permutation of the `features` array).
-        #
-        # Skip the CPU intensive evaluation of the impurity criterion for
-        # features that were already detected as constant (hence not suitable
-        # for good splitting) by ancestor nodes and save the information on
-        # newly discovered constant features to spare computation on descendant
-        # nodes.
-        while (f_i > n_total_constants and  # Stop early if remaining features
-                                            # are constant
-                (n_visited_features < max_features or
-                 # At least one drawn features must be non constant
-                 n_visited_features <= n_found_constants + n_drawn_constants)):
-
-            n_visited_features += 1
-
-            # Loop invariant: elements of features in
-            # - [:n_drawn_constant[ holds drawn and known constant features;
-            # - [n_drawn_constant:n_known_constant[ holds known constant
-            #   features that haven't been drawn yet;
-            # - [n_known_constant:n_total_constant[ holds newly found constant
-            #   features;
-            # - [n_total_constant:f_i[ holds features that haven't been drawn
-            #   yet and aren't constant apriori.
-            # - [f_i:n_features[ holds features that have been drawn
-            #   and aren't constant.
-
-            # Draw a feature at random
-            f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                           random_state)
-
-            if f_j < n_known_constants:
-                # f_j in the interval [n_drawn_constants, n_known_constants[
-                features[f_j], features[n_drawn_constants] = features[n_drawn_constants], features[f_j]
-
-                n_drawn_constants += 1
+        init_tracker(&feature_tracker, self.features, self.constant_features,
+                     self.max_features, n_constant_features[0])
+        while True:
+            feature_sample = sample_feature(&feature_tracker, random_state)
+            if feature_sample.status == FeatureStatus.STOP:
+                break
+            if feature_sample.status == FeatureStatus.CONTINUE:
                 continue
 
-            # f_j in the interval [n_known_constants, f_i - n_found_constants[
-            f_j += n_found_constants
-            # f_j in the interval [n_total_constants, f_i[
-
-            current.feature = features[f_j]
+            current.feature = feature_sample.feature
 
             self.extract_nnz(current.feature,
                              &end_negative, &start_positive,
@@ -1420,15 +1203,10 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
                     max_feature_value = current_feature_value
 
             if max_feature_value <= min_feature_value + FEATURE_THRESHOLD:
-                features[f_j] = features[n_total_constants]
-                features[n_total_constants] = current.feature
-
-                n_found_constants += 1
-                n_total_constants += 1
+                update_found_constant(&feature_tracker)
                 continue
 
-            f_i -= 1
-            features[f_i], features[f_j] = features[f_j], features[f_i]
+            update_drawn_feature(&feature_tracker)
 
             # Draw a random threshold
             current.threshold = rand_uniform(min_feature_value,
@@ -1484,17 +1262,8 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        # Respect invariant for constant features: the original order of
-        # element in features[:n_known_constants] must be preserved for sibling
-        # and child nodes
-        memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
-
-        # Copy newly found constant features
-        memcpy(&constant_features[n_known_constants],
-               &features[n_known_constants],
-               sizeof(SIZE_t) * n_found_constants)
-
+        update_constant_features(&feature_tracker)
         # Return values
         split[0] = best
-        n_constant_features[0] = n_total_constants
+        n_constant_features[0] = feature_tracker.n_total_constants
         return 0

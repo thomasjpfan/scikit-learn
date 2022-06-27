@@ -10,6 +10,7 @@
 # See _splitter.pyx for details.
 
 from ._criterion cimport Criterion
+from ._feature_tracker cimport FeatureTracker
 
 from ._tree cimport DTYPE_t          # Type of X
 from ._tree cimport DOUBLE_t         # Type of y, sample_weight
@@ -48,7 +49,6 @@ cdef class Splitter:
     cdef double weighted_n_samples       # Weighted number of samples
     cdef SIZE_t[::1] features            # Feature indices in X
     cdef SIZE_t[::1] constant_features   # Constant features indices
-    cdef SIZE_t n_features               # X.shape[1]
     cdef DTYPE_t[::1] feature_values     # temp. array holding feature values
 
     cdef SIZE_t start                    # Start position for the current node
