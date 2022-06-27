@@ -47,7 +47,8 @@ cdef class Splitter:
     cdef SIZE_t[::1] samples             # Sample indices in X, y
     cdef SIZE_t n_samples                # X.shape[0]
     cdef double weighted_n_samples       # Weighted number of samples
-    cdef FeatureTracker feature_tracker  # Tracks features
+    cdef SIZE_t[::1] features            # Feature indices in X
+    cdef SIZE_t[::1] constant_features   # Constant features indices
     cdef DTYPE_t[::1] feature_values     # temp. array holding feature values
 
     cdef SIZE_t start                    # Start position for the current node
