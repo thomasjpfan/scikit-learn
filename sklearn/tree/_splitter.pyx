@@ -274,10 +274,10 @@ cdef class BestSplitter(BaseDenseSplitter):
         cdef SIZE_t partition_end
 
         _init_split(&best, end)
-        self.feature_tracker.reset(n_constant_features[0])
+        FeatureTracker.reset(self.feature_tracker, n_constant_features[0])
 
         while True:
-            feature_sample = self.feature_tracker.sample(random_state)
+            feature_sample = FeatureTracker.sample(self.feature_tracker, random_state)
             if feature_sample.status == FeatureStatus.STOP:
                 break
             if feature_sample.status == FeatureStatus.CONTINUE:
@@ -296,9 +296,9 @@ cdef class BestSplitter(BaseDenseSplitter):
             sort(&Xf[start], &samples[start], end - start)
 
             if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
-                self.feature_tracker.update_found_constant(f_j)
+                FeatureTracker.update_found_constant(self.feature_tracker, f_j)
                 continue
-            self.feature_tracker.update_drawn_feature(f_j)
+            FeatureTracker.update_drawn_feature(self.feature_tracker, f_j)
 
             # Evaluate all splits
             self.criterion.reset()
@@ -368,7 +368,7 @@ cdef class BestSplitter(BaseDenseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        self.feature_tracker.update_constant_features()
+        FeatureTracker.update_constant_features(self.feature_tracker)
         # Return values
         split[0] = best
         n_constant_features[0] = self.feature_tracker.n_total_constants
@@ -530,10 +530,10 @@ cdef class RandomSplitter(BaseDenseSplitter):
         cdef DTYPE_t current_feature_value
 
         _init_split(&best, end)
-        self.feature_tracker.reset(n_constant_features[0])
+        FeatureTracker.reset(self.feature_tracker, n_constant_features[0])
 
         while True:
-            feature_sample = self.feature_tracker.sample(random_state)
+            feature_sample = FeatureTracker.sample(self.feature_tracker, random_state)
             if feature_sample.status == FeatureStatus.STOP:
                 break
             if feature_sample.status == FeatureStatus.CONTINUE:
@@ -557,10 +557,9 @@ cdef class RandomSplitter(BaseDenseSplitter):
                     max_feature_value = current_feature_value
 
             if max_feature_value <= min_feature_value + FEATURE_THRESHOLD:
-                self.feature_tracker.update_found_constant(f_j)
+                FeatureTracker.update_found_constant(self.feature_tracker, f_j)
                 continue
-
-            self.feature_tracker.update_drawn_feature(f_j)
+            FeatureTracker.update_drawn_feature(self.feature_tracker, f_j)
 
             # Draw a random threshold
             current.threshold = rand_uniform(min_feature_value,
@@ -623,7 +622,7 @@ cdef class RandomSplitter(BaseDenseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        self.feature_tracker.update_constant_features()
+        FeatureTracker.update_constant_features(self.feature_tracker)
         # Return values
         split[0] = best
         n_constant_features[0] = self.feature_tracker.n_total_constants
@@ -983,10 +982,10 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start_positive
         cdef SIZE_t end_negative
 
-        self.feature_tracker.reset(n_constant_features[0])
+        FeatureTracker.reset(self.feature_tracker, n_constant_features[0])
 
         while True:
-            feature_sample = self.feature_tracker.sample(random_state)
+            feature_sample = FeatureTracker.sample(self.feature_tracker, random_state)
             if feature_sample.status == FeatureStatus.STOP:
                 break
             if feature_sample.status == FeatureStatus.CONTINUE:
@@ -1019,10 +1018,10 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
                     end_negative += 1
 
             if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
-                self.feature_tracker.update_found_constant(f_j)
+                FeatureTracker.update_found_constant(self.feature_tracker, f_j)
                 continue
 
-            self.feature_tracker.update_drawn_feature(f_j)
+            FeatureTracker.update_drawn_feature(self.feature_tracker, f_j)
 
             # Evaluate all splits
             self.criterion.reset()
@@ -1098,7 +1097,7 @@ cdef class BestSparseSplitter(BaseSparseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        self.feature_tracker.update_constant_features()
+        FeatureTracker.update_constant_features(self.feature_tracker)
         # Return values
         split[0] = best
         n_constant_features[0] = self.feature_tracker.n_total_constants
@@ -1156,9 +1155,9 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
         cdef SIZE_t start_positive
         cdef SIZE_t end_negative
 
-        self.feature_tracker.reset(n_constant_features[0])
+        FeatureTracker.reset(self.feature_tracker, n_constant_features[0])
         while True:
-            feature_sample = self.feature_tracker.sample(random_state)
+            feature_sample = FeatureTracker.sample(self.feature_tracker, random_state)
             if feature_sample.status == FeatureStatus.STOP:
                 break
             if feature_sample.status == FeatureStatus.CONTINUE:
@@ -1198,10 +1197,10 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
                     max_feature_value = current_feature_value
 
             if max_feature_value <= min_feature_value + FEATURE_THRESHOLD:
-                self.feature_tracker.update_found_constant(f_j)
+                FeatureTracker.update_found_constant(self.feature_tracker, f_j)
                 continue
 
-            self.feature_tracker.update_drawn_feature(f_j)
+            FeatureTracker.update_drawn_feature(self.feature_tracker, f_j)
 
             # Draw a random threshold
             current.threshold = rand_uniform(min_feature_value,
@@ -1257,7 +1256,7 @@ cdef class RandomSparseSplitter(BaseSparseSplitter):
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
-        self.feature_tracker.update_constant_features()
+        FeatureTracker.update_constant_features(self.feature_tracker)
         # Return values
         split[0] = best
         n_constant_features[0] = self.feature_tracker.n_total_constants
