@@ -25,10 +25,10 @@ cdef struct FeatureTracker:
     # n_total_constants = n_known_constants + n_found_constants
     SIZE_t n_total_constants
 
-cdef void init_tracker(FeatureTracker self, SIZE_t[::1] features,
+cdef void init_tracker(FeatureTracker* self, SIZE_t[::1] features,
                        SIZE_t[::1] constant_features, SIZE_t max_features,
                        SIZE_t n_constant_features) nogil
-cdef FeatureSample sample_feature(FeatureTracker self, UINT32_t* random_state) nogil
-cdef void update_found_constant(FeatureTracker self, SIZE_t f_j) nogil
-cdef void update_drawn_feature(FeatureTracker self, SIZE_t f_j) nogil
-cdef SIZE_t update_constant_features(FeatureTracker self) nogil
+cdef FeatureSample sample_feature(FeatureTracker* self, UINT32_t* random_state) nogil
+cdef void update_found_constant(FeatureTracker* self, SIZE_t f_j) nogil
+cdef void update_drawn_feature(FeatureTracker* self, SIZE_t f_j) nogil
+cdef SIZE_t update_constant_features(FeatureTracker* self) nogil

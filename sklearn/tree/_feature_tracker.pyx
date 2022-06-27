@@ -4,7 +4,7 @@ from ._utils cimport rand_int
 
 import numpy as np
 
-cdef inline void init_tracker(FeatureTracker self, SIZE_t[::1] features,
+cdef inline void init_tracker(FeatureTracker* self, SIZE_t[::1] features,
                               SIZE_t[::1] constant_features, SIZE_t max_features,
                               SIZE_t n_constant_features) nogil:
     """Reset for feature sampler."""
@@ -19,7 +19,7 @@ cdef inline void init_tracker(FeatureTracker self, SIZE_t[::1] features,
     self.n_known_constants = n_constant_features
     self.n_total_constants = n_constant_features
 
-cdef inline FeatureSample sample_feature(FeatureTracker self, UINT32_t* random_state) nogil:
+cdef inline FeatureSample sample_feature(FeatureTracker* self, UINT32_t* random_state) nogil:
     """Sample for new feature to check.
 
     Feature Sampler using Fisher-Yates-based algorithm.
@@ -63,8 +63,7 @@ cdef inline FeatureSample sample_feature(FeatureTracker self, UINT32_t* random_s
     #   and aren't constant.
 
     # Draw a feature at random
-    f_j = rand_int(self.n_drawn_constants, self.f_i - self.n_found_constants,
-                    random_state)
+    f_j = rand_int(self.n_drawn_constants, self.f_i - self.n_found_constants, random_state)
 
     if f_j < self.n_known_constants:
         # f_j in the interval [n_drawn_constants, n_known_constants[
@@ -84,7 +83,7 @@ cdef inline FeatureSample sample_feature(FeatureTracker self, UINT32_t* random_s
     output.status = FeatureStatus.EVALUTE
     return output
 
-cdef inline void update_found_constant(FeatureTracker self, SIZE_t f_j) nogil:
+cdef inline void update_found_constant(FeatureTracker* self, SIZE_t f_j) nogil:
     """Mark f_j as constant."""
     cdef SIZE_t* features = self.features
     features[f_j], features[self.n_total_constants] = (
@@ -93,13 +92,13 @@ cdef inline void update_found_constant(FeatureTracker self, SIZE_t f_j) nogil:
     self.n_found_constants += 1
     self.n_total_constants += 1
 
-cdef inline void update_drawn_feature(FeatureTracker self, SIZE_t f_j) nogil:
+cdef inline void update_drawn_feature(FeatureTracker* self, SIZE_t f_j) nogil:
     """Move f_j into features that have been drawn and are not constant."""
     cdef SIZE_t* features = self.features
     self.f_i -= 1
     features[self.f_i], features[f_j] = features[f_j], features[self.f_i]
 
-cdef inline SIZE_t update_constant_features(FeatureTracker self) nogil:
+cdef inline SIZE_t update_constant_features(FeatureTracker* self) nogil:
     """Move constant features.
 
     Respect invariant for constant features: the original order of element in
@@ -107,7 +106,7 @@ cdef inline SIZE_t update_constant_features(FeatureTracker self) nogil:
     """
     cdef SIZE_t* features = self.features
     cdef SIZE_t* constant_features = self.constant_features
-    # memcpy(features, constant_features, sizeof(SIZE_t) * self.n_known_constants)
-    # # Copy newly found constant features
-    # memcpy(constant_features[self.n_known_constants], features[self.n_known_constants],
-    #        sizeof(SIZE_t) * self.n_found_constants)
+    memcpy(features, constant_features, sizeof(SIZE_t) * self.n_known_constants)
+    # Copy newly found constant features
+    memcpy(constant_features + self.n_known_constants, features + self.n_known_constants,
+           sizeof(SIZE_t) * self.n_found_constants)
