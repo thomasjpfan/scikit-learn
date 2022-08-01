@@ -63,8 +63,8 @@ class deprecated:
         init = cls.__init__
         new = cls.__new__
 
+        # init is wrapped to update docstring
         def wrapped_init(*args, **kwargs):
-            warnings.warn(msg, category=FutureWarning)
             return init(*args, **kwargs)
 
         def wrapped_new(*args, **kwargs):
@@ -122,11 +122,9 @@ class deprecated:
 
 
 def _is_deprecated(func):
-    """Helper to check if func is wrapped by our deprecated decorator"""
-    closures = getattr(func, "__closure__", [])
-    if closures is None:
-        closures = []
-    is_deprecated = "deprecated" in "".join(
-        [c.cell_contents for c in closures if isinstance(c.cell_contents, str)]
-    )
-    return is_deprecated
+    """Helper to check if func is wrapped by our deprecated decorator.
+
+    Functions or classes updated by our deprecated decorator has "DEPRECATED"
+    injected into it's docstring.
+    """
+    return hasattr(func, "__doc__") and func.__doc__ and "DEPRECATED" in func.__doc__

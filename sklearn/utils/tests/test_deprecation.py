@@ -15,7 +15,7 @@ class MockClass1:
 
 
 class Sub1MockClass1(MockClass1):
-    """Does not call super().__init__"""
+    """Subclass that does not call super().__init__."""
 
     def __init__(self):
         pass
@@ -68,8 +68,6 @@ def test_is_deprecated():
     # Test if _is_deprecated helper identifies wrapping via deprecated
     # NOTE it works only for class methods and functions
     assert _is_deprecated(MockClass1.__init__)
-    assert _is_deprecated(MockClass1.__new__)
-    assert _is_deprecated(Sub1MockClass1.__new__)
     assert _is_deprecated(MockClass2().method)
     assert _is_deprecated(MockClass3.__init__)
     assert not _is_deprecated(MockClass4.__init__)
