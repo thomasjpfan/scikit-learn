@@ -60,18 +60,23 @@ class deprecated:
         if self.extra:
             msg += "; %s" % self.extra
 
-        # FIXME: we should probably reset __new__ for full generality
         init = cls.__init__
+        new = cls.__new__
 
-        def wrapped(*args, **kwargs):
+        def wrapped_init(*args, **kwargs):
             warnings.warn(msg, category=FutureWarning)
             return init(*args, **kwargs)
 
-        cls.__init__ = wrapped
+        def wrapped_new(*args, **kwargs):
+            warnings.warn(msg, category=FutureWarning)
+            return new(*args, **kwargs)
 
-        wrapped.__name__ = "__init__"
-        wrapped.__doc__ = self._update_doc(init.__doc__)
-        wrapped.deprecated_original = init
+        cls.__init__ = wrapped_init
+        cls.__new__ = wrapped_new
+
+        wrapped_init.__name__ = "__init__"
+        wrapped_init.__doc__ = self._update_doc(init.__doc__)
+        wrapped_init.deprecated_original = init
 
         return cls
 
