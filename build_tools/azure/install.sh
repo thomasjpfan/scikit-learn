@@ -73,8 +73,8 @@ pre_python_environment_install() {
 
 python_environment_install_and_activate() {
     if [[ "$DISTRIB" == "conda"* ]]; then
-        conda update -n base conda -y
-        conda install -c conda-forge "$(get_dep conda-lock min)" -y
+        conda update -n base conda pip -y
+        pip install "$(get_dep conda-lock min)"
         conda-lock install --name $VIRTUALENV $LOCK_FILE
         source activate $VIRTUALENV
 
