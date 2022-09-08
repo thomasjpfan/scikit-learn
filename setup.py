@@ -195,6 +195,10 @@ class build_ext_subclass(build_ext):
 
         build_ext.build_extensions(self)
 
+    def run(self):
+        self.run_command("build_clib")
+        build_ext.run(self)
+
 
 cmdclass = {"clean": CleanCommand, "build_ext": build_ext_subclass}
 
@@ -354,20 +358,6 @@ extension_config = {
             "extra_compile_args": ["-std=c++11"],
         },
         {
-            "name": "libsvm-skl",
-            "sources": ["src/libsvm/libsvm_template.cpp"],
-            "depends": [
-                "src/libsvm/svm.cpp",
-                "src/libsvm/svm.h",
-                "src/newrand/newrand.h",
-            ],
-            # Force C++ linking in case gcc is picked up instead
-            # of g++ under windows with some versions of MinGW
-            "extra_link_args": ["-lstdc++"],
-            # Use C++11 to use the random number generator fix
-            "extra_compiler_args": ["-std=c++11"],
-        },
-        {
             "sources": ["_libsvm.pyx"],
             "depends": [
                 "src/libsvm/libsvm_helper.c",
@@ -382,23 +372,6 @@ extension_config = {
             ],
             "libraries": ["libsvm-skl"],
             "include_np": True,
-        },
-        {
-            "name": "liblinear-skl",
-            "sources": [
-                "src/liblinear/linear.cpp",
-                "src/liblinear/tron.cpp",
-            ],
-            "depends": [
-                "src/liblinear/linear.h",
-                "src/liblinear/tron.h",
-                "src/newrand/newrand.h",
-            ],
-            # Force C++ linking in case gcc is picked up instead
-            # of g++ under windows with some versions of MinGW
-            "extra_link_args": ["-lstdc++"],
-            # Use C++11 to use the random number generator fix
-            "extra_compiler_args": ["-std=c++11"],
         },
         {
             "sources": ["_liblinear.pyx"],
@@ -464,6 +437,44 @@ extension_config = {
     ],
 }
 
+libraries = [
+    (
+        "libsvm-skl",
+        {
+            "sources": ["sklearn/svm/src/libsvm/libsvm_template.cpp"],
+            "depends": [
+                "sklearn/svm/src/libsvm/svm.cpp",
+                "sklearn/svm/src/libsvm/svm.h",
+                "sklearn/svm/src/newrand/newrand.h",
+            ],
+            # Force C++ linking in case gcc is picked up instead
+            # of g++ under windows with some versions of MinGW
+            "extra_link_args": ["-lstdc++"],
+            # Use C++11 to use the random number generator fix
+            "extra_compiler_args": ["-std=c++11"],
+        },
+    ),
+    (
+        "liblinear-skl",
+        {
+            "sources": [
+                "sklearn/svm/src/liblinear/linear.cpp",
+                "sklearn/svm/src/liblinear/tron.cpp",
+            ],
+            "depends": [
+                "sklearn/svm/src/liblinear/linear.h",
+                "sklearn/svm/src/liblinear/tron.h",
+                "sklearn/svm/src/newrand/newrand.h",
+            ],
+            # Force C++ linking in case gcc is picked up instead
+            # of g++ under windows with some versions of MinGW
+            "extra_link_args": ["-lstdc++"],
+            # Use C++11 to use the random number generator fix
+            "extra_compiler_args": ["-std=c++11"],
+        },
+    ),
+]
+
 
 def configure_extension_modules():
     # Skip cythonization as we do not want to include the generated
@@ -508,16 +519,13 @@ def configure_extension_modules():
 
             gen_from_templates(tempita_sources)
 
-            if "name" in extension:
-                name = ".".join(["sklearn", submodule, extension["name"]])
+            # By convention, our extensions always use the name of the first source
+            source_name = os.path.splitext(os.path.basename(sources[0]))[0]
+            if submodule:
+                name_parts = ["sklearn", submodule, source_name]
             else:
-                # By convention, our extensions always use the name of the first source
-                source_name = os.path.splitext(os.path.basename(sources[0]))[0]
-                if submodule:
-                    name_parts = ["sklearn", submodule, source_name]
-                else:
-                    name_parts = ["sklearn", source_name]
-                name = ".".join(name_parts)
+                name_parts = ["sklearn", source_name]
+            name = ".".join(name_parts)
 
             # Make paths start from the root directory
             include_dirs = [
@@ -622,4 +630,5 @@ if __name__ == "__main__":
 
         _check_cython_version()
         metadata["ext_modules"] = configure_extension_modules()
+        metadata["libraries"] = libraries
     setup(**metadata)
