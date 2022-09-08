@@ -535,9 +535,7 @@ def configure_extension_modules():
             if extension.get("include_np", False):
                 include_dirs.append(np_include)
 
-            libraries = [
-                parent_dir + "/" + library for library in extension.get("libraries", [])
-            ] + default_libraries
+            libraries = extension.get("libraries", []) + default_libraries
             depends = [
                 parent_dir + "/" + depend for depend in extension.get("depends", [])
             ]
