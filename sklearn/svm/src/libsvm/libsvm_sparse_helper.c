@@ -16,14 +16,14 @@ struct svm_csr_node **csr_to_libsvm (double *values, int* indices, int* indptr, 
 {
     struct svm_csr_node **sparse, *temp;
     int i, j=0, k=0, n;
-    sparse = malloc (n_samples * sizeof(struct svm_csr_node *));
+    sparse = (svm_csr_node**)malloc (n_samples * sizeof(struct svm_csr_node *));
 
     if (sparse == NULL)
         return NULL;
 
     for (i=0; i<n_samples; ++i) {
         n = indptr[i+1] - indptr[i]; /* count elements in row i */
-        temp = malloc ((n+1) * sizeof(struct svm_csr_node));
+        temp = (svm_csr_node *)malloc ((n+1) * sizeof(struct svm_csr_node));
 
         if (temp == NULL) {
             for (j=0; j<i; j++)
@@ -53,7 +53,7 @@ struct svm_parameter * set_parameter(int svm_type, int kernel_type, int degree,
 		char *weight_label, char *weight, int max_iter, int random_seed)
 {
     struct svm_parameter *param;
-    param = malloc(sizeof(struct svm_parameter));
+    param = (svm_parameter *)malloc(sizeof(struct svm_parameter));
     if (param == NULL) return NULL;
     param->svm_type = svm_type;
     param->kernel_type = kernel_type;
@@ -87,7 +87,7 @@ struct svm_csr_problem * csr_set_problem (char *values, npy_intp *n_indices,
                 char *sample_weight, int kernel_type) {
 
     struct svm_csr_problem *problem;
-    problem = malloc (sizeof (struct svm_csr_problem));
+    problem = (svm_csr_problem *)malloc (sizeof (struct svm_csr_problem));
     if (problem == NULL) return NULL;
     problem->l = (int) n_indptr[0] - 1;
     problem->y = (double *) Y;
@@ -117,15 +117,15 @@ struct svm_csr_model *csr_set_model(struct svm_parameter *param, int nr_class,
 
     m = nr_class * (nr_class-1)/2;
 
-    if ((model = malloc(sizeof(struct svm_csr_model))) == NULL)
+    if ((model = (svm_csr_model *)malloc(sizeof(struct svm_csr_model))) == NULL)
         goto model_error;
-    if ((model->nSV = malloc(nr_class * sizeof(int))) == NULL)
+    if ((model->nSV = (int *)malloc(nr_class * sizeof(int))) == NULL)
         goto nsv_error;
-    if ((model->label = malloc(nr_class * sizeof(int))) == NULL)
-        goto label_error;
-    if ((model->sv_coef = malloc((nr_class-1)*sizeof(double *))) == NULL)
+    if ((model->label = (int *)malloc(nr_class * sizeof(int))) == NULL)
+      /home/thomasfan/Desktop/scikit-learn-2/sklearn/datasets/tests/data/openml  goto label_error;
+    if ((model->sv_coef = (double **)malloc((nr_class-1)*sizeof(double *))) == NULL)
         goto sv_coef_error;
-    if ((model->rho = malloc( m * sizeof(double))) == NULL)
+    if ((model->rho = (double *)malloc( m * sizeof(double))) == NULL)
         goto rho_error;
 
     // This is only allocated in dynamic memory while training.
@@ -154,7 +154,7 @@ struct svm_csr_model *csr_set_model(struct svm_parameter *param, int nr_class,
          * We cannot squash all this mallocs in a single call since
          * svm_destroy_model will free each element of the array.
          */
-        if ((model->sv_coef[i] = malloc((model->l) * sizeof(double))) == NULL) {
+        if ((model->sv_coef[i] = (double *)malloc((model->l) * sizeof(double))) == NULL) {
             int j;
             for (j=0; j<i; j++)
                 free(model->sv_coef[j]);
@@ -174,10 +174,10 @@ struct svm_csr_model *csr_set_model(struct svm_parameter *param, int nr_class,
      */
 
     if (param->probability) {
-        if ((model->probA = malloc(m * sizeof(double))) == NULL)
+        if ((model->probA = (double *)malloc(m * sizeof(double))) == NULL)
             goto probA_error;
         memcpy(model->probA, probA, m * sizeof(double));
-        if ((model->probB = malloc(m * sizeof(double))) == NULL)
+        if ((model->probB = (double *)malloc(m * sizeof(double))) == NULL)
             goto probB_error;
         memcpy(model->probB, probB, m * sizeof(double));
     } else {

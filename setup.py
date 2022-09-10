@@ -197,6 +197,17 @@ class build_ext_subclass(build_ext):
 
     def run(self):
         self.run_command("build_clib")
+        # build_clib = self.get_finalized_command("build_clib")
+
+        # from pprint import pprint
+
+        # for e in self.extensions:
+        #     e.library_dirs.append(build_clib.build_clib)
+        #     pprint(vars(e))
+        #     print()
+
+        # assert False
+
         build_ext.run(self)
 
 
@@ -371,11 +382,15 @@ extension_config = {
                 "src/newrand",
             ],
             "libraries": ["libsvm-skl"],
+            # Force C++ linking in case gcc is picked up instead
+            # of g++ under windows with some versions of MinGW
+            "extra_link_args": ["-lstdc++"],
             "include_np": True,
         },
         {
             "sources": ["_liblinear.pyx"],
             "libraries": ["liblinear-skl"],
+            "language": "c++",
             "include_dirs": [
                 "src/liblinear",
                 "src/newrand",
@@ -391,6 +406,7 @@ extension_config = {
         {
             "sources": ["_libsvm_sparse.pyx"],
             "libraries": ["libsvm-skl"],
+            "language": "c++",
             "include_dirs": [
                 "src/libsvm",
                 "src/newrand",
@@ -494,6 +510,8 @@ def configure_extension_modules():
 
     cython_exts = []
     for submodule, extensions in extension_config.items():
+        # if submodule != "svm":
+        #     continue
         submodule_parts = submodule.split(".")
         parent_dir = "/".join(["sklearn", *submodule_parts])
         for extension in extensions:
