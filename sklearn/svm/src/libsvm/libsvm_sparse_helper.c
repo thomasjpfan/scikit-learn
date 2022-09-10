@@ -122,7 +122,7 @@ struct svm_csr_model *csr_set_model(struct svm_parameter *param, int nr_class,
     if ((model->nSV = (int *)malloc(nr_class * sizeof(int))) == NULL)
         goto nsv_error;
     if ((model->label = (int *)malloc(nr_class * sizeof(int))) == NULL)
-      /home/thomasfan/Desktop/scikit-learn-2/sklearn/datasets/tests/data/openml  goto label_error;
+        goto label_error;
     if ((model->sv_coef = (double **)malloc((nr_class-1)*sizeof(double *))) == NULL)
         goto sv_coef_error;
     if ((model->rho = (double *)malloc( m * sizeof(double))) == NULL)

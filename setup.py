@@ -197,17 +197,6 @@ class build_ext_subclass(build_ext):
 
     def run(self):
         self.run_command("build_clib")
-        # build_clib = self.get_finalized_command("build_clib")
-
-        # from pprint import pprint
-
-        # for e in self.extensions:
-        #     e.library_dirs.append(build_clib.build_clib)
-        #     pprint(vars(e))
-        #     print()
-
-        # assert False
-
         build_ext.run(self)
 
 
