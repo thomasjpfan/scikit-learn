@@ -16,6 +16,7 @@ import setuptools  # noqa
 # from setuptools._distutils.command.clean import clean as Clean
 from setuptools import Command, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_py import build_py
 from setuptools import setup
 
 import traceback
@@ -201,7 +202,22 @@ class build_ext_subclass(build_ext):
         build_ext.run(self)
 
 
-cmdclass = {"clean": CleanCommand, "build_ext": build_ext_subclass}
+class build_py_subclass(build_py):
+    def run(self):
+        if self.py_modules:
+            self.build_modules()
+        if self.packages:
+            self.build_packages()
+            self.build_package_data()
+
+        self.byte_compile(self.get_outputs(include_bytecode=0))
+
+
+cmdclass = {
+    "clean": CleanCommand,
+    "build_ext": build_ext_subclass,
+    # "build_py": build_py_subclass,
+}
 
 
 def check_package_status(package, min_version):
@@ -495,8 +511,6 @@ def configure_extension_modules():
 
     cython_exts = []
     for submodule, extensions in extension_config.items():
-        # if submodule != "svm":
-        #     continue
         submodule_parts = submodule.split(".")
         parent_dir = join("sklearn", *submodule_parts)
         for extension in extensions:
@@ -609,6 +623,12 @@ if __name__ == "__main__":
         package_data={"": ["*.pxd"]},
         zip_safe=False,  # the package can run out of an .egg file
         include_package_data=True,
+        exclude_package_data={
+            "": ["*.pxi", "*.pyx", "*.c", "*.cpp"],
+            "sklearn.svm.src.liblinear": ["*"],
+            "sklearn.svm.src.libsvm": ["*"],
+            "sklearn.svm.src.newrand": ["*"],
+        },
         extras_require={
             key: min_deps.tag_to_packages[key]
             for key in ["examples", "docs", "tests", "benchmark"]
