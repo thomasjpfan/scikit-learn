@@ -6,6 +6,7 @@
 
 import sys
 import os
+from os.path import join
 import platform
 import shutil
 
@@ -352,7 +353,7 @@ extension_config = {
         {
             "sources": ["_newrand.pyx"],
             "include_np": True,
-            "include_dirs": ["src/newrand"],
+            "include_dirs": [join("src", "newrand")],
             "language": "c++",
             # Use C++11 random number generator fix
             "extra_compile_args": ["-std=c++11"],
@@ -360,15 +361,15 @@ extension_config = {
         {
             "sources": ["_libsvm.pyx"],
             "depends": [
-                "src/libsvm/libsvm_helper.c",
-                "src/libsvm/libsvm_template.cpp",
-                "src/libsvm/svm.cpp",
-                "src/libsvm/svm.h",
-                "src/newrand/newrand.h",
+                join("src", "libsvm", "libsvm_helper.c"),
+                join("src", "libsvm", "libsvm_template.cpp"),
+                join("src", "libsvm", "svm.cpp"),
+                join("src", "libsvm", "svm.h"),
+                join("src", "newrand", "newrand.h"),
             ],
             "include_dirs": [
-                "src/libsvm",
-                "src/newrand",
+                join("src", "libsvm"),
+                join("src", "newrand"),
             ],
             "libraries": ["libsvm-skl"],
             # Force C++ linking in case gcc is picked up instead
@@ -381,15 +382,16 @@ extension_config = {
             "libraries": ["liblinear-skl"],
             "language": "c++",
             "include_dirs": [
-                "src/liblinear",
-                "src/newrand",
-                "../utils",
+                join("src", "liblinear"),
+                join("src", "newrand"),
+                join("..", "utils"),
             ],
             "include_np": True,
             "depends": [
-                "src/liblinear/*.h",
-                "src/newrand/newrand.h",
-                "src/liblinear/liblinear_helper.h",
+                join("src", "liblinear", "tron.h"),
+                join("src", "liblinear", "linear.h"),
+                join("src", "liblinear", "liblinear_helper.h"),
+                join("src", "newrand", "newrand.h"),
             ],
         },
         {
@@ -397,14 +399,14 @@ extension_config = {
             "libraries": ["libsvm-skl"],
             "language": "c++",
             "include_dirs": [
-                "src/libsvm",
-                "src/newrand",
+                join("src", "libsvm"),
+                join("src", "newrand"),
             ],
             "include_np": True,
             "depends": [
-                "src/libsvm/svm.h",
-                "src/newrand/newrand.h",
-                "src/libsvm/libsvm_sparse_helper.c",
+                join("src", "libsvm", "svm.h"),
+                join("src", "newrand", "newrand.h"),
+                join("src", "libsvm", "libsvm_sparse_helper.c"),
             ],
         },
     ],
@@ -419,7 +421,7 @@ extension_config = {
         {"sources": ["_cython_blas.pyx"]},
         {"sources": ["arrayfuncs.pyx"], "include_np": True},
         {
-            "sources": ["murmurhash.pyx", "src/MurmurHash3.cpp"],
+            "sources": ["murmurhash.pyx", join("src", "MurmurHash3.cpp")],
             "include_dirs": ["src"],
             "include_np": True,
         },
@@ -446,15 +448,12 @@ libraries = [
     (
         "libsvm-skl",
         {
-            "sources": ["sklearn/svm/src/libsvm/libsvm_template.cpp"],
+            "sources": [join("sklearn", "svm", "src", "libsvm", "libsvm_template.cpp")],
             "depends": [
-                "sklearn/svm/src/libsvm/svm.cpp",
-                "sklearn/svm/src/libsvm/svm.h",
-                "sklearn/svm/src/newrand/newrand.h",
+                join("sklearn", "svm", "src", "libsvm", "svm.cpp"),
+                join("sklearn", "svm", "src", "libsvm", "svm.h"),
+                join("sklearn", "svm", "src", "newrand", "newrand.h"),
             ],
-            # Force C++ linking in case gcc is picked up instead
-            # of g++ under windows with some versions of MinGW
-            "extra_link_args": ["-lstdc++"],
             # Use C++11 to use the random number generator fix
             "extra_compiler_args": ["-std=c++11"],
         },
@@ -463,17 +462,14 @@ libraries = [
         "liblinear-skl",
         {
             "sources": [
-                "sklearn/svm/src/liblinear/linear.cpp",
-                "sklearn/svm/src/liblinear/tron.cpp",
+                join("sklearn", "svm", "src", "liblinear", "linear.cpp"),
+                join("sklearn", "svm", "src", "liblinear", "tron.cpp"),
             ],
             "depends": [
-                "sklearn/svm/src/liblinear/linear.h",
-                "sklearn/svm/src/liblinear/tron.h",
-                "sklearn/svm/src/newrand/newrand.h",
+                join("sklearn", "svm", "src", "liblinear", "linear.h"),
+                join("sklearn", "svm", "src", "liblinear", "tron.h"),
+                join("sklearn", "svm", "src", "newrand", "newrand.h"),
             ],
-            # Force C++ linking in case gcc is picked up instead
-            # of g++ under windows with some versions of MinGW
-            "extra_link_args": ["-lstdc++"],
             # Use C++11 to use the random number generator fix
             "extra_compiler_args": ["-std=c++11"],
         },
@@ -502,7 +498,7 @@ def configure_extension_modules():
         # if submodule != "svm":
         #     continue
         submodule_parts = submodule.split(".")
-        parent_dir = "/".join(["sklearn", *submodule_parts])
+        parent_dir = join("sklearn", *submodule_parts)
         for extension in extensions:
             if is_pypy and not extension.get("compile_for_pypy", True):
                 continue
@@ -510,7 +506,7 @@ def configure_extension_modules():
             sources = []
             tempita_sources = []
             for source in extension["sources"]:
-                source = parent_dir + "/" + source
+                source = join(parent_dir, source)
                 new_source_path, path_ext = os.path.splitext(source)
 
                 if path_ext != ".tp":
@@ -537,7 +533,7 @@ def configure_extension_modules():
 
             # Make paths start from the root directory
             include_dirs = [
-                parent_dir + "/" + include_dir
+                join(parent_dir, include_dir)
                 for include_dir in extension.get("include_dirs", [])
             ]
             if extension.get("include_np", False):
@@ -545,7 +541,7 @@ def configure_extension_modules():
 
             libraries = extension.get("libraries", []) + default_libraries
             depends = [
-                parent_dir + "/" + depend for depend in extension.get("depends", [])
+                join(parent_dir, depend) for depend in extension.get("depends", [])
             ]
             extra_compile_args = (
                 extension.get("extra_compile_args", []) + default_extra_compile_args
