@@ -25,12 +25,12 @@ static struct feature_node **dense_to_sparse(char *x, int double_precision,
     struct feature_node *T;             /* pointer to the top of the stack */
     int have_bias = (bias > 0);
 
-    sparse = (feature_node **)malloc (n_samples * sizeof(struct feature_node *));
+    sparse = malloc (n_samples * sizeof(struct feature_node *));
     if (sparse == NULL)
         return NULL;
 
     n_nonzero += (have_bias+1) * n_samples;
-    T = (feature_node *)malloc (n_nonzero * sizeof(struct feature_node));
+    T = malloc (n_nonzero * sizeof(struct feature_node));
     if (T == NULL) {
         free(sparse);
         return NULL;
@@ -87,12 +87,12 @@ static struct feature_node **csr_to_sparse(char *x, int double_precision,
     struct feature_node *T;
     int have_bias = (bias > 0);
 
-    sparse = (feature_node **)malloc (n_samples * sizeof(struct feature_node *));
+    sparse = malloc (n_samples * sizeof(struct feature_node *));
     if (sparse == NULL)
         return NULL;
 
     n_nonzero += (have_bias+1) * n_samples;
-    T = (feature_node *)malloc (n_nonzero * sizeof(struct feature_node));
+    T = malloc (n_nonzero * sizeof(struct feature_node));
     if (T == NULL) {
         free(sparse);
         return NULL;
@@ -128,57 +128,57 @@ struct problem * set_problem(char *X, int double_precision_X, int n_samples,
         int n_features, int n_nonzero, double bias, char* sample_weight,
         char *Y)
 {
-    struct problem *problem_;
+    struct problem *problem;
     /* not performant but simple */
-    problem_ = (problem *)malloc(sizeof(struct problem));
-    if (problem_ == NULL) return NULL;
-    problem_->l = n_samples;
-    problem_->n = n_features + (bias > 0);
-    problem_->y = (double *) Y;
-    problem_->W = (double *) sample_weight;
-    problem_->x = dense_to_sparse(X, double_precision_X, n_samples, n_features,
+    problem = malloc(sizeof(struct problem));
+    if (problem == NULL) return NULL;
+    problem->l = n_samples;
+    problem->n = n_features + (bias > 0);
+    problem->y = (double *) Y;
+    problem->W = (double *) sample_weight;
+    problem->x = dense_to_sparse(X, double_precision_X, n_samples, n_features,
                         n_nonzero, bias);
-    problem_->bias = bias;
+    problem->bias = bias;
 
-    if (problem_->x == NULL) {
-        free(problem_);
+    if (problem->x == NULL) { 
+        free(problem);
         return NULL;
     }
 
-    return problem_;
+    return problem;
 }
 
 struct problem * csr_set_problem (char *X, int double_precision_X,
         char *indices, char *indptr, int n_samples, int n_features,
         int n_nonzero, double bias, char *sample_weight, char *Y)
 {
-    struct problem *problem_;
-    problem_ = (problem *)malloc (sizeof (struct problem));
-    if (problem_ == NULL) return NULL;
-    problem_->l = n_samples;
-    problem_->n = n_features + (bias > 0);
-    problem_->y = (double *) Y;
-    problem_->W = (double *) sample_weight;
-    problem_->x = csr_to_sparse(X, double_precision_X, (int *) indices,
+    struct problem *problem;
+    problem = malloc (sizeof (struct problem));
+    if (problem == NULL) return NULL;
+    problem->l = n_samples;
+    problem->n = n_features + (bias > 0);
+    problem->y = (double *) Y;
+    problem->W = (double *) sample_weight;
+    problem->x = csr_to_sparse(X, double_precision_X, (int *) indices,
                         (int *) indptr, n_samples, n_features, n_nonzero, bias);
-    problem_->bias = bias;
+    problem->bias = bias;
 
-    if (problem_->x == NULL) {
-        free(problem_);
+    if (problem->x == NULL) {
+        free(problem);
         return NULL;
     }
 
-    return problem_;
+    return problem;
 }
 
 
 /* Create a parameter struct with and return it */
 struct parameter *set_parameter(int solver_type, double eps, double C,
                                 npy_intp nr_weight, char *weight_label,
-                                char *weight, int max_iter, unsigned seed,
+                                char *weight, int max_iter, unsigned seed, 
                                 double epsilon)
 {
-    struct parameter *param = (parameter *)malloc(sizeof(struct parameter));
+    struct parameter *param = malloc(sizeof(struct parameter));
     if (param == NULL)
         return NULL;
 
@@ -196,7 +196,7 @@ struct parameter *set_parameter(int solver_type, double eps, double C,
 
 void copy_w(void *data, struct model *model, int len)
 {
-    memcpy(data, model->w, len * sizeof(double));
+    memcpy(data, model->w, len * sizeof(double)); 
 }
 
 double get_bias(struct model *model)
