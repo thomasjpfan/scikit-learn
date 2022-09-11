@@ -388,15 +388,12 @@ extension_config = {
                 join("src", "newrand"),
             ],
             "libraries": ["libsvm-skl"],
-            # Force C++ linking in case gcc is picked up instead
-            # of g++ under windows with some versions of MinGW
             "extra_link_args": ["-lstdc++"],
             "include_np": True,
         },
         {
             "sources": ["_liblinear.pyx"],
             "libraries": ["liblinear-skl"],
-            "language": "c++",
             "include_dirs": [
                 join("src", "liblinear"),
                 join("src", "newrand"),
@@ -409,11 +406,11 @@ extension_config = {
                 join("src", "liblinear", "liblinear_helper.h"),
                 join("src", "newrand", "newrand.h"),
             ],
+            "extra_link_args": ["-lstdc++"],
         },
         {
             "sources": ["_libsvm_sparse.pyx"],
             "libraries": ["libsvm-skl"],
-            "language": "c++",
             "include_dirs": [
                 join("src", "libsvm"),
                 join("src", "newrand"),
@@ -424,6 +421,7 @@ extension_config = {
                 join("src", "newrand", "newrand.h"),
                 join("src", "libsvm", "libsvm_sparse_helper.c"),
             ],
+            "extra_link_args": ["-lstdc++"],
         },
     ],
     "tree": [
