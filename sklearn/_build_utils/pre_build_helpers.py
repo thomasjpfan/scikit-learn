@@ -11,7 +11,7 @@ import subprocess
 from setuptools import Distribution, Command
 from setuptools.command.build_ext import customize_compiler
 
-from .patch_new_compiler import patched_new_compiler as new_compiler
+from .new_compiler import new_compiler
 
 
 class config_cc(Command):

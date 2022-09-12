@@ -56,12 +56,12 @@ PROJECT_URLS = {
 import sklearn  # noqa
 import sklearn._min_dependencies as min_deps  # noqa
 from sklearn._build_utils import _check_cython_version  # noqa
-from sklearn._build_utils.patch_new_compiler import patch_new_compiler  # noqa
+from sklearn._build_utils.new_compiler import patch_new_compiler  # noqa
 from sklearn.externals._packaging.version import parse as parse_version  # noqa
 
 VERSION = sklearn.__version__
 
-# patch new_compilers function for intel support
+# Patches new_compiler to support other compilers such as intelem.
 patch_new_compiler()
 
 # See: https://numpy.org/doc/stable/reference/c-api/deprecations.html
