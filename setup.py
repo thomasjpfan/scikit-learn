@@ -16,7 +16,6 @@ import setuptools  # noqa
 # from setuptools._distutils.command.clean import clean as Clean
 from setuptools import Command, Extension
 from setuptools.command.build_ext import build_ext
-from setuptools.command.build_py import build_py
 from setuptools import setup
 
 import traceback
@@ -57,9 +56,13 @@ PROJECT_URLS = {
 import sklearn  # noqa
 import sklearn._min_dependencies as min_deps  # noqa
 from sklearn._build_utils import _check_cython_version  # noqa
+from sklearn._build_utils.patch_new_compiler import patch_new_compiler  # noqa
 from sklearn.externals._packaging.version import parse as parse_version  # noqa
 
 VERSION = sklearn.__version__
+
+# patch new_compilers function for intel support
+patch_new_compiler()
 
 # See: https://numpy.org/doc/stable/reference/c-api/deprecations.html
 DEFINE_MACRO_NUMPY_C_API = (
@@ -202,21 +205,9 @@ class build_ext_subclass(build_ext):
         build_ext.run(self)
 
 
-class build_py_subclass(build_py):
-    def run(self):
-        if self.py_modules:
-            self.build_modules()
-        if self.packages:
-            self.build_packages()
-            self.build_package_data()
-
-        self.byte_compile(self.get_outputs(include_bytecode=0))
-
-
 cmdclass = {
     "clean": CleanCommand,
     "build_ext": build_ext_subclass,
-    # "build_py": build_py_subclass,
 }
 
 
