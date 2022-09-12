@@ -18,6 +18,7 @@ def new_compiler(plat=None, compiler=None, verbose=0, dry_run=0, force=0):
 def patch_new_compiler():
     patch_modules = [
         "setuptools.command.build_ext",
+        "setuptools.command.build_clib",
         "distutils.ccompiler",
         "setuptools._distutils.ccompiler",
     ]
