@@ -462,10 +462,12 @@ libraries = [
     (
         "libsvm-skl",
         {
-            "sources": [join("sklearn", "svm", "src", "libsvm", "libsvm_template.cpp")],
+            "sources": [
+                join("sklearn", "svm", "src", "libsvm", "libsvm_template.cpp"),
+            ],
             "depends": [
-                join("sklearn", "svm", "src", "libsvm", "svm.cpp"),
                 join("sklearn", "svm", "src", "libsvm", "svm.h"),
+                join("sklearn", "svm", "src", "libsvm", "svm.cpp"),
                 join("sklearn", "svm", "src", "newrand", "newrand.h"),
             ],
             # Use C++11 to use the random number generator fix
