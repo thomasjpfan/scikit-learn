@@ -130,7 +130,6 @@ scikit_learn_install() {
         # environment:
         pip install --verbose --editable .
     elif [[ "$BUILD_WITH_ICC" == "true" ]]; then
-        # The "build_clib" command is implicitly used to build "libsvm-skl".
         # To compile with a different compiler, we also need to specify the
         # compiler for this command
         python setup.py build --compiler=intelem

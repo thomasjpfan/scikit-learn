@@ -32,7 +32,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import platform
-from distutils.unixccompiler import UnixCCompiler
+from setuptools._distutils.unixccompiler import UnixCCompiler
 
 
 class IntelEM64TCCompiler(UnixCCompiler):
