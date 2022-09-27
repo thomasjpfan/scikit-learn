@@ -453,6 +453,7 @@ libraries = [
     (
         "libsvm-skl",
         {
+            "language": "c++",
             "sources": [
                 join("sklearn", "svm", "src", "libsvm", "libsvm_template.cpp"),
             ],
@@ -468,6 +469,7 @@ libraries = [
     (
         "liblinear-skl",
         {
+            "language": "c++",
             "sources": [
                 join("sklearn", "svm", "src", "liblinear", "linear.cpp"),
                 join("sklearn", "svm", "src", "liblinear", "tron.cpp"),
