@@ -133,7 +133,7 @@ scikit_learn_install() {
         # To compile with a different compiler, we also need to specify the
         # compiler for this command
         python setup.py build --compiler=intelem
-        python setup.py install --skip-build
+        python setup.py install
     else
         # Use the pre-installed build dependencies and build directly in the
         # current environment.

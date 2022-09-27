@@ -13,17 +13,3 @@ def new_compiler(plat=None, compiler=None, verbose=0, dry_run=0, force=0):
     return orig_new_compiler(
         plat=plat, compiler=compiler, verbose=verbose, dry_run=dry_run, force=force
     )
-
-
-def patch_new_compiler():
-    patch_modules = [
-        "setuptools.command.build_ext",
-        "setuptools.command.build_clib",
-        "distutils.ccompiler",
-        "setuptools._distutils.ccompiler",
-    ]
-
-    for patch_module in patch_modules:
-        with suppress(ImportError):
-            mod = import_module(patch_module)
-            mod.new_compiler = new_compiler

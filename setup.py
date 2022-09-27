@@ -9,6 +9,7 @@ import os
 from os.path import join
 import platform
 import shutil
+from sysconfig import get_platform
 
 # We need to import setuptools before because it monkey-patches distutils
 import setuptools  # noqa
@@ -16,6 +17,7 @@ import setuptools  # noqa
 # from setuptools._distutils.command.clean import clean as Clean
 from setuptools import Command, Extension
 from setuptools.command.build_ext import build_ext
+from setuptools.command.build_clib import build_clib
 from setuptools import setup
 
 import traceback
@@ -56,13 +58,11 @@ PROJECT_URLS = {
 import sklearn  # noqa
 import sklearn._min_dependencies as min_deps  # noqa
 from sklearn._build_utils import _check_cython_version  # noqa
-from sklearn._build_utils.new_compiler import patch_new_compiler  # noqa
+from sklearn._build_utils.new_compiler import new_compiler  # noqa
+from setuptools.command.build_ext import customize_compiler  # noqa
 from sklearn.externals._packaging.version import parse as parse_version  # noqa
 
 VERSION = sklearn.__version__
-
-# Patches new_compiler to support other compilers such as intelem.
-patch_new_compiler()
 
 # See: https://numpy.org/doc/stable/reference/c-api/deprecations.html
 DEFINE_MACRO_NUMPY_C_API = (
@@ -200,10 +200,85 @@ class build_ext_subclass(build_ext):
 
         build_ext.build_extensions(self)
 
+    def run(self):  # noqa: C901
+        if not self.extensions:
+            return
+
+        # If we were asked to build any C/C++ libraries, make sure that the
+        # directory where we put them is in the library search path for
+        # linking extensions.
+        if self.distribution.has_c_libraries():
+            build_clib = self.get_finalized_command("build_clib")
+            self.libraries.extend(build_clib.get_library_names() or [])
+            self.library_dirs.append(build_clib.build_clib)
+
+        # Setup the CCompiler object that we'll use to do all the
+        # compiling and linking
+        self.compiler = new_compiler(
+            compiler=self.compiler,
+            verbose=self.verbose,
+            dry_run=self.dry_run,
+            force=self.force,
+        )
+        customize_compiler(self.compiler)
+        # If we are cross-compiling, init the compiler now (if we are not
+        # cross-compiling, init would not hurt, but people may rely on
+        # late initialization of compiler even if they shouldn't...)
+        if os.name == "nt" and self.plat_name != get_platform():
+            self.compiler.initialize(self.plat_name)
+
+        # And make sure that any compile/link-related options (which might
+        # come from the command-line or from the setup script) are set in
+        # that CCompiler object -- that way, they automatically apply to
+        # all compiling and linking done here.
+        if self.include_dirs is not None:
+            self.compiler.set_include_dirs(self.include_dirs)
+        if self.define is not None:
+            # 'define' option is a list of (name,value) tuples
+            for (name, value) in self.define:
+                self.compiler.define_macro(name, value)
+        if self.undef is not None:
+            for macro in self.undef:
+                self.compiler.undefine_macro(macro)
+        if self.libraries is not None:
+            self.compiler.set_libraries(self.libraries)
+        if self.library_dirs is not None:
+            self.compiler.set_library_dirs(self.library_dirs)
+        if self.rpath is not None:
+            self.compiler.set_runtime_library_dirs(self.rpath)
+        if self.link_objects is not None:
+            self.compiler.set_link_objects(self.link_objects)
+
+        # Now actually compile and link everything.
+        self.build_extensions()
+
+
+class build_clib_subclass(build_clib):
+    def run(self):
+        if not self.libraries:
+            return
+        self.compiler = new_compiler(
+            compiler=self.compiler, dry_run=self.dry_run, force=self.force
+        )
+        customize_compiler(self.compiler)
+
+        if self.include_dirs is not None:
+            self.compiler.set_include_dirs(self.include_dirs)
+        if self.define is not None:
+            # 'define' option is a list of (name,value) tuples
+            for (name, value) in self.define:
+                self.compiler.define_macro(name, value)
+        if self.undef is not None:
+            for macro in self.undef:
+                self.compiler.undefine_macro(macro)
+
+        self.build_libraries(self.libraries)
+
 
 cmdclass = {
     "clean": CleanCommand,
     "build_ext": build_ext_subclass,
+    "build_clib": build_clib_subclass,
 }
 
 
