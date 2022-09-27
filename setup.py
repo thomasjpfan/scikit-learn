@@ -200,10 +200,6 @@ class build_ext_subclass(build_ext):
 
         build_ext.build_extensions(self)
 
-    def run(self):
-        self.run_command("build_clib")
-        build_ext.run(self)
-
 
 cmdclass = {
     "clean": CleanCommand,
@@ -453,7 +449,6 @@ libraries = [
     (
         "libsvm-skl",
         {
-            "language": "c++",
             "sources": [
                 join("sklearn", "svm", "src", "libsvm", "libsvm_template.cpp"),
             ],
@@ -464,12 +459,12 @@ libraries = [
             ],
             # Use C++11 to use the random number generator fix
             "extra_compiler_args": ["-std=c++11"],
+            "extra_link_args": ["-lstdc++"],
         },
     ),
     (
         "liblinear-skl",
         {
-            "language": "c++",
             "sources": [
                 join("sklearn", "svm", "src", "liblinear", "linear.cpp"),
                 join("sklearn", "svm", "src", "liblinear", "tron.cpp"),
@@ -481,6 +476,7 @@ libraries = [
             ],
             # Use C++11 to use the random number generator fix
             "extra_compiler_args": ["-std=c++11"],
+            "extra_link_args": ["-lstdc++"],
         },
     ),
 ]

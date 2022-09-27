@@ -77,8 +77,12 @@ def _get_compiler():
     dist.parse_command_line()
 
     cmd_opts = dist.command_options.get("build_ext")
+    cmd_opts2 = dist.command_options.get("build")
+
     if cmd_opts is not None and "compiler" in cmd_opts:
         compiler = cmd_opts["compiler"][1]
+    elif cmd_opts2 is not None and "compiler" in cmd_opts2:
+        compiler = cmd_opts2["compiler"][1]
     else:
         compiler = None
 

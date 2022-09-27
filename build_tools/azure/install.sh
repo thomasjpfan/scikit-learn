@@ -122,12 +122,6 @@ scikit_learn_install() {
         export LDFLAGS="$LDFLAGS -Wl,--sysroot=/"
     fi
 
-    if [[ "$BUILD_WITH_ICC" == "true" ]]; then
-        # The "build_clib" command is implicitly used to build "libsvm-skl".
-        # To compile with a different compiler, we also need to specify the
-        # compiler for this command
-        python setup.py build_ext --compiler=intelem -i build_clib --compiler=intelem
-    fi
 
     # TODO use a specific variable for this rather than using a particular build ...
     if [[ "$DISTRIB" == "conda-pip-latest" ]]; then
@@ -135,6 +129,12 @@ scikit_learn_install() {
         # dependencies specified in pyproject.toml using an isolated build
         # environment:
         pip install --verbose --editable .
+    elif [[ "$BUILD_WITH_ICC" == "true" ]]; then
+        # The "build_clib" command is implicitly used to build "libsvm-skl".
+        # To compile with a different compiler, we also need to specify the
+        # compiler for this command
+        python setup.py build --compiler=intelem
+        python setup.py install --skip-build
     else
         # Use the pre-installed build dependencies and build directly in the
         # current environment.
