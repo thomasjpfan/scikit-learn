@@ -207,6 +207,12 @@ try:
                     print(
                         f"Using old NumPy C API (version 1.7) for extension {ext.name}"
                     )
+            # Disable FH4 exception handling to not require vendoring VCRUNTIME140_1.dll
+            # https://github.com/pypa/cibuildwheel/issues/423#issuecomment-677763904
+            # https://github.com/scipy/oldest-supported-numpy/issues/45#issuecomment-1096927247
+            if self.compiler.compiler_type == "msvc":
+                for ext in self.extensions:
+                    ext.extra_compile_args.append("/d2FH4-")
 
             if sklearn._OPENMP_SUPPORTED:
                 openmp_flag = get_openmp_flag(self.compiler)
