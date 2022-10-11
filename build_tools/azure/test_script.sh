@@ -94,5 +94,5 @@ if [[ -n "$SELECTED_TESTS" ]]; then
 fi
 
 set -x
-eval "$TEST_CMD --pyargs sklearn"
+eval "$TEST_CMD --pyargs sklearn.model_selection.tests.test_search -k test_searchcv_raise_warning_with_non_finite_score"
 set +x
