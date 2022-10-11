@@ -2021,6 +2021,10 @@ def test_searchcv_raise_warning_with_non_finite_score(
         grid.fit(X, y)
 
     set_with_warning = ["test", "train"] if return_train_score else ["test"]
+    for w in warn_msg:
+        print(w)
+
+    assert False
     assert len(warn_msg) == len(set_with_warning)
     for msg, dataset in zip(warn_msg, set_with_warning):
         assert f"One or more of the {dataset} scores are non-finite" in str(msg.message)
