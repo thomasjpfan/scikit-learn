@@ -22,5 +22,5 @@ else
         -e OMP_NUM_THREADS=2 \
         -e OPENBLAS_NUM_THREADS=2 \
         --rm scikit-learn/minimal-windows \
-        powershell -Command "pytest --pyargs sklearn"
+        powershell -Command "pytest --pyargs sklearn -v"
 fi
