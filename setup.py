@@ -188,6 +188,10 @@ class build_ext_subclass(build_ext):
             else:
                 print(f"Using old NumPy C API (version 1.7) for extension {ext.name}")
 
+        if self.compiler.compiler_type == "msvc":
+            for ext in self.extensions:
+                ext.extra_compile_args.extend(["-lucrt", "-static"])
+
         if sklearn._OPENMP_SUPPORTED:
             openmp_flag = get_openmp_flag(self.compiler)
 

@@ -63,7 +63,7 @@ jobs:
           #   python: 39
           #   bitness: 64
           #   platform_id: win_amd64
-          - os: windows-2019
+          - os: windows-latest
             python: 310
             bitness: 64
             platform_id: win_amd64
