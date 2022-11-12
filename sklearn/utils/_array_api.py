@@ -1,5 +1,6 @@
 """Tools to support array_api."""
 import numpy
+import numpy_array_api_compat
 from .._config import get_config
 import scipy.special as special
 
@@ -49,44 +50,6 @@ class _ArrayAPIWrapper:
         return self._namespace.stack(selected, axis=axis)
 
 
-class _NumPyApiWrapper:
-    """Array API compat wrapper for any numpy version
-
-    NumPy < 1.22 does not expose the numpy.array_api namespace. This
-    wrapper makes it possible to write code that uses the standard
-    Array API while working with any version of NumPy supported by
-    scikit-learn.
-
-    See the `get_namespace()` public function for more details.
-    """
-
-    def __getattr__(self, name):
-        return getattr(numpy, name)
-
-    def astype(self, x, dtype, *, copy=True, casting="unsafe"):
-        # astype is not defined in the top level NumPy namespace
-        return x.astype(dtype, copy=copy, casting=casting)
-
-    def asarray(self, x, *, dtype=None, device=None, copy=None):
-        # Support copy in NumPy namespace
-        if copy is True:
-            return numpy.array(x, copy=True, dtype=dtype)
-        else:
-            return numpy.asarray(x, dtype=dtype)
-
-    def unique_inverse(self, x):
-        return numpy.unique(x, return_inverse=True)
-
-    def unique_counts(self, x):
-        return numpy.unique(x, return_counts=True)
-
-    def unique_values(self, x):
-        return numpy.unique(x)
-
-    def concat(self, arrays, *, axis=None):
-        return numpy.concatenate(arrays, axis=axis)
-
-
 def get_namespace(*arrays):
     """Get namespace of arrays.
 
@@ -133,7 +96,7 @@ def get_namespace(*arrays):
     # Returns a tuple: (array_namespace, is_array_api)
 
     if not get_config()["array_api_dispatch"]:
-        return _NumPyApiWrapper(), False
+        return numpy_array_api_compat, False
 
     namespaces = {
         x.__array_namespace__() if hasattr(x, "__array_namespace__") else None
@@ -152,7 +115,7 @@ def get_namespace(*arrays):
     (xp,) = namespaces
     if xp is None:
         # Use numpy as default
-        return _NumPyApiWrapper(), False
+        return numpy_array_api_compat, False
 
     return _ArrayAPIWrapper(xp), True
 
