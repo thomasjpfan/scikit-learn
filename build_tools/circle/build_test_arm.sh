@@ -1,10 +1,8 @@
 #!/bin/bash
 
 set -e
-set -x
 
 UNAMESTR=`uname`
-N_CORES=`nproc --all`
 
 # defines the get_dep and show_installed_libraries functions
 source build_tools/shared.sh
@@ -16,13 +14,20 @@ setup_ccache() {
     for name in gcc g++ cc c++ x86_64-linux-gnu-gcc x86_64-linux-gnu-c++; do
       ln -s $(which ccache) "/tmp/ccache/${name}"
     done
+
+    # OSX uses clang from the compilers package, which is exposes through CC and CXX
+    if [[ "$UNAMESTR" == "Darwin" ]]; then
+      for name in $CC $CXX; do
+        ln -s $(which ccache) "/tmp/ccache/${name}"
+      done
+    fi
+
     export PATH="/tmp/ccache:${PATH}"
     # Unset ccache limits
     ccache -F 0
     ccache -M 0
+    ccache --show-config
 }
-
-MINICONDA_URL="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh"
 
 # Install Mambaforge
 wget $MINICONDA_URL -O mambaforge.sh
@@ -46,7 +51,7 @@ export SKLEARN_BUILD_PARALLEL=$(($N_CORES + 1))
 
 # Disable the build isolation and build in the tree so that the same folder can be
 # cached between CI runs.
-pip install --verbose --no-build-isolation .
+python -m pip install --verbose --no-build-isolation .
 
 # Report cache usage
 ccache -s --verbose
