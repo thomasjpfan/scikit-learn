@@ -37,7 +37,7 @@ macos_arm64_test_task:
     SKLEARN_BUILD_PARALLEL: 5
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/cirrus/pylatest_conda_forge_osx_arm-64_osx-arm64_conda.lock
-    MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh
   pip_cache:
     folder: ~/.cache/pip
   ccache_cache:
