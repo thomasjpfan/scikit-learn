@@ -1,10 +1,8 @@
 #!/bin/bash
 
 set -e
-set -x
 
 UNAMESTR=`uname`
-N_CORES=`nproc --all`
 
 # defines the get_dep and show_installed_libraries functions
 source build_tools/shared.sh
@@ -21,8 +19,6 @@ setup_ccache() {
     ccache -F 0
     ccache -M 0
 }
-
-MINICONDA_URL="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh"
 
 # Install Mambaforge
 wget $MINICONDA_URL -O mambaforge.sh
@@ -46,7 +42,7 @@ export SKLEARN_BUILD_PARALLEL=$(($N_CORES + 1))
 
 # Disable the build isolation and build in the tree so that the same folder can be
 # cached between CI runs.
-pip install --verbose --no-build-isolation .
+python -m pip install --verbose --no-build-isolation .
 
 # Report cache usage
 ccache -s --verbose
