@@ -1,0 +1,15 @@
+linux_aarch64_test:
+  compute_engine_instance:
+    image_project: cirrus-images
+    image: family/docker-builder-arm64
+    architecture: arm64
+    platform: linux
+    cpu: 4
+    memory: 16G
+  total_cache:
+    folders:
+      - ~/.cache/ccache
+      - ~/.cache/pip
+      - ~/scikit_learn_data
+
+  test_script: bash build_tools/circle/build_test_arm.sh
