@@ -11,5 +11,7 @@ macos_arm64_test_task:
     CCACHE_DIR:
   ccache_cache:
     folder: ~/Library/Caches/ccache
+  scikit_learn_data_cache:
+    folder: ~/scikit_learn_data
 
   test_script: bash build_tools/circle/build_test_arm.sh
