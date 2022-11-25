@@ -1,6 +1,9 @@
 macos_arm64_test_task:
   macos_instance:
     image: ghcr.io/cirruslabs/macos-ventura-base:latest
+    cpu: 8
+    memory: 16G
+
   env:
     OMP_NUM_THREADS: 2
     OPENBLAS_NUM_THREADS: 2
