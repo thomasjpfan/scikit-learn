@@ -11,10 +11,11 @@ linux_aarch64_test_task:
     OPENBLAS_NUM_THREADS: 2
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
-  total_cache:
-    folders:
-      - ~/.cache/ccache
-      - ~/.cache/pip
-      - ~/scikit_learn_data
+  pip_cache:
+    folder: ~/.cache/pip
+  ccache_cache:
+    folder: ~/.cache/ccache
+  scikit_learn_data_cache:
+    folder: ~/scikit_learn_data
 
   test_script: bash build_tools/circle/build_test_arm.sh
