@@ -8,11 +8,8 @@ macos_arm64_test_task:
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/cirrus/pylatest_conda_forge_osx_arm-64_osx-arm64_conda.lock
     MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh
-  pip_cache:
-    folder: ~/.cache/pip
+    CCACHE_DIR:
   ccache_cache:
-    folder: ~/.cache/ccache
-  scikit_learn_data_cache:
-    folder: ~/scikit_learn_data
+    folder: ~/Library/Caches/ccache
 
   test_script: bash build_tools/circle/build_test_arm.sh
