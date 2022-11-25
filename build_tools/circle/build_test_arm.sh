@@ -4,7 +4,8 @@ set -e
 set -x
 
 UNAMESTR=`uname`
-N_CORES=`nproc --all`
+N_CORES_DEFAULT=`nproc --all`
+N_CORES="${N_CORES:=$N_CORES_DEFAULT}"
 
 # defines the get_dep and show_installed_libraries functions
 source build_tools/shared.sh
