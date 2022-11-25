@@ -11,7 +11,7 @@ def main(ctx):
 
     # Get commit message for event.
     SHA = env.get("CIRRUS_CHANGE_IN_REPO")
-    url = "https://api.github.com/repos/scipy/scipy/git/commits/" + SHA
+    url = "https://api.github.com/repos/scikit-learn/scikit-learn/git/commits/" + SHA
     response = http.get(url).json()
     commit_message = response["message"]
 
