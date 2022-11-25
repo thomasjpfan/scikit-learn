@@ -1,18 +1,12 @@
 linux_aarch64_test_task:
-  compute_engine_instance:
-    image_project: cirrus-images
-    image: family/docker-builder-arm64
-    architecture: arm64
-    platform: linux
+  arm_container:
+    image: ubuntu-2004:202101-01
     cpu: 4
-    memory: 16G
+    memory: 12G
   env:
     OMP_NUM_THREADS: 2
     OPENBLAS_NUM_THREADS: 2
-    N_CORES_TEST: 2
-    # Set parallelism to 5 to overlap IO bound tasks with CPU bound tasks on CI
-    # workers with 4 cores when building the compiled extensions of scikit-learn.
-    SKLEARN_BUILD_PARALLEL: 5
+    N_CORES: 4
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
     MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
@@ -27,14 +21,11 @@ linux_aarch64_test_task:
 
 macos_arm64_test_task:
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
   env:
     OMP_NUM_THREADS: 2
     OPENBLAS_NUM_THREADS: 2
-    N_CORES: 2
-    # Set parallelism to 5 to overlap IO bound tasks with CPU bound tasks on CI
-    # workers with 4 cores when building the compiled extensions of scikit-learn.
-    SKLEARN_BUILD_PARALLEL: 5
+    N_CORES: 4
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/cirrus/pylatest_conda_forge_osx_arm-64_osx-arm64_conda.lock
     MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh

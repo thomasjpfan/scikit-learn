@@ -132,7 +132,7 @@ conda_build_metadata_list = [
         "folder": "build_tools/cirrus",
         "platform": "osx-arm64",
         "channel": "conda-forge",
-        "conda_dependencies": remove_from(common_dependencies, ["pyamg"])
+        "conda_dependencies": remove_from(common_dependencies + ["pip"], ["pyamg"])
         + ["ccache", "compilers", "llvm-openmp"],
     },
     {

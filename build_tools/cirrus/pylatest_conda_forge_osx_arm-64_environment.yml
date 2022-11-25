@@ -19,6 +19,7 @@ dependencies:
   - codecov
   - pytest-cov
   - coverage
+  - pip
   - ccache
   - compilers
   - llvm-openmp
