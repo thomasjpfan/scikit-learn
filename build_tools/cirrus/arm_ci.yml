@@ -1,4 +1,4 @@
-linux_aarch64_test:
+linux_aarch64_test_task:
   compute_engine_instance:
     image_project: cirrus-images
     image: family/docker-builder-arm64
