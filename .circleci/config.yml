@@ -46,6 +46,11 @@ jobs:
       - OPENBLAS_NUM_THREADS: 2
       - CONDA_ENV_NAME: testenv
       - LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
+      - MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
+      - N_CORES_TEST: 1
+      # Set parallelism to 3 to overlap IO bound tasks with CPU bound tasks on CI
+      # workers with 2 cores when building the compiled extensions of scikit-learn.
+      - SKLEARN_BUILD_PARALLEL: 3
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh

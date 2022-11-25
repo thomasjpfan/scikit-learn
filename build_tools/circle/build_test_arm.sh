@@ -4,8 +4,6 @@ set -e
 set -x
 
 UNAMESTR=`uname`
-N_CORES_DEFAULT=`nproc --all`
-N_CORES="${N_CORES:=$N_CORES_DEFAULT}"
 
 # defines the get_dep and show_installed_libraries functions
 source build_tools/shared.sh
@@ -23,8 +21,6 @@ setup_ccache() {
     ccache -M 0
 }
 
-MINICONDA_URL="https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh"
-
 # Install Mambaforge
 wget $MINICONDA_URL -O mambaforge.sh
 MINICONDA_PATH=$HOME/miniconda
@@ -41,10 +37,6 @@ setup_ccache
 
 python --version
 
-# Set parallelism to $N_CORES + 1 to overlap IO bound tasks with CPU bound tasks on CI
-# workers with $N_CORES cores when building the compiled extensions of scikit-learn.
-export SKLEARN_BUILD_PARALLEL=$(($N_CORES + 1))
-
 # Disable the build isolation and build in the tree so that the same folder can be
 # cached between CI runs.
 pip install --verbose --no-build-isolation .
@@ -60,4 +52,4 @@ cd /tmp
 python -c "import sklearn; sklearn.show_versions()"
 python -m threadpoolctl --import sklearn
 # Test using as many workers as available cores
-pytest --pyargs -n $N_CORES sklearn
+pytest --pyargs -n $N_CORES_TEST sklearn

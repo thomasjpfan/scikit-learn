@@ -9,9 +9,35 @@ linux_aarch64_test_task:
   env:
     OMP_NUM_THREADS: 2
     OPENBLAS_NUM_THREADS: 2
-    N_CORES: 2
+    N_CORES_TEST: 2
+    # Set parallelism to 5 to overlap IO bound tasks with CPU bound tasks on CI
+    # workers with 4 cores when building the compiled extensions of scikit-learn.
+    SKLEARN_BUILD_PARALLEL: 5
     CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
+    MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
+  pip_cache:
+    folder: ~/.cache/pip
+  ccache_cache:
+    folder: ~/.cache/ccache
+  scikit_learn_data_cache:
+    folder: ~/scikit_learn_data
+
+  test_script: bash build_tools/circle/build_test_arm.sh
+
+macos_arm64_test_task:
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+  env:
+    OMP_NUM_THREADS: 2
+    OPENBLAS_NUM_THREADS: 2
+    N_CORES: 2
+    # Set parallelism to 5 to overlap IO bound tasks with CPU bound tasks on CI
+    # workers with 4 cores when building the compiled extensions of scikit-learn.
+    SKLEARN_BUILD_PARALLEL: 5
+    CONDA_ENV_NAME: testenv
+    LOCK_FILE: build_tools/cirrus/pylatest_conda_forge_osx_arm-64_osx-arm64_conda.lock
+    MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
   pip_cache:
     folder: ~/.cache/pip
   ccache_cache:
