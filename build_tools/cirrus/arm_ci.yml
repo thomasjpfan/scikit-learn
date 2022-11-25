@@ -6,6 +6,11 @@ linux_aarch64_test_task:
     platform: linux
     cpu: 4
     memory: 16G
+  env:
+    OMP_NUM_THREADS: 2
+    OPENBLAS_NUM_THREADS: 2
+    CONDA_ENV_NAME: testenv
+    LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
   total_cache:
     folders:
       - ~/.cache/ccache
