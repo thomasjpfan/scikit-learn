@@ -1,6 +1,9 @@
 linux_aarch64_test_task:
-  arm_container:
-    image: ubuntu-2004:202101-01
+  compute_engine_instance:
+    image_project: cirrus-images
+    image: family/docker-builder-arm64
+    architecture: arm64
+    platform: linux
     cpu: 4
     memory: 12G
   env:
