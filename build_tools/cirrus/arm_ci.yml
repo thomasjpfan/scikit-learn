@@ -1,3 +1,8 @@
+env:
+  CONDA_ENV_NAME: testenv
+  OMP_NUM_THREADS: 2
+  OPENBLAS_NUM_THREADS: 2
+
 linux_aarch64_test_task:
   compute_engine_instance:
     image_project: cirrus-images
@@ -7,10 +12,7 @@ linux_aarch64_test_task:
     cpu: 4
     memory: 12G
   env:
-    OMP_NUM_THREADS: 2
-    OPENBLAS_NUM_THREADS: 2
     N_CORES: 4
-    CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
     MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
   pip_cache:
@@ -26,10 +28,7 @@ macos_arm64_test_task:
   macos_instance:
     image: ghcr.io/cirruslabs/macos-ventura-base:latest
   env:
-    OMP_NUM_THREADS: 2
-    OPENBLAS_NUM_THREADS: 2
     N_CORES: 4
-    CONDA_ENV_NAME: testenv
     LOCK_FILE: build_tools/cirrus/pylatest_conda_forge_osx_arm-64_osx-arm64_conda.lock
     MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-MacOSX-arm64.sh
   pip_cache:
