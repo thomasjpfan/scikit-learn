@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -e
-set -x
 
 UNAMESTR=`uname`
 
@@ -39,7 +38,7 @@ python --version
 
 # Disable the build isolation and build in the tree so that the same folder can be
 # cached between CI runs.
-pip install --verbose --no-build-isolation .
+python -m pip install --verbose --no-build-isolation .
 
 # Report cache usage
 ccache -s --verbose
