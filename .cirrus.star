@@ -12,10 +12,9 @@ def main(ctx):
     # Get commit message for event.
     SHA = env.get("CIRRUS_CHANGE_IN_REPO")
     url = "https://api.github.com/repos/scipy/scipy/git/commits/" + SHA
-    dct = http.get(url).json()
-    if "[wheel build]" in dct["message"]:
-        return fs.read("ci/cirrus_wheels.yml")
+    response = http.get(url).json()
+    commit_message = response["message"]
 
-    if "[skip ci]" in dct["message"]:
+    if "[skip ci]" in commit_message:
         return []
     return fs.read("build_tools/cirrus/arm_ci.yml")
