@@ -16,10 +16,10 @@ setup_ccache() {
     done
 
     # OSX uses clang from the compilers package, which is exposes through CC and CXX
-    if [[ "$UNAMESTR" == "Darwin" ]];
+    if [[ "$UNAMESTR" == "Darwin" ]]; then
       for name in $CC $CXX; do
         ln -s $(which ccache) "/tmp/ccache/${name}"
-      fi
+      done
     fi
 
     export PATH="/tmp/ccache:${PATH}"
