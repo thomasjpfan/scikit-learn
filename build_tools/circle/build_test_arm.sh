@@ -14,10 +14,19 @@ setup_ccache() {
     for name in gcc g++ cc c++ x86_64-linux-gnu-gcc x86_64-linux-gnu-c++; do
       ln -s $(which ccache) "/tmp/ccache/${name}"
     done
+
+    # OSX uses clang from the compilers package, which is exposes through CC and CXX
+    if [[ "$UNAMESTR" == "Darwin" ]];
+      for name in $CC $CXX; do
+        ln -s $(which ccache) "/tmp/ccache/${name}"
+      fi
+    fi
+
     export PATH="/tmp/ccache:${PATH}"
     # Unset ccache limits
     ccache -F 0
     ccache -M 0
+    ccache --show-config
 }
 
 # Install Mambaforge
