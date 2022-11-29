@@ -609,9 +609,8 @@ def setup_package():
         cmdclass=cmdclass,
         python_requires=python_requires,
         install_requires=min_deps.tag_to_packages["install"],
-        package_data={"": ["*.pxd"]},
+        package_data={"": ["*.csv", "*.gz", "*.txt", "*.pxd"]},
         zip_safe=False,  # the package can run out of an .egg file
-        include_package_data=True,
         extras_require={
             key: min_deps.tag_to_packages[key]
             for key in ["examples", "docs", "tests", "benchmark"]
