@@ -7,7 +7,7 @@ set -x
 source build_tools/shared.sh
 
 if [[ "$DISTRIB" == "conda" ]]; then
-    conda install -c conda-forge conda -y
+    conda update -n base -c conda-forge conda -y
     conda install -c conda-forge "$(get_dep conda-lock min)" -y
     conda-lock install --name $VIRTUALENV $LOCK_FILE
     source activate $VIRTUALENV
