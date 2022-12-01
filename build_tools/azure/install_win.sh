@@ -7,12 +7,11 @@ set -x
 source build_tools/shared.sh
 
 if [[ "$DISTRIB" == "conda" ]]; then
-    # Pin conda because 22.11.0 is incomability with the Windows CI
-    conda install -n base conda=22.9.0 -y
+    conda install -n base conda -y
     conda install pip -y
     pip install "$(get_dep conda-lock min)"
     conda-lock install --name $VIRTUALENV $LOCK_FILE
-    source activate $VIRTUALENV
+    conda activate $VIRTUALENV
 else
     python -m venv $VIRTUALENV
     source $VIRTUALENV/Scripts/activate
