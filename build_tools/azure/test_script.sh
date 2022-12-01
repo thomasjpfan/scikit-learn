@@ -6,7 +6,7 @@ set -e
 source build_tools/shared.sh
 
 if [[ "$DISTRIB" =~ ^conda.* ]]; then
-    conda activate $VIRTUALENV
+    source activate $VIRTUALENV
 elif [[ "$DISTRIB" == "ubuntu" || "$DISTRIB" == "debian-32" || "$DISTRIB" == "pip-nogil" ]]; then
     source $VIRTUALENV/bin/activate
 fi
