@@ -64,7 +64,8 @@ pre_python_environment_install() {
 
 python_environment_install_and_activate() {
     if [[ "$DISTRIB" == "conda"* ]]; then
-        conda update -n base conda -y
+        # Pin conda because 22.11.0 is incomability with the Windows CI
+        conda update -n base conda=22.9.0 -y
         conda install -c conda-forge "$(get_dep conda-lock min)" -y
         conda-lock install --name $VIRTUALENV $LOCK_FILE
         source activate $VIRTUALENV
