@@ -116,7 +116,7 @@ def test_get_support():
 
 
 def test_output_dataframe():
-    """Check output dtype for dataframes."""
+    """Check output dtypes for dataframes is consistent with the input dtypes."""
     pd = pytest.importorskip("pandas")
 
     X = pd.DataFrame(

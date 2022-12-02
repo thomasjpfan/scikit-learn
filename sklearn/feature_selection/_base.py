@@ -17,6 +17,7 @@ from ..utils import (
     safe_sqr,
 )
 from ..utils._tags import _safe_tags
+from ..utils._set_output import _get_output_config
 from ..utils import _safe_indexing
 from ..utils.validation import _check_feature_names_in
 
@@ -78,8 +79,10 @@ class SelectorMixin(TransformerMixin, metaclass=ABCMeta):
         X_r : array of shape [n_samples, n_selected_features]
             The input samples with only the selected features.
         """
-        if hasattr(X, "iloc"):
-            # Only check feature names and n_features for dataframes
+        output_config_dense = _get_output_config("transform", estimator=self)["dense"]
+        if output_config_dense == "pandas" and not issparse(X):
+            # Only check feature names and n_features when output is a dataframe
+            # This allow _transform to preserve `X`'s dtype
             self._check_feature_names(X, reset=False)
             self._check_n_features(X, reset=False)
         else:

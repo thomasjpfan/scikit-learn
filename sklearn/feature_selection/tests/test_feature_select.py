@@ -947,7 +947,10 @@ def test_mutual_info_regression():
 
 
 def test_dataframe_output_dtypes():
-    """Check that the output datafarme dtypes are the same as the input."""
+    """Check that the output datafarme dtypes are the same as the input.
+
+    Non-regression test for gh-24860.
+    """
     pd = pytest.importorskip("pandas")
 
     X, y = load_iris(return_X_y=True, as_frame=True)
