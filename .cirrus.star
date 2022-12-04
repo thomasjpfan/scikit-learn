@@ -9,12 +9,16 @@ def main(ctx):
     # if env.get("CIRRUS_REPO_FULL_NAME") != "scikit-learn/scikit-learn":
     #    return []
 
-    # Get commit message for event.
+    # Get commit message for event. There is not command line access in starlark,
+    # so we need to query the GitHub API for the commit message.
+    # Note that `CIRRUS_CHANGE_MESSAGE` can not be used because it is set to
+    # a the PR's title and not the latest commit message in the PR.
     SHA = env.get("CIRRUS_CHANGE_IN_REPO")
-    url = "https://api.github.com/repos/scikit-learn/scikit-learn/git/commits/" + SHA
+    REPO = env.get("CIRRUS_REPO_FULL_NAME")
+    url = "https://api.github.com/repos/" + REPO + "/git/commits/" + SHA
     response = http.get(url).json()
     commit_message = response["message"]
 
     if "[skip ci]" in commit_message:
         return []
-    return fs.read("build_tools/cirrus/arm_ci.yml")
+    return fs.read("build_tools/cirrus/arm_wheel.yml")

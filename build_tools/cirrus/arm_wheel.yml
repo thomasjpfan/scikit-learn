@@ -1,0 +1,27 @@
+macos_arm64_test_task:
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+  env:
+    CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
+    CONFTEST_NAME: conftest.py
+    CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
+                      OPENBLAS_NUM_THREADS=2
+                      SKLEARN_SKIP_NETWORK_TESTS=1
+                      SKLEARN_BUILD_PARALLEL=3
+    CIBW_TEST_COMMAND: pytest --pyargs sklearn
+    CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
+    CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
+    CIBW_BUILD_VERBOSITY: 1
+  matrix:
+    - env:
+        CIBW_BUILD: cp38-macosx_arm64
+    - env:
+        CIBW_BUILD: cp39-macosx_arm64
+    - env:
+        CIBW_BUILD: cp310-macosx_arm64
+    - env:
+        CIBW_BUILD: cp311-macosx_arm64
+
+  test_script:
+    - bash build_tools/github/build_wheels.sh
+    - bash build_tools/github/test_wheels.sh
