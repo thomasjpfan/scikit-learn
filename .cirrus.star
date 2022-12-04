@@ -6,8 +6,8 @@ load("cirrus", "env", "fs", "http")
 def main(ctx):
     # Only run for scikit-learn/scikit-learn. For debugging on a fork, you can
     # comment out the following condition.
-    if env.get("CIRRUS_REPO_FULL_NAME") != "scikit-learn/scikit-learn":
-        return []
+    # if env.get("CIRRUS_REPO_FULL_NAME") != "scikit-learn/scikit-learn":
+    #    return []
 
     # Get commit message for event.
     SHA = env.get("CIRRUS_CHANGE_IN_REPO")
