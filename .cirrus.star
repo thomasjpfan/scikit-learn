@@ -9,6 +9,12 @@ def main(ctx):
     # if env.get("CIRRUS_REPO_FULL_NAME") != "scikit-learn/scikit-learn":
     #    return []
 
+    arm_wheel_yaml = "build_tools/cirrus/arm_wheel.yml"
+
+    # Nightly jobs always run
+    if env.get("CIRRUS_CRON", "") == "nightly":
+        return fs.read(arm_wheel_yaml)
+
     # Get commit message for event. There is not command line access in starlark,
     # so we need to query the GitHub API for the commit message.
     # Note that `CIRRUS_CHANGE_MESSAGE` can not be used because it is set to
@@ -17,8 +23,9 @@ def main(ctx):
     REPO = env.get("CIRRUS_REPO_FULL_NAME")
     url = "https://api.github.com/repos/" + REPO + "/git/commits/" + SHA
     response = http.get(url).json()
-    commit_message = response["message"]
+    commit_msg = response["message"]
 
-    if "[skip ci]" in commit_message:
+    if "[skip ci]" in commit_msg or "[cd build]" not in commit_msg:
         return []
-    return fs.read("build_tools/cirrus/arm_wheel.yml")
+
+    return fs.read(arm_wheel_yaml)
