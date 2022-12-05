@@ -25,7 +25,6 @@ macos_arm64_test_task:
 
   test_script:
     - bash build_tools/cirrus/install_conda.sh
-    - ls $HOME/miniconda
     - echo $CONDA_PREFIX
     - echo $SHELL
     # - bash build_tools/github/build_wheels.sh
