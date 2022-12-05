@@ -25,7 +25,7 @@ def main(ctx):
     response = http.get(url).json()
     commit_msg = response["message"]
 
-    if "[skip ci]" in commit_msg or "[cd build]" not in commit_msg:
+    if "[skip ci]" in commit_msg or "[cd build]" not in commit_msg or "[cd build cirrus]" not in commit_msg:
         return []
 
     return fs.read(arm_wheel_yaml)
