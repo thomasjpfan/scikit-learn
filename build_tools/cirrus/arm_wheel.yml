@@ -12,7 +12,7 @@ macos_arm64_test_task:
     CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
     CIBW_BUILD_VERBOSITY: 1
-    MINICONDA_PATH: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
   matrix:
   #   - env:
   #       CIBW_BUILD: cp38-macosx_arm64

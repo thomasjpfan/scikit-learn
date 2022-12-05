@@ -1,4 +1,4 @@
-wget $MINICONDA_URL -O mambaforge.sh
+curl -L -o mambaforge.sh $MINICONDA_URL
 MINICONDA_PATH=$HOME/miniconda
 chmod +x mambaforge.sh && ./mambaforge.sh -b -p $MINICONDA_PATH
 export PATH=$MINICONDA_PATH/bin:$PATH
