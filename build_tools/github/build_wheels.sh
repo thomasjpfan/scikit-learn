@@ -25,7 +25,7 @@ if [[ $(uname) == "Darwin" ]]; then
     fi
 
     sudo conda create -n build $OPENMP_URL
-    conda activate build
+    source activate build
     echo $CONDA_PREFIX
     PREFIX="$CONDA_PREFIX/envs/build"
 
