@@ -11,6 +11,9 @@ macos_arm64_test_task:
                       CPU_COUNT=2
     CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
+    # cibuildwheel can not test on Python 3.8 even on a Apple Silicon machine.
+    # For details see: https://github.com/pypa/cibuildwheel/pull/1169
+    CIBW_TEST_SKIP: cp38-macosx_*:arm64
     CIBW_BUILD_VERBOSITY: 1
     PATH: $HOME/mambaforge/bin/:$PATH
     CONDA_HOME: $HOME/mambaforge
@@ -30,3 +33,6 @@ macos_arm64_test_task:
 
   cibuildwheel_script:
     - bash build_tools/github/build_wheels.sh
+
+  wheels_artifacts:
+    path: "wheelhouse/*"
