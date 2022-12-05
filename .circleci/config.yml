@@ -44,10 +44,8 @@ jobs:
     environment:
       - OMP_NUM_THREADS: 2
       - OPENBLAS_NUM_THREADS: 2
-      - N_CORES: 2
       - CONDA_ENV_NAME: testenv
       - LOCK_FILE: build_tools/circle/py39_conda_forge_linux-aarch64_conda.lock
-      - MINICONDA_URL: https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Linux-aarch64.sh
     steps:
       - checkout
       - run: ./build_tools/circle/checkout_merge_commit.sh

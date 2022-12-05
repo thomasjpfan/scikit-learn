@@ -128,14 +128,6 @@ conda_build_metadata_list = [
         },
     },
     {
-        "build_name": "pylatest_conda_forge_osx_arm-64",
-        "folder": "build_tools/cirrus",
-        "platform": "osx-arm64",
-        "channel": "conda-forge",
-        "conda_dependencies": remove_from(common_dependencies + ["pip"], ["pyamg"])
-        + ["ccache", "compilers", "llvm-openmp"],
-    },
-    {
         "build_name": "pylatest_conda_forge_mkl_no_coverage",
         "folder": "build_tools/azure",
         "platform": "linux-64",
