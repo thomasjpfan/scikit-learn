@@ -1,6 +1,6 @@
 macos_arm64_test_task:
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-ventura-base:latest
+    image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
     CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
     CONFTEST_NAME: conftest.py
@@ -17,20 +17,16 @@ macos_arm64_test_task:
   matrix:
     - env:
         CIBW_BUILD: cp38-macosx_arm64
-        CIBW_TEST_SKIP: "*"
     - env:
         CIBW_BUILD: cp39-macosx_arm64
-        CIBW_TEST_SKIP: "*"
     - env:
         CIBW_BUILD: cp310-macosx_arm64
-        CIBW_TEST_SKIP: "*"
     - env:
-        # Only test on the latest python version
         CIBW_BUILD: cp311-macosx_arm64
 
   conda_script:
     - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
     - bash ~/mambaforge.sh -b -p $HOME/mambaforge
 
-  test_script:
+  cibuildwheel_script:
     - bash build_tools/github/build_wheels.sh
