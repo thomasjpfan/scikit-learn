@@ -29,7 +29,5 @@ macos_arm64_test_task:
     - bash ~/mambaforge.sh -b -p $HOME/mambaforge
 
   test_script:
-    # - bash build_tools/cirrus/install_conda.sh
-    - python --version
-    # - bash build_tools/github/build_wheels.sh
+    - bash build_tools/github/build_wheels.sh
     # - bash build_tools/github/test_wheels.sh
