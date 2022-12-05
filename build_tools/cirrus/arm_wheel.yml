@@ -7,20 +7,20 @@ macos_arm64_test_task:
     CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
                       OPENBLAS_NUM_THREADS=2
                       SKLEARN_SKIP_NETWORK_TESTS=1
-                      SKLEARN_BUILD_PARALLEL=3
+                      SKLEARN_BUILD_PARALLEL=5
+                      CPU_COUNT=2
     CIBW_TEST_COMMAND: bash {project}/build_tools/github/test_wheels.sh
-    CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-    CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
+    CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
     CIBW_BUILD_VERBOSITY: 1
-    PATH: $PATH:$HOME/mambaforge/bin/
+    PATH: $HOME/mambaforge/bin/:$PATH
     CONDA_HOME: $HOME/mambaforge
   matrix:
   #   - env:
   #       CIBW_BUILD: cp38-macosx_arm64
   #   - env:
   #       CIBW_BUILD: cp39-macosx_arm64
-  #   - env:
-  #       CIBW_BUILD: cp310-macosx_arm64
+    - env:
+        CIBW_BUILD: cp310-macosx_arm64
     - env:
         CIBW_BUILD: cp311-macosx_arm64
 

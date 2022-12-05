@@ -14,4 +14,9 @@ fi
 # Test that there are no links to system libraries in the
 # threadpoolctl output section of the show_versions output:
 python -c "import sklearn; sklearn.show_versions()"
-pytest --pyargs sklearn
+
+if [[ -v "$CPU_COUNT" ]]; then
+    pytest --pyargs sklearn -n $CPU_COUNT
+else
+    pytest --pyargs sklearn
+fi
