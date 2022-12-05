@@ -15,7 +15,7 @@ fi
 # threadpoolctl output section of the show_versions output:
 python -c "import sklearn; sklearn.show_versions()"
 
-if [[ -v "$CPU_COUNT" ]]; then
+if [ ! -z "$CPU_COUNT" ]; then
     pytest --pyargs sklearn -n $CPU_COUNT
 else
     pytest --pyargs sklearn
