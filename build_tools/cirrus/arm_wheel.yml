@@ -12,7 +12,8 @@ macos_arm64_test_task:
     CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
     CIBW_BUILD_VERBOSITY: 1
-    PATH: $HOME/mambaforge/bin/:$PATH
+    PATH: $PATH:$HOME/mambaforge/bin/
+    CONDA_HOME: $HOME/mambaforge
   matrix:
   #   - env:
   #       CIBW_BUILD: cp38-macosx_arm64
