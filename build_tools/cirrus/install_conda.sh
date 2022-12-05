@@ -6,5 +6,3 @@ export PATH=$MINICONDA_PATH/bin:$PATH
 
 conda init --all --verbose
 conda update --yes conda
-
-echo $CONDA_PREFIX
