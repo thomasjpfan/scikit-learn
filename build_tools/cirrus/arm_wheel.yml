@@ -15,13 +15,17 @@ macos_arm64_test_task:
     PATH: $HOME/mambaforge/bin/:$PATH
     CONDA_HOME: $HOME/mambaforge
   matrix:
-  #   - env:
-  #       CIBW_BUILD: cp38-macosx_arm64
-  #   - env:
-  #       CIBW_BUILD: cp39-macosx_arm64
+    - env:
+        CIBW_BUILD: cp38-macosx_arm64
+        CIBW_TEST_SKIP: "*"
+    - env:
+        CIBW_BUILD: cp39-macosx_arm64
+        CIBW_TEST_SKIP: "*"
     - env:
         CIBW_BUILD: cp310-macosx_arm64
+        CIBW_TEST_SKIP: "*"
     - env:
+        # Only test on the latest python version
         CIBW_BUILD: cp311-macosx_arm64
 
   conda_script:
