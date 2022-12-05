@@ -7,4 +7,4 @@ export PATH=$MINICONDA_PATH/bin:$PATH
 conda init --all --verbose
 conda update --yes conda
 
-echo "export PATH=$MINICONDA_PATH/bin:$PATH" >> $HOME/.bashrc
+echo $CONDA_PREFIX
