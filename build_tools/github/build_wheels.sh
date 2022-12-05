@@ -25,7 +25,7 @@ if [[ $(uname) == "Darwin" ]]; then
     fi
 
     sudo conda create -n build $OPENMP_URL
-    PREFIX="/usr/local/miniconda/envs/build"
+    PREFIX="$CONDA_PREFIX/envs/build"
 
     export CC=/usr/bin/clang
     export CXX=/usr/bin/clang++
@@ -39,5 +39,5 @@ fi
 # in the pyproject.toml file, while the tests are run
 # against the most recent version of the dependencies
 
-python -m pip install cibuildwheel
-python -m cibuildwheel --output-dir wheelhouse
+# python -m pip install cibuildwheel
+# python -m cibuildwheel --output-dir wheelhouse
