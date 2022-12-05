@@ -25,6 +25,7 @@ if [[ $(uname) == "Darwin" ]]; then
     fi
 
     sudo conda create -n build $OPENMP_URL
+    echo $CONDA_PREFIX
     PREFIX="$CONDA_PREFIX/envs/build"
 
     export CC=/usr/bin/clang

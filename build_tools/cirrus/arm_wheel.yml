@@ -23,9 +23,11 @@ macos_arm64_test_task:
     - env:
         CIBW_BUILD: cp311-macosx_arm64
 
+  conda_script:
+    - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    - bash ~/mambaforge.sh -b -p $HOME/mambaforge
+
   test_script:
-    - bash build_tools/cirrus/install_conda.sh
-    - echo $CONDA_PREFIX
-    - echo $SHELL
-    # - bash build_tools/github/build_wheels.sh
+    # - bash build_tools/cirrus/install_conda.sh
+    - bash build_tools/github/build_wheels.sh
     # - bash build_tools/github/test_wheels.sh
