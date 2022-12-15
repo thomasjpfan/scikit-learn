@@ -75,12 +75,7 @@ CRITERIA_REG = {
     "poisson": _criterion.Poisson,
 }
 
-DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.RandomSplitter}
-
-SPARSE_SPLITTERS = {
-    "best": _splitter.BestSparseSplitter,
-    "random": _splitter.RandomSparseSplitter,
-}
+SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.RandomSplitter}
 
 # =============================================================================
 # Base decision tree
@@ -332,8 +327,6 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             # Make a deepcopy in case the criterion has mutable attributes that
             # might be shared and modified concurrently during parallel fitting
             criterion = copy.deepcopy(criterion)
-
-        SPLITTERS = SPARSE_SPLITTERS if issparse(X) else DENSE_SPLITTERS
 
         splitter = self.splitter
         if not isinstance(self.splitter, Splitter):

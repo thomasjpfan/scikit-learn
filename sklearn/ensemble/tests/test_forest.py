@@ -52,7 +52,7 @@ from sklearn.utils.validation import check_random_state
 
 from sklearn.metrics import mean_squared_error
 
-from sklearn.tree._classes import SPARSE_SPLITTERS
+from sklearn.tree._classes import SPLITTERS
 
 
 # toy sample
@@ -1148,7 +1148,7 @@ def check_memory_layout(name, dtype):
     y = iris.target
     assert_array_almost_equal(est.fit(X, y).predict(X), y)
 
-    if est.estimator.splitter in SPARSE_SPLITTERS:
+    if est.estimator.splitter in SPLITTERS:
         # csr matrix
         X = csr_matrix(iris.data, dtype=dtype)
         y = iris.target
