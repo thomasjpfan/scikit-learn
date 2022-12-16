@@ -91,6 +91,12 @@ cdef class Splitter:
     def __setstate__(self, d):
         pass
 
+    def __reduce__(self):
+        return (type(self), (self.criterion,
+                             self.max_features,
+                             self.min_samples_leaf,
+                             self.min_weight_leaf,
+                             self.random_state), self.__getstate__())
     cdef int init(
         self,
         object X,
@@ -365,13 +371,6 @@ cdef class BaseDenseSplitter(DataSplitter):
 
 cdef class BestSplitter(Splitter):
     """Splitter for finding the best split."""
-    def __reduce__(self):
-        return (BestSplitter, (self.criterion,
-                               self.max_features,
-                               self.min_samples_leaf,
-                               self.min_weight_leaf,
-                               self.random_state), self.__getstate__())
-
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         """Find the best split on node samples[start:end]
@@ -652,13 +651,6 @@ cdef void heapsort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil:
 
 cdef class RandomSplitter(Splitter):
     """Splitter for finding the best random split."""
-    def __reduce__(self):
-        return (RandomSplitter, (self.criterion,
-                                 self.max_features,
-                                 self.min_samples_leaf,
-                                 self.min_weight_leaf,
-                                 self.random_state), self.__getstate__())
-
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         """Find the best random split on node samples[start:end]
