@@ -157,7 +157,6 @@ cdef class Splitter:
         self.y = y
 
         self.sample_weight = sample_weight
-
         return 0
 
     cdef int node_reset(self, SIZE_t start, SIZE_t end,

@@ -571,8 +571,8 @@ def configure_extension_modules():
                 join(parent_dir, depend) for depend in extension.get("depends", [])
             ]
 
-            extra_compile_args = default_extra_compile_args + extension.get(
-                "extra_compile_args", []
+            extra_compile_args = (
+                extension.get("extra_compile_args", []) + default_extra_compile_args
             )
             libraries_ext = extension.get("libraries", []) + default_libraries
 
