@@ -205,10 +205,6 @@ cdef class Splitter:
         This is a placeholder method. The majority of computation will be done
         here.
 
-        The `criterion` and the `data_splitter` hold references to the sample indicies.
-        The `data_splitter` will place the place the indicies basd on the current
-        split and `criterion` uses the indicies to evaluate the split.
-
         It should return -1 upon errors.
         """
 
@@ -244,10 +240,12 @@ cdef class BaseDenseSplitter:
         self.feature_values = np.empty(n_samples, dtype=np.float32)
 
     cdef inline void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
+        """Initialize splitter at the beginning of node_split."""
         self.start = start
         self.end = end
 
     cdef inline void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
+        """Simultaneously sort based on the feature value."""
         cdef:
             SIZE_t i
             DTYPE_t[::1] Xf = self.feature_values
@@ -266,6 +264,7 @@ cdef class BaseDenseSplitter:
         DTYPE_t* min_feature_value_out,
         DTYPE_t* max_feature_value_out,
     ) nogil:
+        """Compute the next p for the dense splitter."""
         cdef:
             SIZE_t p
             DTYPE_t current_feature_value
@@ -288,6 +287,7 @@ cdef class BaseDenseSplitter:
         max_feature_value_out[0] = max_feature_value
 
     cdef inline void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
+        """Find min and max feature value for the random splitter."""
         cdef DTYPE_t[::1] Xf = self.feature_values
 
         while p[0] + 1 < self.end and Xf[p[0] + 1] <= Xf[p[0]] + FEATURE_THRESHOLD:
@@ -299,6 +299,7 @@ cdef class BaseDenseSplitter:
         p_prev[0] = p[0] - 1
 
     cdef inline SIZE_t parition_samples(self, double current_threshold) nogil:
+        """Parition samples in the random splitter."""
         cdef:
             SIZE_t p = self.start
             SIZE_t partition_end = self.end
@@ -322,6 +323,7 @@ cdef class BaseDenseSplitter:
         double best_threshold,
         SIZE_t best_feature,
     ) nogil:
+        """Parition samples for the best split."""
         cdef:
             SIZE_t p = self.start
             SIZE_t partition_end = self.end
@@ -347,7 +349,7 @@ cdef class BestSplitter(Splitter):
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseDenseSplitter(X, self.samples, self.n_samples)
 
-    cdef int node_split(BestSplitter self, double impurity, SplitRecord* split,
+    cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_best(self, self.data_splitter, impurity, split, n_constant_features)
 
@@ -364,7 +366,7 @@ cdef class BestSparseSplitter(Splitter):
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseSparseSplitter(X, self.samples, self.n_samples)
 
-    cdef int node_split(BestSparseSplitter self, double impurity, SplitRecord* split,
+    cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_best(self, self.data_splitter, impurity, split, n_constant_features)
 
@@ -671,7 +673,7 @@ cdef class RandomSplitter(Splitter):
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseDenseSplitter(X, self.samples, self.n_samples)
 
-    cdef int node_split(RandomSplitter self, double impurity, SplitRecord* split,
+    cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
 
@@ -688,7 +690,7 @@ cdef class RandomSparseSplitter(Splitter):
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseSparseSplitter(X, self.samples, self.n_samples)
 
-    cdef int node_split(RandomSparseSplitter self, double impurity, SplitRecord* split,
+    cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
 
@@ -907,11 +909,13 @@ cdef class BaseSparseSplitter:
             self.index_to_samples[samples[p]] = p
 
     cdef inline void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
+        """Initialize splitter at the beginning of node_split."""
         self.start = start
         self.end = end
         self.is_samples_sorted = 0
 
     cdef inline void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
+        """Simultaneously sort based on the feature value."""
         cdef DTYPE_t[::1] Xf = self.feature_values
 
         self.extract_nnz(current_feature)
@@ -942,6 +946,7 @@ cdef class BaseSparseSplitter:
         DTYPE_t* min_feature_value_out,
         DTYPE_t* max_feature_value_out,
     ) nogil:
+        """Find min and max feature value for the random splitter."""
         cdef:
             SIZE_t p
             DTYPE_t current_feature_value, min_feature_value, max_feature_value
@@ -979,6 +984,7 @@ cdef class BaseSparseSplitter:
         max_feature_value_out[0] = max_feature_value
 
     cdef inline void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
+        """Compute the next p for the dense splitter."""
         cdef:
             SIZE_t p_next
             DTYPE_t[::1] Xf = self.feature_values
@@ -1000,6 +1006,7 @@ cdef class BaseSparseSplitter:
         p[0] = p_next
 
     cdef inline SIZE_t parition_samples(self, double current_threshold) nogil:
+        """Parition samples in the random splitter."""
         return self._partition(current_threshold, self.start_positive)
 
     cdef inline void parition_samples_best(
@@ -1008,12 +1015,12 @@ cdef class BaseSparseSplitter:
         double best_threshold,
         SIZE_t best_feature,
     ) nogil:
+        """Parition samples for the best split."""
         self.extract_nnz(best_feature)
         self._partition(best_threshold, best_pos)
 
     cdef inline SIZE_t _partition(self, double threshold, SIZE_t zero_pos) nogil:
         """Partition samples[start:end] based on threshold."""
-
         cdef:
             SIZE_t p, partition_end
             SIZE_t[::1] index_to_samples = self.index_to_samples
