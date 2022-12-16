@@ -28,28 +28,28 @@ cdef struct SplitRecord:
     double impurity_left   # Impurity of the left split.
     double impurity_right  # Impurity of the right split.
 
-cdef class DataSplitter:
-    cdef SIZE_t[::1] samples
-    cdef DTYPE_t[::1] feature_values
-    cdef SIZE_t start
-    cdef SIZE_t end
+# cdef class DataSplitter:
+#     cdef SIZE_t[::1] samples
+#     cdef DTYPE_t[::1] feature_values
+#     cdef SIZE_t start
+#     cdef SIZE_t end
 
-    cdef void init_node_split(self, SIZE_t start, SIZE_t end) nogil
-    cdef void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil
-    cdef void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil
-    cdef void find_min_max(
-        self,
-        SIZE_t current_feature,
-        DTYPE_t* min_feature_value_out,
-        DTYPE_t* max_feature_value_out,
-    ) nogil
-    cdef SIZE_t parition_samples(self, double current_threshold) nogil
-    cdef void parition_samples_best(
-        self,
-        SIZE_t best_pos,
-        double best_threshold,
-        SIZE_t best_feature,
-    ) nogil
+#     cdef void init_node_split(self, SIZE_t start, SIZE_t end) nogil
+#     cdef void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil
+#     cdef void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil
+#     cdef void find_min_max(
+#         self,
+#         SIZE_t current_feature,
+#         DTYPE_t* min_feature_value_out,
+#         DTYPE_t* max_feature_value_out,
+#     ) nogil
+#     cdef SIZE_t parition_samples(self, double current_threshold) nogil
+#     cdef void parition_samples_best(
+#         self,
+#         SIZE_t best_pos,
+#         double best_threshold,
+#         SIZE_t best_feature,
+#     ) nogil
 
 cdef class Splitter:
     # The splitter searches in the input space for a feature and a threshold
@@ -79,8 +79,6 @@ cdef class Splitter:
 
     cdef const DOUBLE_t[:, ::1] y
     cdef const DOUBLE_t[:] sample_weight
-
-    cdef DataSplitter data_splitter
 
     # The samples vector `samples` is maintained by the Splitter object such
     # that the samples contained in a node are contiguous. With this setting,

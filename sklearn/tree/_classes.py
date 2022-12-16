@@ -75,7 +75,12 @@ CRITERIA_REG = {
     "poisson": _criterion.Poisson,
 }
 
-SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.RandomSplitter}
+DENSE_SPLITTERS = {"best": _splitter.BestSplitter, "random": _splitter.RandomSplitter}
+
+SPARSE_SPLITTERS = {
+    "best": _splitter.BestSparseSplitter,
+    "random": _splitter.RandomSparseSplitter,
+}
 
 # =============================================================================
 # Base decision tree
@@ -176,7 +181,15 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             # Need to validate separately here.
             # We can't pass multi_output=True because that would allow y to be
             # csr.
-            check_X_params = dict(dtype=DTYPE, accept_sparse="csc")
+
+            if not issparse(X) and self._get_tags()["allow_nan"]:
+                force_all_finite = "allow-nan"
+            else:
+                force_all_finite = True
+
+            check_X_params = dict(
+                dtype=DTYPE, accept_sparse="csc", force_all_finite=force_all_finite
+            )
             check_y_params = dict(ensure_2d=False, dtype=None)
             X, y = self._validate_data(
                 X, y, validate_separately=(check_X_params, check_y_params)
@@ -328,6 +341,8 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             # might be shared and modified concurrently during parallel fitting
             criterion = copy.deepcopy(criterion)
 
+        SPLITTERS = SPARSE_SPLITTERS if issparse(X) else DENSE_SPLITTERS
+
         splitter = self.splitter
         if not isinstance(self.splitter, Splitter):
             splitter = SPLITTERS[self.splitter](
@@ -382,7 +397,17 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
     def _validate_X_predict(self, X, check_input):
         """Validate the training data on predict (probabilities)."""
         if check_input:
-            X = self._validate_data(X, dtype=DTYPE, accept_sparse="csr", reset=False)
+            if not issparse(X) and self._get_tags()["allow_nan"]:
+                force_all_finite = "allow-nan"
+            else:
+                force_all_finite = True
+            X = self._validate_data(
+                X,
+                dtype=DTYPE,
+                accept_sparse="csr",
+                reset=False,
+                force_all_finite=force_all_finite,
+            )
             if issparse(X) and (
                 X.indices.dtype != np.intc or X.indptr.dtype != np.intc
             ):
@@ -964,7 +989,15 @@ class DecisionTreeClassifier(ClassifierMixin, BaseDecisionTree):
             return proba
 
     def _more_tags(self):
-        return {"multilabel": True}
+        # XXX: nan is only support for dense arrays, but we set this for common test to
+        # pass
+        allow_nan = (
+            isinstance(self.splitter, str)
+            and self.splitter == "best"
+            and isinstance(self.criterion, str)
+            and self.criterion not in {"mae", "absolute_error"}
+        )
+        return {"multilabel": True, "allow_nan": allow_nan}
 
 
 class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
@@ -1271,6 +1304,17 @@ class DecisionTreeRegressor(RegressorMixin, BaseDecisionTree):
             grid, target_features, averaged_predictions
         )
         return averaged_predictions
+
+    def _more_tags(self):
+        # XXX: nan is only support for dense arrays, but we set this for common test to
+        # pass
+        allow_nan = (
+            isinstance(self.splitter, str)
+            and self.splitter == "best"
+            and isinstance(self.criterion, str)
+            and self.criterion not in {"mae", "absolute_error"}
+        )
+        return {"allow_nan": allow_nan}
 
 
 class ExtraTreeClassifier(DecisionTreeClassifier):
