@@ -367,8 +367,12 @@ ctypedef fused DataSplitterFused:
     BaseDenseSplitter
     BaseSparseSplitter
 
+ctypedef fused BestSplitterFused:
+    BestSplitter
+    BestSparseSplitter
+
 cdef inline int node_split_best(
-    Splitter self,
+    BestSplitterFused self,
     DataSplitterFused data_splitter,
     double impurity,
     SplitRecord* split,
@@ -745,8 +749,12 @@ cdef class RandomSparseSplitter(Splitter):
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
 
-cdef int node_split_random(
-    Splitter self,
+ctypedef fused RandomSplitterFused:
+    RandomSplitter
+    RandomSparseSplitter
+
+cdef inline int node_split_random(
+    RandomSplitterFused self,
     DataSplitterFused data_splitter,
     double impurity,
     SplitRecord* split,
