@@ -419,11 +419,7 @@ extension_config = {
     ],
     "tree": [
         {"sources": ["_tree.pyx"], "language": "c++", "include_np": True},
-        {
-            "sources": ["_splitter.pyx"],
-            "include_np": True,
-            "extra_compile_args": ["-O3"],
-        },
+        {"sources": ["_splitter.pyx"], "include_np": True},
         {"sources": ["_criterion.pyx"], "include_np": True},
         {"sources": ["_utils.pyx"], "include_np": True},
     ],
