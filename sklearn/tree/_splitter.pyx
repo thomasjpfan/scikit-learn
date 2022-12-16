@@ -273,11 +273,11 @@ cdef class BaseDenseSplitter:
         self.samples = samples
         self.feature_values = np.empty(n_samples, dtype=np.float32)
 
-    cdef void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
+    cdef inline void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
         self.start = start
         self.end = end
 
-    cdef void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
+    cdef inline void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
         cdef:
             SIZE_t i
             DTYPE_t[::1] Xf = self.feature_values
@@ -290,7 +290,7 @@ cdef class BaseDenseSplitter:
             Xf[i] = self.X[self.samples[i], current_feature]
         sort(&Xf[self.start], &self.samples[self.start], self.end - self.start)
 
-    cdef void find_min_max(
+    cdef inline void find_min_max(
         self,
         SIZE_t current_feature,
         DTYPE_t* min_feature_value_out,
@@ -317,7 +317,7 @@ cdef class BaseDenseSplitter:
         min_feature_value_out[0] = min_feature_value
         max_feature_value_out[0] = max_feature_value
 
-    cdef void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
+    cdef inline void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
         cdef DTYPE_t[::1] Xf = self.feature_values
 
         while p[0] + 1 < self.end and Xf[p[0] + 1] <= Xf[p[0]] + FEATURE_THRESHOLD:
@@ -328,7 +328,7 @@ cdef class BaseDenseSplitter:
         # (p >= end) or (X[p, current.feature] > X[p - 1, current.feature])
         p_prev[0] = p[0] - 1
 
-    cdef SIZE_t parition_samples(self, double current_threshold) nogil:
+    cdef inline SIZE_t parition_samples(self, double current_threshold) nogil:
         cdef:
             SIZE_t p = self.start
             SIZE_t partition_end = self.end
@@ -346,7 +346,7 @@ cdef class BaseDenseSplitter:
 
         return partition_end
 
-    cdef void parition_samples_best(
+    cdef inline void parition_samples_best(
         self,
         SIZE_t best_pos,
         double best_threshold,
@@ -965,12 +965,12 @@ cdef class BaseSparseSplitter:
         for p in range(n_samples):
             self.index_to_samples[samples[p]] = p
 
-    cdef void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
+    cdef inline void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
         self.start = start
         self.end = end
         self.is_samples_sorted = 0
 
-    cdef void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
+    cdef inline void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
         cdef DTYPE_t[::1] Xf = self.feature_values
 
         self.extract_nnz(current_feature)
@@ -995,7 +995,7 @@ cdef class BaseSparseSplitter:
                 Xf[self.end_negative] = 0.
                 self.end_negative += 1
 
-    cdef void find_min_max(
+    cdef inline void find_min_max(
         self,
         SIZE_t current_feature,
         DTYPE_t* min_feature_value_out,
@@ -1037,7 +1037,7 @@ cdef class BaseSparseSplitter:
         min_feature_value_out[0] = min_feature_value
         max_feature_value_out[0] = max_feature_value
 
-    cdef void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
+    cdef inline void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
         cdef:
             SIZE_t p_next
             DTYPE_t[::1] Xf = self.feature_values
@@ -1058,10 +1058,10 @@ cdef class BaseSparseSplitter:
         p_prev[0] = p[0]
         p[0] = p_next
 
-    cdef SIZE_t parition_samples(self, double current_threshold) nogil:
+    cdef inline SIZE_t parition_samples(self, double current_threshold) nogil:
         return self._partition(current_threshold, self.start_positive)
 
-    cdef void parition_samples_best(
+    cdef inline void parition_samples_best(
         self,
         SIZE_t best_pos,
         double best_threshold,
