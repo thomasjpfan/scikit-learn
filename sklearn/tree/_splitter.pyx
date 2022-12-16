@@ -966,7 +966,7 @@ cdef class BaseSparseSplitter(DataSplitter):
         self.extract_nnz(best_feature)
         self._partition(best_threshold, best_pos)
 
-    cdef SIZE_t _partition(self, double threshold, SIZE_t zero_pos) nogil:
+    cdef inline SIZE_t _partition(self, double threshold, SIZE_t zero_pos) nogil:
         """Partition samples[start:end] based on threshold."""
 
         cdef:
