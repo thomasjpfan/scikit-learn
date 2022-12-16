@@ -401,7 +401,6 @@ cdef class BestSplitter(Splitter):
         cdef SIZE_t f_j
         cdef SIZE_t p
         cdef SIZE_t p_prev
-        cdef SIZE_t i
 
         cdef SIZE_t n_visited_features = 0
         # Number of features discovered to be constant during the split search
@@ -686,7 +685,6 @@ cdef class RandomSplitter(Splitter):
 
         cdef SIZE_t f_i = n_features
         cdef SIZE_t f_j
-        cdef SIZE_t p
         # Number of features discovered to be constant during the split search
         cdef SIZE_t n_found_constants = 0
         # Number of features known to be constant and drawn without replacement
@@ -697,7 +695,6 @@ cdef class RandomSplitter(Splitter):
         cdef SIZE_t n_visited_features = 0
         cdef DTYPE_t min_feature_value
         cdef DTYPE_t max_feature_value
-        cdef DTYPE_t current_feature_value
 
         _init_split(&best, end)
 
