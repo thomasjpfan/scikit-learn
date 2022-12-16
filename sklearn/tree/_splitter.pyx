@@ -15,6 +15,7 @@ from ._criterion cimport Criterion
 
 from libc.stdlib cimport qsort
 from libc.string cimport memcpy
+from cython cimport final
 
 import numpy as np
 
@@ -217,11 +218,7 @@ cdef class Splitter:
 
         return self.criterion.node_impurity()
 
-cdef class DataSplitter:
-    cdef SIZE_t[::1] samples
-    cdef DTYPE_t[::1] feature_values
-    cdef SIZE_t start
-    cdef SIZE_t end
+# cdef class DataSplitter:
 # cdef class DataSplitter:
 #     cdef void init_node_split(self, SIZE_t start, SIZE_t end) nogil:
 #         """Initialize DataSplitter at the beginning of node_split."""
@@ -257,9 +254,14 @@ cdef class DataSplitter:
 #         """Parition samples for the best split."""
 #         pass
 
-cdef class BaseDenseSplitter(DataSplitter):
+@final
+cdef class BaseDenseSplitter:
     cdef:
         const DTYPE_t[:, :] X
+        cdef SIZE_t[::1] samples
+        cdef DTYPE_t[::1] feature_values
+        cdef SIZE_t start
+        cdef SIZE_t end
 
     def __cinit__(
         self,
@@ -539,7 +541,7 @@ cdef inline int node_split_best(
     n_constant_features[0] = n_total_constants
     return 0
 
-
+@final
 cdef class BestSplitter(Splitter):
     """Splitter for finding the best dense split."""
     cdef BaseDenseSplitter data_splitter
@@ -564,7 +566,7 @@ cdef class BestSplitter(Splitter):
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_best(self, self.data_splitter, impurity, split, n_constant_features)
 
-
+@final
 cdef class BestSparseSplitter(Splitter):
     """Splitter for finding the best split, using the sparse data."""
     cdef BaseSparseSplitter data_splitter
@@ -702,7 +704,7 @@ cdef void heapsort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil:
         sift_down(Xf, samples, 0, end)
         end = end - 1
 
-
+@final
 cdef class RandomSplitter(Splitter):
     """Splitter for finding the best random split."""
     cdef BaseDenseSplitter data_splitter
@@ -726,6 +728,7 @@ cdef class RandomSplitter(Splitter):
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
 
+@final
 cdef class RandomSparseSplitter(Splitter):
     """Splitter for finding a random split, using the sparse data."""
     cdef BaseSparseSplitter data_splitter
@@ -913,9 +916,14 @@ cdef inline int node_split_random(
     n_constant_features[0] = n_total_constants
     return 0
 
-
-cdef class BaseSparseSplitter(DataSplitter):
+@final
+cdef class BaseSparseSplitter:
     # The sparse splitter works only with csc sparse matrix format
+    cdef SIZE_t[::1] samples
+    cdef DTYPE_t[::1] feature_values
+    cdef SIZE_t start
+    cdef SIZE_t end
+
     cdef DTYPE_t[::1] X_data
     cdef INT32_t[::1] X_indices
     cdef INT32_t[::1] X_indptr
