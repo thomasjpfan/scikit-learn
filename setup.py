@@ -419,7 +419,11 @@ extension_config = {
     ],
     "tree": [
         {"sources": ["_tree.pyx"], "language": "c++", "include_np": True},
-        {"sources": ["_splitter.pyx"], "include_np": True},
+        {
+            "sources": ["_splitter.pyx"],
+            "include_np": True,
+            "extra_compile_args": ["-O3"],
+        },
         {"sources": ["_criterion.pyx"], "include_np": True},
         {"sources": ["_utils.pyx"], "include_np": True},
     ],
@@ -571,8 +575,8 @@ def configure_extension_modules():
                 join(parent_dir, depend) for depend in extension.get("depends", [])
             ]
 
-            extra_compile_args = (
-                extension.get("extra_compile_args", []) + default_extra_compile_args
+            extra_compile_args = default_extra_compile_args + extension.get(
+                "extra_compile_args", []
             )
             libraries_ext = extension.get("libraries", []) + default_libraries
 
