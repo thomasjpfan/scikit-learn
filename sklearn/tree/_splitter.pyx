@@ -87,20 +87,17 @@ cdef class Splitter:
         self.random_state = random_state
 
     def __getstate__(self):
-        return {
-            "criterion": self.criterion,
-            "max_features": self.max_features,
-            "min_samples_leaf": self.min_samples_leaf,
-            "min_weight_leaf": self.min_weight_leaf,
-            "random_state": self.random_state,
-        }
+        return {}
 
     def __setstate__(self, d):
-        self.criterion = d["criterion"]
-        self.max_features = d["max_features"]
-        self.min_samples_leaf = d["min_samples_leaf"]
-        self.min_weight_leaf = d["min_weight_leaf"]
-        self.random_state = d["random_state"]
+        pass
+
+    def __reduce__(self):
+        return (type(self), (self.criterion,
+                             self.max_features,
+                             self.min_samples_leaf,
+                             self.min_weight_leaf,
+                             self.random_state), self.__getstate__())
 
     cdef int init(
         self,
