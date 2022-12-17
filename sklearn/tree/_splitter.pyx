@@ -249,14 +249,16 @@ cdef class BaseDenseSplitter:
         cdef:
             SIZE_t i
             DTYPE_t[::1] Xf = self.feature_values
+            const DTYPE_t[:, :] X = self.X
+            SIZE_t[::1] samples = self.samples
 
         # Sort samples along that feature; by
         # copying the values into an array and
         # sorting the array in a manner which utilizes the cache more
         # effectively.
         for i in range(self.start, self.end):
-            Xf[i] = self.X[self.samples[i], current_feature]
-        sort(&Xf[self.start], &self.samples[self.start], self.end - self.start)
+            Xf[i] = X[samples[i], current_feature]
+        sort(&Xf[self.start], &samples[self.start], self.end - self.start)
 
     cdef inline void find_min_max(
         self,
@@ -268,14 +270,16 @@ cdef class BaseDenseSplitter:
         cdef:
             SIZE_t p
             DTYPE_t current_feature_value
-            DTYPE_t min_feature_value = self.X[self.samples[self.start], current_feature]
+            const DTYPE_t[:, :] X = self.X
+            SIZE_t[::1] samples = self.samples
+            DTYPE_t min_feature_value = X[samples[self.start], current_feature]
             DTYPE_t max_feature_value = min_feature_value
             DTYPE_t[::1] Xf = self.feature_values
 
         Xf[self.start] = min_feature_value
 
         for p in range(self.start + 1, self.end):
-            current_feature_value = self.X[self.samples[p], current_feature]
+            current_feature_value = X[samples[p], current_feature]
             Xf[p] = current_feature_value
 
             if current_feature_value < min_feature_value:
@@ -328,9 +332,10 @@ cdef class BaseDenseSplitter:
             SIZE_t p = self.start
             SIZE_t partition_end = self.end
             SIZE_t[::1] samples = self.samples
+            const DTYPE_t[:, :] X = self.X
 
         while p < partition_end:
-            if self.X[samples[p], best_feature] <= best_threshold:
+            if X[samples[p], best_feature] <= best_threshold:
                 p += 1
             else:
                 partition_end -= 1
@@ -916,20 +921,23 @@ cdef class BaseSparseSplitter:
 
     cdef inline void sort_samples_and_feature_values(self, SIZE_t current_feature) nogil:
         """Simultaneously sort based on the feature value."""
-        cdef DTYPE_t[::1] Xf = self.feature_values
+        cdef:
+            DTYPE_t[::1] Xf = self.feature_values
+            SIZE_t[::1] index_to_samples = self.index_to_samples
+            SIZE_t[::1] samples = self.samples
 
         self.extract_nnz(current_feature)
         # Sort the positive and negative parts of `Xf`
-        sort(&Xf[self.start], &self.samples[self.start], self.end_negative - self.start)
+        sort(&Xf[self.start], &samples[self.start], self.end_negative - self.start)
         if self.start_positive < self.end:
-            sort(&Xf[self.start_positive], &self.samples[self.start_positive],
+            sort(&Xf[self.start_positive], &samples[self.start_positive],
                     self.end - self.start_positive)
 
         # Update index_to_samples to take into account the sort
         for p in range(self.start, self.end_negative):
-            self.index_to_samples[self.samples[p]] = p
+            index_to_samples[samples[p]] = p
         for p in range(self.start_positive, self.end):
-            self.index_to_samples[self.samples[p]] = p
+            index_to_samples[samples[p]] = p
 
         # Add one or two zeros in Xf, if there is any
         if self.end_negative < self.start_positive:
