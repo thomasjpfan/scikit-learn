@@ -356,7 +356,11 @@ cdef class BestSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best(self, self.data_splitter, impurity, split, n_constant_features)
+        return node_split_best(
+            self.data_splitter, self.criterion, self.start, self.end,
+            self.features, self.constant_features, self.n_features, self.max_features,
+            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
+            impurity, split, n_constant_features)
 
 
 cdef class BestSparseSplitter(Splitter):
@@ -373,19 +377,28 @@ cdef class BestSparseSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best(self, self.data_splitter, impurity, split, n_constant_features)
+        return node_split_best(
+            self.data_splitter, self.criterion, self.start, self.end,
+            self.features, self.constant_features, self.n_features, self.max_features,
+            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
+            impurity, split, n_constant_features)
 
 ctypedef fused DataSplitterFused:
     BaseDenseSplitter
     BaseSparseSplitter
 
-ctypedef fused BestSplitterFused:
-    BestSplitter
-    BestSparseSplitter
-
 cdef inline int node_split_best(
-    BestSplitterFused self,
     DataSplitterFused data_splitter,
+    Criterion criterion,
+    SIZE_t start,
+    SIZE_t end,
+    SIZE_t[::1] features,
+    SIZE_t[::1] constant_features,
+    SIZE_t n_features,
+    SIZE_t max_features,
+    SIZE_t min_samples_leaf,
+    double min_weight_leaf,
+    UINT32_t* random_state,
     double impurity,
     SplitRecord* split,
     SIZE_t* n_constant_features,
@@ -396,18 +409,7 @@ cdef inline int node_split_best(
     or 0 otherwise.
     """
     # Find the best split
-    cdef SIZE_t start = self.start
-    cdef SIZE_t end = self.end
-
-    cdef SIZE_t[::1] features = self.features
-    cdef SIZE_t[::1] constant_features = self.constant_features
-    cdef SIZE_t n_features = self.n_features
-
     cdef DTYPE_t[::1] Xf = data_splitter.feature_values
-    cdef SIZE_t max_features = self.max_features
-    cdef SIZE_t min_samples_leaf = self.min_samples_leaf
-    cdef double min_weight_leaf = self.min_weight_leaf
-    cdef UINT32_t* random_state = &self.rand_r_state
 
     cdef SplitRecord best, current
     cdef double current_proxy_improvement = -INFINITY
@@ -487,7 +489,7 @@ cdef inline int node_split_best(
         features[f_i], features[f_j] = features[f_j], features[f_i]
 
         # Evaluate all splits
-        self.criterion.reset()
+        criterion.reset()
         p = start
 
         while p < end:
@@ -503,14 +505,14 @@ cdef inline int node_split_best(
                     ((end - current.pos) < min_samples_leaf)):
                 continue
 
-            self.criterion.update(current.pos)
+            criterion.update(current.pos)
 
             # Reject if min_weight_leaf is not satisfied
-            if ((self.criterion.weighted_n_left < min_weight_leaf) or
-                    (self.criterion.weighted_n_right < min_weight_leaf)):
+            if ((criterion.weighted_n_left < min_weight_leaf) or
+                    (criterion.weighted_n_right < min_weight_leaf)):
                 continue
 
-            current_proxy_improvement = self.criterion.proxy_impurity_improvement()
+            current_proxy_improvement = criterion.proxy_impurity_improvement()
 
             if current_proxy_improvement > best_proxy_improvement:
                 best_proxy_improvement = current_proxy_improvement
@@ -529,11 +531,11 @@ cdef inline int node_split_best(
     # Reorganize into samples[start:best.pos] + samples[best.pos:end]
     if best.pos < end:
         data_splitter.parition_samples_best(best.pos, best.threshold, best.feature)
-        self.criterion.reset()
-        self.criterion.update(best.pos)
-        self.criterion.children_impurity(&best.impurity_left,
+        criterion.reset()
+        criterion.update(best.pos)
+        criterion.children_impurity(&best.impurity_left,
                                             &best.impurity_right)
-        best.improvement = self.criterion.impurity_improvement(
+        best.improvement = criterion.impurity_improvement(
             impurity, best.impurity_left, best.impurity_right)
 
     # Respect invariant for constant features: the original order of
@@ -680,7 +682,11 @@ cdef class RandomSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
+        return node_split_random(
+            self.data_splitter, self.criterion, self.start, self.end,
+            self.features, self.constant_features, self.n_features, self.max_features,
+            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
+            impurity, split, n_constant_features)
 
 
 cdef class RandomSparseSplitter(Splitter):
@@ -697,7 +703,11 @@ cdef class RandomSparseSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_random(self, self.data_splitter, impurity, split, n_constant_features)
+        return node_split_random(
+            self.data_splitter, self.criterion, self.start, self.end,
+            self.features, self.constant_features, self.n_features, self.max_features,
+            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
+            impurity, split, n_constant_features)
 
 
 ctypedef fused RandomSplitterFused:
@@ -705,8 +715,17 @@ ctypedef fused RandomSplitterFused:
     RandomSparseSplitter
 
 cdef inline int node_split_random(
-    RandomSplitterFused self,
     DataSplitterFused data_splitter,
+    Criterion criterion,
+    SIZE_t start,
+    SIZE_t end,
+    SIZE_t[::1] features,
+    SIZE_t[::1] constant_features,
+    SIZE_t n_features,
+    SIZE_t max_features,
+    SIZE_t min_samples_leaf,
+    double min_weight_leaf,
+    UINT32_t* random_state,
     double impurity,
     SplitRecord* split,
     SIZE_t* n_constant_features
@@ -717,18 +736,6 @@ cdef inline int node_split_random(
     or 0 otherwise.
     """
     # Draw random splits and pick the best
-    cdef SIZE_t start = self.start
-    cdef SIZE_t end = self.end
-
-    cdef SIZE_t[::1] features = self.features
-    cdef SIZE_t[::1] constant_features = self.constant_features
-    cdef SIZE_t n_features = self.n_features
-
-    cdef SIZE_t max_features = self.max_features
-    cdef SIZE_t min_samples_leaf = self.min_samples_leaf
-    cdef double min_weight_leaf = self.min_weight_leaf
-    cdef UINT32_t* random_state = &self.rand_r_state
-
     cdef SplitRecord best, current
     cdef double current_proxy_improvement = - INFINITY
     cdef double best_proxy_improvement = - INFINITY
@@ -823,15 +830,15 @@ cdef inline int node_split_random(
             continue
 
         # Evaluate split
-        self.criterion.reset()
-        self.criterion.update(current.pos)
+        criterion.reset()
+        criterion.update(current.pos)
 
         # Reject if min_weight_leaf is not satisfied
-        if ((self.criterion.weighted_n_left < min_weight_leaf) or
-                (self.criterion.weighted_n_right < min_weight_leaf)):
+        if ((criterion.weighted_n_left < min_weight_leaf) or
+                (criterion.weighted_n_right < min_weight_leaf)):
             continue
 
-        current_proxy_improvement = self.criterion.proxy_impurity_improvement()
+        current_proxy_improvement = criterion.proxy_impurity_improvement()
 
         if current_proxy_improvement > best_proxy_improvement:
             best_proxy_improvement = current_proxy_improvement
@@ -842,11 +849,11 @@ cdef inline int node_split_random(
         if current.feature != best.feature:
             data_splitter.parition_samples_best(best.pos, best.threshold, best.feature)
 
-        self.criterion.reset()
-        self.criterion.update(best.pos)
-        self.criterion.children_impurity(&best.impurity_left,
+        criterion.reset()
+        criterion.update(best.pos)
+        criterion.children_impurity(&best.impurity_left,
                                             &best.impurity_right)
-        best.improvement = self.criterion.impurity_improvement(
+        best.improvement = criterion.impurity_improvement(
             impurity, best.impurity_left, best.impurity_right)
 
     # Respect invariant for constant features: the original order of
