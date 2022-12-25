@@ -504,7 +504,7 @@ def configure_extension_modules():
     is_pypy = platform.python_implementation() == "PyPy"
     np_include = numpy.get_include()
 
-    optimization_level = "O2"
+    optimization_level = "O3"
     if os.name == "posix":
         default_extra_compile_args = [f"-{optimization_level}"]
         default_libraries = ["m"]
