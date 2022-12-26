@@ -414,8 +414,8 @@ cdef class BaseBestSplitter(Splitter):
 
         cdef SIZE_t[::1] features = self.features
         cdef SIZE_t[::1] constant_features = self.constant_features
-        cdef DTYPE_t[::1] Xf = self.data_splitter.feature_values
 
+        cdef DTYPE_t[::1] Xf = self.data_splitter.feature_values
         cdef SIZE_t max_features = self.max_features
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
         cdef double min_weight_leaf = self.min_weight_leaf
@@ -455,8 +455,8 @@ cdef class BaseBestSplitter(Splitter):
         while (f_i > n_total_constants and  # Stop early if remaining features
                                             # are constant
                 (n_visited_features < max_features or
-                    # At least one drawn features must be non constant
-                    n_visited_features <= n_found_constants + n_drawn_constants)):
+                 # At least one drawn features must be non constant
+                 n_visited_features <= n_found_constants + n_drawn_constants)):
 
             n_visited_features += 1
 
@@ -473,7 +473,7 @@ cdef class BaseBestSplitter(Splitter):
 
             # Draw a feature at random
             f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                            random_state)
+                           random_state)
 
             if f_j < n_known_constants:
                 # f_j in the interval [n_drawn_constants, n_known_constants[
@@ -544,7 +544,7 @@ cdef class BaseBestSplitter(Splitter):
             self.criterion.reset()
             self.criterion.update(best.pos)
             self.criterion.children_impurity(&best.impurity_left,
-                                                &best.impurity_right)
+                                             &best.impurity_right)
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
@@ -555,8 +555,8 @@ cdef class BaseBestSplitter(Splitter):
 
         # Copy newly found constant features
         memcpy(&constant_features[n_known_constants],
-                &features[n_known_constants],
-                sizeof(SIZE_t) * n_found_constants)
+               &features[n_known_constants],
+               sizeof(SIZE_t) * n_found_constants)
 
         # Return values
         split[0] = best
@@ -725,14 +725,14 @@ cdef class BaseRandomSplitter(Splitter):
         cdef SIZE_t[::1] constant_features = self.constant_features
         cdef SIZE_t n_features = self.n_features
 
-        cdef SplitRecord best, current
-        cdef double current_proxy_improvement = - INFINITY
-        cdef double best_proxy_improvement = - INFINITY
-
         cdef SIZE_t max_features = self.max_features
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
         cdef double min_weight_leaf = self.min_weight_leaf
         cdef UINT32_t* random_state = &self.rand_r_state
+
+        cdef SplitRecord best, current
+        cdef double current_proxy_improvement = - INFINITY
+        cdef double best_proxy_improvement = - INFINITY
 
         cdef SIZE_t f_i = n_features
         cdef SIZE_t f_j
@@ -763,8 +763,8 @@ cdef class BaseRandomSplitter(Splitter):
         while (f_i > n_total_constants and  # Stop early if remaining features
                                             # are constant
                 (n_visited_features < max_features or
-                    # At least one drawn features must be non constant
-                    n_visited_features <= n_found_constants + n_drawn_constants)):
+                 # At least one drawn features must be non constant
+                 n_visited_features <= n_found_constants + n_drawn_constants)):
             n_visited_features += 1
 
             # Loop invariant: elements of features in
@@ -780,7 +780,7 @@ cdef class BaseRandomSplitter(Splitter):
 
             # Draw a feature at random
             f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                            random_state)
+                           random_state)
 
             if f_j < n_known_constants:
                 # f_j in the interval [n_drawn_constants, n_known_constants[
@@ -809,8 +809,8 @@ cdef class BaseRandomSplitter(Splitter):
 
             # Draw a random threshold
             current.threshold = rand_uniform(min_feature_value,
-                                                max_feature_value,
-                                                random_state)
+                                             max_feature_value,
+                                             random_state)
 
             if current.threshold == max_feature_value:
                 current.threshold = min_feature_value
@@ -846,7 +846,7 @@ cdef class BaseRandomSplitter(Splitter):
             self.criterion.reset()
             self.criterion.update(best.pos)
             self.criterion.children_impurity(&best.impurity_left,
-                                                &best.impurity_right)
+                                             &best.impurity_right)
             best.improvement = self.criterion.impurity_improvement(
                 impurity, best.impurity_left, best.impurity_right)
 
@@ -857,8 +857,8 @@ cdef class BaseRandomSplitter(Splitter):
 
         # Copy newly found constant features
         memcpy(&constant_features[n_known_constants],
-                &features[n_known_constants],
-                sizeof(SIZE_t) * n_found_constants)
+               &features[n_known_constants],
+               sizeof(SIZE_t) * n_found_constants)
 
         # Return values
         split[0] = best
@@ -1074,12 +1074,12 @@ cdef class BaseSparseSplitter(DataSplitter):
         feature : SIZE_t,
             Index of the feature we want to extract non zero value.
         """
-        cdef SIZE_t[::1] samples = self.samples
-        cdef DTYPE_t[::1] feature_values = self.feature_values
         cdef SIZE_t indptr_start = self.X_indptr[feature],
         cdef SIZE_t indptr_end = self.X_indptr[feature + 1]
         cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
         cdef SIZE_t n_samples = self.end - self.start
+        cdef SIZE_t[::1] samples = self.samples
+        cdef DTYPE_t[::1] feature_values = self.feature_values
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t[::1] sorted_samples = self.sorted_samples
         cdef INT32_t[::1] X_indices = self.X_indices
