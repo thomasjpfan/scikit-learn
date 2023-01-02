@@ -709,11 +709,6 @@ cdef class BaseRandomSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        # return node_split_random(
-        #     self.data_splitter, self.criterion, self.start, self.end,
-        #     self.features, self.constant_features, self.n_features, self.max_features,
-        #     self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
-        #     impurity, split, n_constant_features)
         """Find the best random split on node samples[start:end]
 
         Returns -1 in case of failure to allocate memory (and raise MemoryError)
