@@ -680,7 +680,7 @@ cdef void heapsort(DTYPE_t* Xf, SIZE_t* samples, SIZE_t n) nogil:
         end = end - 1
 
 
-cdef class RandomSplitter(Splitter):
+cdef class RandomSplitter(BaseRandomSplitter):
     """Splitter for finding the best random split."""
     cdef int init(
         self,
@@ -692,7 +692,7 @@ cdef class RandomSplitter(Splitter):
         self.data_splitter = BaseDenseSplitter(X, self.samples, self.n_samples)
 
 
-cdef class RandomSparseSplitter(Splitter):
+cdef class RandomSparseSplitter(BaseRandomSplitter):
     """Splitter for finding a random split, using the sparse data."""
     cdef int init(
         self,
