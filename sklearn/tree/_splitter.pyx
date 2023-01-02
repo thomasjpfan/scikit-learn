@@ -398,7 +398,9 @@ cdef class BestSparseSplitter(BaseBestSplitter):
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseSparseSplitter(X, self.samples, self.n_samples)
 
+
 cdef class BaseBestSplitter(Splitter):
+    """Splitter for finding the best split."""
     cdef DataSplitter data_splitter
 
     cdef int node_split(self, double impurity, SplitRecord* split,
