@@ -277,12 +277,10 @@ cdef class BaseDenseSplitter:
             DTYPE_t min_feature_value = X[samples[self.start], current_feature]
             DTYPE_t max_feature_value = min_feature_value
             DTYPE_t[::1] Xf = self.feature_values
-            SIZE_t start = self.start
-            SIZE_t end = self.end
 
-        Xf[start] = min_feature_value
+        Xf[self.start] = min_feature_value
 
-        for p in range(start + 1, end):
+        for p in range(self.start + 1, self.end):
             current_feature_value = X[samples[p], current_feature]
             Xf[p] = current_feature_value
 
@@ -296,11 +294,9 @@ cdef class BaseDenseSplitter:
 
     cdef inline void next_p(self, SIZE_t* p_prev, SIZE_t* p) nogil:
         """Find min and max feature value for the random splitter."""
-        cdef:
-            DTYPE_t[::1] Xf = self.feature_values
-            SIZE_t end = self.end
+        cdef DTYPE_t[::1] Xf = self.feature_values
 
-        while p[0] + 1 < end and Xf[p[0] + 1] <= Xf[p[0]] + FEATURE_THRESHOLD:
+        while p[0] + 1 < self.end and Xf[p[0] + 1] <= Xf[p[0]] + FEATURE_THRESHOLD:
             p[0] += 1
 
         # (p + 1 >= end) or (Xf[p + 1] > X[p])
