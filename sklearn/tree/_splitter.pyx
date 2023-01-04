@@ -536,7 +536,7 @@ cdef class BestSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best[BaseDenseSplitter](
+        return node_split_best(
             self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 
@@ -554,7 +554,7 @@ cdef class BestSparseSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best[BaseSparseSplitter](
+        return node_split_best(
             self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 
@@ -853,7 +853,7 @@ cdef class RandomSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_random[BaseDenseSplitter](
+        return node_split_random(
             self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 
@@ -871,7 +871,7 @@ cdef class RandomSparseSplitter(Splitter):
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_random[BaseSparseSplitter](
+        return node_split_random(
             self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 @final
