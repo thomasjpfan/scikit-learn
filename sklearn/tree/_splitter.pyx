@@ -345,6 +345,7 @@ cdef class BaseDenseSplitter:
 cdef class BestSplitter(Splitter):
     """Splitter for finding the best dense split."""
     cdef BaseDenseSplitter data_splitter
+    cdef BaseBestSplitter best_splitter
     cdef int init(
         self,
         object X,
@@ -353,16 +354,18 @@ cdef class BestSplitter(Splitter):
     ) except -1:
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseDenseSplitter(X, self.samples, self.n_samples)
+        self.best_splitter = BaseBestSplitter(self, self.criterion)
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best(
-            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
+        return self.best_splitter.node_split_best(
+            self.data_splitter, impurity, split, n_constant_features)
 
 
 cdef class BestSparseSplitter(Splitter):
     """Splitter for finding the best split, using the sparse data."""
     cdef BaseSparseSplitter data_splitter
+    cdef BaseBestSplitter best_splitter
     cdef int init(
         self,
         object X,
@@ -371,184 +374,210 @@ cdef class BestSparseSplitter(Splitter):
     ) except -1:
         Splitter.init(self, X, y, sample_weight)
         self.data_splitter = BaseSparseSplitter(X, self.samples, self.n_samples)
+        self.best_splitter = BaseBestSplitter(self, self.criterion)
 
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
-        return node_split_best(
-            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
+        return self.best_splitter.node_split_best(
+            self.data_splitter, impurity, split, n_constant_features)
 
 ctypedef fused DataSplitterFused:
     BaseDenseSplitter
     BaseSparseSplitter
 
-cdef inline int node_split_best(
-    Splitter splitter,
-    DataSplitterFused data_splitter,
-    Criterion criterion,
-    double impurity,
-    SplitRecord* split,
-    SIZE_t* n_constant_features,
-) nogil except -1:
-    """Find the best split on node samples[start:end]
+cdef class BaseBestSplitter:
+    cdef Criterion criterion
+    cdef SIZE_t start
+    cdef SIZE_t end
 
-    Returns -1 in case of failure to allocate memory (and raise MemoryError)
-    or 0 otherwise.
-    """
-    # Find the best split
-    cdef SIZE_t start = splitter.start
-    cdef SIZE_t end = splitter.end
+    cdef SIZE_t[::1] features
+    cdef SIZE_t[::1] constant_features
+    cdef SIZE_t n_features
 
-    cdef SIZE_t[::1] features = splitter.features
-    cdef SIZE_t[::1] constant_features = splitter.constant_features
-    cdef SIZE_t n_features = splitter.n_features
+    cdef SIZE_t max_features
+    cdef SIZE_t min_samples_leaf
+    cdef double min_weight_leaf
+    cdef UINT32_t* rand_r_state
 
-    cdef DTYPE_t[::1] Xf = data_splitter.feature_values
-    cdef SIZE_t max_features = splitter.max_features
-    cdef SIZE_t min_samples_leaf = splitter.min_samples_leaf
-    cdef double min_weight_leaf = splitter.min_weight_leaf
-    cdef UINT32_t* random_state = &splitter.rand_r_state
+    def __init__(self, Splitter splitter, Criterion criterion):
+        self.start = splitter.start
+        self.end = splitter.end
+        self.features = splitter.features
+        self.constant_features = splitter.constant_features
+        self.n_features = splitter.n_features
+        self.max_features = splitter.max_features
+        self.min_samples_leaf = splitter.min_samples_leaf
+        self.min_weight_leaf = splitter.min_weight_leaf
+        self.rand_r_state = &splitter.rand_r_state
+        self.criterion = criterion
 
-    cdef SplitRecord best, current
-    cdef double current_proxy_improvement = -INFINITY
-    cdef double best_proxy_improvement = -INFINITY
+    cdef int node_split_best(
+        self,
+        DataSplitterFused data_splitter,
+        double impurity,
+        SplitRecord* split,
+        SIZE_t* n_constant_features,
+    ) nogil except -1:
+        """Find the best split on node samples[start:end]
 
-    cdef SIZE_t f_i = n_features
-    cdef SIZE_t f_j
-    cdef SIZE_t p
-    cdef SIZE_t p_prev
+        Returns -1 in case of failure to allocate memory (and raise MemoryError)
+        or 0 otherwise.
+        """
+        # Find the best split
+        cdef SIZE_t start = self.start
+        cdef SIZE_t end = self.end
 
-    cdef SIZE_t n_visited_features = 0
-    # Number of features discovered to be constant during the split search
-    cdef SIZE_t n_found_constants = 0
-    # Number of features known to be constant and drawn without replacement
-    cdef SIZE_t n_drawn_constants = 0
-    cdef SIZE_t n_known_constants = n_constant_features[0]
-    # n_total_constants = n_known_constants + n_found_constants
-    cdef SIZE_t n_total_constants = n_known_constants
+        cdef SIZE_t[::1] features = self.features
+        cdef SIZE_t[::1] constant_features = self.constant_features
+        cdef SIZE_t n_features = self.n_features
 
-    _init_split(&best, end)
+        cdef DTYPE_t[::1] Xf = data_splitter.feature_values
+        cdef SIZE_t max_features = self.max_features
+        cdef SIZE_t min_samples_leaf = self.min_samples_leaf
+        cdef double min_weight_leaf = self.min_weight_leaf
+        cdef UINT32_t* random_state = self.rand_r_state
 
-    data_splitter.init_node_split(start, end)
+        cdef SplitRecord best, current
+        cdef double current_proxy_improvement = -INFINITY
+        cdef double best_proxy_improvement = -INFINITY
 
-    # Sample up to max_features without replacement using a
-    # Fisher-Yates-based algorithm (using the local variables `f_i` and
-    # `f_j` to compute a permutation of the `features` array).
-    #
-    # Skip the CPU intensive evaluation of the impurity criterion for
-    # features that were already detected as constant (hence not suitable
-    # for good splitting) by ancestor nodes and save the information on
-    # newly discovered constant features to spare computation on descendant
-    # nodes.
-    while (f_i > n_total_constants and  # Stop early if remaining features
-                                        # are constant
-            (n_visited_features < max_features or
-                # At least one drawn features must be non constant
-                n_visited_features <= n_found_constants + n_drawn_constants)):
+        cdef SIZE_t f_i = n_features
+        cdef SIZE_t f_j
+        cdef SIZE_t p
+        cdef SIZE_t p_prev
 
-        n_visited_features += 1
+        cdef SIZE_t n_visited_features = 0
+        # Number of features discovered to be constant during the split search
+        cdef SIZE_t n_found_constants = 0
+        # Number of features known to be constant and drawn without replacement
+        cdef SIZE_t n_drawn_constants = 0
+        cdef SIZE_t n_known_constants = n_constant_features[0]
+        # n_total_constants = n_known_constants + n_found_constants
+        cdef SIZE_t n_total_constants = n_known_constants
 
-        # Loop invariant: elements of features in
-        # - [:n_drawn_constant[ holds drawn and known constant features;
-        # - [n_drawn_constant:n_known_constant[ holds known constant
-        #   features that haven't been drawn yet;
-        # - [n_known_constant:n_total_constant[ holds newly found constant
-        #   features;
-        # - [n_total_constant:f_i[ holds features that haven't been drawn
-        #   yet and aren't constant apriori.
-        # - [f_i:n_features[ holds features that have been drawn
-        #   and aren't constant.
+        _init_split(&best, end)
 
-        # Draw a feature at random
-        f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
-                        random_state)
+        data_splitter.init_node_split(start, end)
 
-        if f_j < n_known_constants:
-            # f_j in the interval [n_drawn_constants, n_known_constants[
-            features[n_drawn_constants], features[f_j] = features[f_j], features[n_drawn_constants]
+        # Sample up to max_features without replacement using a
+        # Fisher-Yates-based algorithm (using the local variables `f_i` and
+        # `f_j` to compute a permutation of the `features` array).
+        #
+        # Skip the CPU intensive evaluation of the impurity criterion for
+        # features that were already detected as constant (hence not suitable
+        # for good splitting) by ancestor nodes and save the information on
+        # newly discovered constant features to spare computation on descendant
+        # nodes.
+        while (f_i > n_total_constants and  # Stop early if remaining features
+                                            # are constant
+                (n_visited_features < max_features or
+                    # At least one drawn features must be non constant
+                    n_visited_features <= n_found_constants + n_drawn_constants)):
 
-            n_drawn_constants += 1
-            continue
+            n_visited_features += 1
 
-        # f_j in the interval [n_known_constants, f_i - n_found_constants[
-        f_j += n_found_constants
-        # f_j in the interval [n_total_constants, f_i[
-        current.feature = features[f_j]
-        data_splitter.sort_samples_and_feature_values(current.feature)
+            # Loop invariant: elements of features in
+            # - [:n_drawn_constant[ holds drawn and known constant features;
+            # - [n_drawn_constant:n_known_constant[ holds known constant
+            #   features that haven't been drawn yet;
+            # - [n_known_constant:n_total_constant[ holds newly found constant
+            #   features;
+            # - [n_total_constant:f_i[ holds features that haven't been drawn
+            #   yet and aren't constant apriori.
+            # - [f_i:n_features[ holds features that have been drawn
+            #   and aren't constant.
 
-        if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
-            features[f_j], features[n_total_constants] = features[n_total_constants], features[f_j]
+            # Draw a feature at random
+            f_j = rand_int(n_drawn_constants, f_i - n_found_constants,
+                            random_state)
 
-            n_found_constants += 1
-            n_total_constants += 1
-            continue
+            if f_j < n_known_constants:
+                # f_j in the interval [n_drawn_constants, n_known_constants[
+                features[n_drawn_constants], features[f_j] = features[f_j], features[n_drawn_constants]
 
-        f_i -= 1
-        features[f_i], features[f_j] = features[f_j], features[f_i]
-
-        # Evaluate all splits
-        criterion.reset()
-        p = start
-
-        while p < end:
-            data_splitter.next_p(&p_prev, &p)
-
-            if p >= end:
+                n_drawn_constants += 1
                 continue
 
-            current.pos = p
+            # f_j in the interval [n_known_constants, f_i - n_found_constants[
+            f_j += n_found_constants
+            # f_j in the interval [n_total_constants, f_i[
+            current.feature = features[f_j]
+            data_splitter.sort_samples_and_feature_values(current.feature)
 
-            # Reject if min_samples_leaf is not guaranteed
-            if (((current.pos - start) < min_samples_leaf) or
-                    ((end - current.pos) < min_samples_leaf)):
+            if Xf[end - 1] <= Xf[start] + FEATURE_THRESHOLD:
+                features[f_j], features[n_total_constants] = features[n_total_constants], features[f_j]
+
+                n_found_constants += 1
+                n_total_constants += 1
                 continue
 
-            criterion.update(current.pos)
+            f_i -= 1
+            features[f_i], features[f_j] = features[f_j], features[f_i]
 
-            # Reject if min_weight_leaf is not satisfied
-            if ((criterion.weighted_n_left < min_weight_leaf) or
-                    (criterion.weighted_n_right < min_weight_leaf)):
-                continue
+            # Evaluate all splits
+            self.criterion.reset()
+            p = start
 
-            current_proxy_improvement = criterion.proxy_impurity_improvement()
+            while p < end:
+                data_splitter.next_p(&p_prev, &p)
 
-            if current_proxy_improvement > best_proxy_improvement:
-                best_proxy_improvement = current_proxy_improvement
-                # sum of halves is used to avoid infinite value
-                current.threshold = Xf[p_prev] / 2.0 + Xf[p] / 2.0
+                if p >= end:
+                    continue
 
-                if (
-                    current.threshold == Xf[p] or
-                    current.threshold == INFINITY or
-                    current.threshold == -INFINITY
-                ):
-                    current.threshold = Xf[p_prev]
+                current.pos = p
 
-                best = current  # copy
+                # Reject if min_samples_leaf is not guaranteed
+                if (((current.pos - start) < min_samples_leaf) or
+                        ((end - current.pos) < min_samples_leaf)):
+                    continue
 
-    # Reorganize into samples[start:best.pos] + samples[best.pos:end]
-    if best.pos < end:
-        data_splitter.parition_samples_best(best.pos, best.threshold, best.feature)
-        criterion.reset()
-        criterion.update(best.pos)
-        criterion.children_impurity(&best.impurity_left,
-                                            &best.impurity_right)
-        best.improvement = criterion.impurity_improvement(
-            impurity, best.impurity_left, best.impurity_right)
+                self.criterion.update(current.pos)
 
-    # Respect invariant for constant features: the original order of
-    # element in features[:n_known_constants] must be preserved for sibling
-    # and child nodes
-    memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
+                # Reject if min_weight_leaf is not satisfied
+                if ((self.criterion.weighted_n_left < min_weight_leaf) or
+                        (self.criterion.weighted_n_right < min_weight_leaf)):
+                    continue
 
-    # Copy newly found constant features
-    memcpy(&constant_features[n_known_constants],
-            &features[n_known_constants],
-            sizeof(SIZE_t) * n_found_constants)
+                current_proxy_improvement = self.criterion.proxy_impurity_improvement()
 
-    # Return values
-    split[0] = best
-    n_constant_features[0] = n_total_constants
-    return 0
+                if current_proxy_improvement > best_proxy_improvement:
+                    best_proxy_improvement = current_proxy_improvement
+                    # sum of halves is used to avoid infinite value
+                    current.threshold = Xf[p_prev] / 2.0 + Xf[p] / 2.0
+
+                    if (
+                        current.threshold == Xf[p] or
+                        current.threshold == INFINITY or
+                        current.threshold == -INFINITY
+                    ):
+                        current.threshold = Xf[p_prev]
+
+                    best = current  # copy
+
+        # Reorganize into samples[start:best.pos] + samples[best.pos:end]
+        if best.pos < end:
+            data_splitter.parition_samples_best(best.pos, best.threshold, best.feature)
+            self.criterion.reset()
+            self.criterion.update(best.pos)
+            self.criterion.children_impurity(&best.impurity_left,
+                                                &best.impurity_right)
+            best.improvement = self.criterion.impurity_improvement(
+                impurity, best.impurity_left, best.impurity_right)
+
+        # Respect invariant for constant features: the original order of
+        # element in features[:n_known_constants] must be preserved for sibling
+        # and child nodes
+        memcpy(&features[0], &constant_features[0], sizeof(SIZE_t) * n_known_constants)
+
+        # Copy newly found constant features
+        memcpy(&constant_features[n_known_constants],
+                &features[n_known_constants],
+                sizeof(SIZE_t) * n_found_constants)
+
+        # Return values
+        split[0] = best
+        n_constant_features[0] = n_total_constants
+        return 0
 
 
 # Sort n-element arrays pointed to by Xf and samples, simultaneously,
