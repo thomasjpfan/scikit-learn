@@ -680,10 +680,7 @@ cdef class RandomSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(
-            self.data_splitter, self.criterion, self.start, self.end,
-            self.features, self.constant_features, self.n_features, self.max_features,
-            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
-            impurity, split, n_constant_features)
+            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
 
 
 cdef class RandomSparseSplitter(Splitter):
@@ -701,11 +698,7 @@ cdef class RandomSparseSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(
-            self.data_splitter, self.criterion, self.start, self.end,
-            self.features, self.constant_features, self.n_features, self.max_features,
-            self.min_samples_leaf, self.min_weight_leaf, &self.rand_r_state,
-            impurity, split, n_constant_features)
-
+            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
 
 ctypedef fused RandomSplitterFused:
     RandomSplitter
@@ -714,15 +707,7 @@ ctypedef fused RandomSplitterFused:
 cdef inline int node_split_random(
     DataSplitterFused data_splitter,
     Criterion criterion,
-    SIZE_t start,
-    SIZE_t end,
-    SIZE_t[::1] features,
-    SIZE_t[::1] constant_features,
-    SIZE_t n_features,
-    SIZE_t max_features,
-    SIZE_t min_samples_leaf,
-    double min_weight_leaf,
-    UINT32_t* random_state,
+    Splitter splitter,
     double impurity,
     SplitRecord* split,
     SIZE_t* n_constant_features
@@ -733,6 +718,19 @@ cdef inline int node_split_random(
     or 0 otherwise.
     """
     # Draw random splits and pick the best
+    cdef SIZE_t start = splitter.start
+    cdef SIZE_t end = splitter.end
+
+    cdef SIZE_t[::1] features = splitter.features
+    cdef SIZE_t[::1] constant_features = splitter.constant_features
+    cdef SIZE_t n_features = splitter.n_features
+
+    cdef DTYPE_t[::1] Xf = data_splitter.feature_values
+    cdef SIZE_t max_features = splitter.max_features
+    cdef SIZE_t min_samples_leaf = splitter.min_samples_leaf
+    cdef double min_weight_leaf = splitter.min_weight_leaf
+    cdef UINT32_t* random_state = &splitter.rand_r_state
+
     cdef SplitRecord best, current
     cdef double current_proxy_improvement = - INFINITY
     cdef double best_proxy_improvement = - INFINITY
