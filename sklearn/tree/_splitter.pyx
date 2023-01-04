@@ -229,7 +229,7 @@ cdef class BaseDenseSplitter:
         cdef SIZE_t start
         cdef SIZE_t end
 
-    def __cinit__(
+    def __init__(
         self,
         const DTYPE_t[:, :] X,
         SIZE_t[::1] samples,
@@ -889,7 +889,7 @@ cdef class BaseSparseSplitter:
     cdef SIZE_t end_negative
     cdef bint is_samples_sorted
 
-    def __cinit__(
+    def __init__(
         self,
         object X,
         SIZE_t[::1] samples,
