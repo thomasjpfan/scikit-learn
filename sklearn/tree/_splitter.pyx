@@ -357,7 +357,7 @@ cdef class BestSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_best(
-            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
+            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 
 cdef class BestSparseSplitter(Splitter):
@@ -375,16 +375,16 @@ cdef class BestSparseSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_best(
-            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
+            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 ctypedef fused DataSplitterFused:
     BaseDenseSplitter
     BaseSparseSplitter
 
 cdef inline int node_split_best(
+    Splitter splitter,
     DataSplitterFused data_splitter,
     Criterion criterion,
-    Splitter splitter,
     double impurity,
     SplitRecord* split,
     SIZE_t* n_constant_features,
@@ -680,7 +680,7 @@ cdef class RandomSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(
-            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
+            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 
 cdef class RandomSparseSplitter(Splitter):
@@ -698,16 +698,16 @@ cdef class RandomSparseSplitter(Splitter):
     cdef int node_split(self, double impurity, SplitRecord* split,
                         SIZE_t* n_constant_features) nogil except -1:
         return node_split_random(
-            self.data_splitter, self.criterion, self, impurity, split, n_constant_features)
+            self, self.data_splitter, self.criterion, impurity, split, n_constant_features)
 
 ctypedef fused RandomSplitterFused:
     RandomSplitter
     RandomSparseSplitter
 
 cdef inline int node_split_random(
+    Splitter splitter,
     DataSplitterFused data_splitter,
     Criterion criterion,
-    Splitter splitter,
     double impurity,
     SplitRecord* split,
     SIZE_t* n_constant_features
