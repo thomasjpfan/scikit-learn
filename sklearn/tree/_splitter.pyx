@@ -251,16 +251,14 @@ cdef class BaseDenseSplitter:
             DTYPE_t[::1] Xf = self.feature_values
             const DTYPE_t[:, :] X = self.X
             SIZE_t[::1] samples = self.samples
-            SIZE_t start = self.start
-            SIZE_t end = self.end
 
         # Sort samples along that feature; by
         # copying the values into an array and
         # sorting the array in a manner which utilizes the cache more
         # effectively.
-        for i in range(start, end):
+        for i in range(self.start, self.end):
             Xf[i] = X[samples[i], current_feature]
-        sort(&Xf[start], &samples[start], end - start)
+        sort(&Xf[self.start], &samples[self.start], self.end - self.start)
 
     cdef inline void find_min_max(
         self,
