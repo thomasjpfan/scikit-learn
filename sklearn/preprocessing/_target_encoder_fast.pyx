@@ -5,24 +5,18 @@ import numpy as np
 
 cnp.import_array()
 
-ctypedef fused Y_DTYPE:
-    int
-    long
-    float
-    double
-
 def _fit_encoding_fast(
     cnp.int64_t[:, :] X_int,
-    cnp.ndarray[Y_DTYPE, ndim=1] y,
+    cnp.float64_t[:] y,
     cnp.int64_t[::1] n_categories,
     double smooth,
-    double encoding_mean,
+    double y_mean,
 ):
     cdef:
         list encodings = []
         cnp.int64_t i, j, n_cats
         int n_samples = X_int.shape[0]
-        double smooth_sum = smooth * encoding_mean
+        double smooth_sum = smooth * y_mean
         cnp.int64_t max_cats = np.max(n_categories)
         double[::1] current_sum = np.empty(max_cats, dtype=np.float64)
         double[::1] current_cnt = np.empty(max_cats, dtype=np.float64)

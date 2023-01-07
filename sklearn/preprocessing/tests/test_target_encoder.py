@@ -8,26 +8,27 @@ from sklearn.model_selection import KFold
 
 
 @pytest.mark.parametrize(
-    "categories",
+    "categories, unknown_value",
     [
-        np.array([0, 1, 2], dtype=np.int64),
-        np.array([1.0, 3.0, np.nan], dtype=np.float64),
-        np.array(["cat", "dog", "snake"], dtype=object),
-        "auto",
+        ([np.array([0, 1, 2], dtype=np.int64)], 4),
+        ([np.array([1.0, 3.0, np.nan], dtype=np.float64)], 6.0),
+        ([np.array(["cat", "dog", "snake"], dtype=object)], "bear"),
+        ("auto", 3),
     ],
 )
 @pytest.mark.parametrize("seed", range(2))
 @pytest.mark.parametrize("smooth", [5.0, 10.0])
-def test_regression(categories, seed, smooth):
+def test_regression(categories, unknown_value, seed, smooth):
     """Check regression encoding."""
 
     X_int = np.array([[0] * 20 + [1] * 30 + [2] * 40], dtype=np.int64).T
+    n_categories = 3
     n_samples = X_int.shape[0]
 
     if isinstance(categories, str) and categories == "auto":
         X_input = X_int
     else:
-        X_input = categories[X_int]
+        X_input = categories[0][X_int]
 
     rng = np.random.RandomState(seed)
     y = rng.uniform(low=-10, high=20, size=n_samples)
@@ -52,30 +53,30 @@ def test_regression(categories, seed, smooth):
     expected_X_fit_transform = np.empty_like(X_int, dtype=np.float64)
     kfold = KFold(n_splits=3)
     for train_idx, test_idx in kfold.split(X_input):
-        cur_encodings = np.zeros(3, dtype=np.float64)
+        cur_encodings = np.zeros(n_categories, dtype=np.float64)
         X_, y_ = X_int[train_idx, :], y[train_idx]
-        for c in range(3):
+        y_train_mean = np.mean(y_)
+        for c in range(n_categories):
             y_subset = y_[X_[:, 0] == c]
-            current_sum = np.sum(y_subset) + smooth_sum
+            current_sum = np.sum(y_subset) + y_train_mean * smooth
             current_cnt = y_subset.shape[0] + smooth
             cur_encodings[c] = current_sum / current_cnt
 
-            expected_X_fit_transform[test_idx, 0] = np.take(
-                cur_encodings, indices=X_input[test_idx, 0]
-            )
+        expected_X_fit_transform[test_idx, 0] = np.take(
+            cur_encodings, indices=X_int[test_idx, 0]
+        )
 
     target_encoder = TargetRegressorEncoder(
         smooth=smooth, categories=categories, cv=kfold
     )
 
-    X_fit_transform = target_encoder.fit_tranfsorm(X_input, y)
+    X_fit_transform = target_encoder.fit_transform(X_input, y)
     assert_allclose(X_fit_transform, expected_X_fit_transform)
     assert len(target_encoder.encodings_) == 1
     assert_allclose(target_encoder.encodings_[0], expected_encodings)
     assert target_encoder.encoding_mean_ == pytest.approx(y_mean)
 
-    # 3 is unknown and will be encoded as the mean
-    X_test = np.array([[0, 1, 2, 3]], dtype=np.int64).T
+    X_test = np.array([[0, 1, 2]], dtype=np.int64).T
     expected_X_test_transform = np.concatenate(
         (expected_encodings, np.asarray([y_mean]))
     ).reshape(-1, 1)
@@ -83,7 +84,9 @@ def test_regression(categories, seed, smooth):
     if isinstance(categories, str) and categories == "auto":
         X_test_input = X_test
     else:
-        X_test_input = categories[X_test]
+        X_test_input = categories[0][X_test]
+
+    X_test_input = np.concatenate((X_test_input, [[unknown_value]]))
 
     X_test_transform = target_encoder.transform(X_test_input)
     assert_allclose(X_test_transform, expected_X_test_transform)
@@ -108,15 +111,11 @@ def test_regression_custom_categories(X, categories):
     """custom categoires with unknown categories that are not in training data."""
     rng = np.random.RandomState(42)
     y = rng.uniform(low=-10, high=20, size=X.shape[0])
-    y_mean = y.mean()
-
-    enc = TargetRegressorEncoder(categories=categories)
-    X_fit_trans = enc.fit_transform(X, y)
+    enc = TargetRegressorEncoder(categories=categories).fit(X, y)
 
     # The last element is unknown and encoded as the mean
-    assert_allclose(X_fit_trans[-1], [y_mean])
-
-    X_trans = enc.transform([X[0, -1]])
+    y_mean = y.mean()
+    X_trans = enc.transform(X[-1:])
     assert X_trans[0, 0] == pytest.approx(y_mean)
 
     assert len(enc.encodings_) == 1
@@ -128,7 +127,8 @@ def test_regression_custom_categories(X, categories):
     "y, msg",
     [
         ([1, 2, 0, 1], "Found input variables with inconsistent"),
-        (["cat", "dog", "bear"], "dtype='numeric' is not compatible"),
+        (np.asarray([[1, 2, 0], [1, 2, 3]]).T, "y should be a 1d array"),
+        (["cat", "dog", "bear"], "could not convert string to float"),
     ],
 )
 def test_regression_errors(y, msg):
@@ -160,28 +160,84 @@ def test_regression_feature_names_out_set_output():
 
 
 @pytest.mark.parametrize("to_pandas", [True, False])
-def test_regression_multiple_features_quick(to_pandas):
+@pytest.mark.parametrize("smooth", [1.0, 2.0])
+def test_regression_multiple_features_quick(to_pandas, smooth):
     """Check regression encoder with multiple features."""
-    X = np.array(
-        [[1, 1], [0, 1], [1, 1], [0, 1], [1, 0], [0, 1], [1, 0], [0, 0]], dtype=np.int64
+    X_int = np.array(
+        [[1, 1], [0, 1], [1, 1], [2, 1], [1, 0], [0, 1], [1, 0], [0, 0]], dtype=np.int64
     )
-    # y = np.array([0, 1, 2, 3, 4, 5, 10, 7])
-    # y_mean = np.mean(y)
+    y = np.array([3, 5, 2, 3, 4, 5, 10, 7])
+    y_mean = np.mean(y)
+    categories = [[0, 1, 2], [0, 1]]
 
     X_test = np.array(
         [
             [0, 1],
-            [1, 0],
-            [2, 10],  # unknown
+            [3, 0],  # 3 is unknown
+            [1, 10],  # 10 is unknown
         ],
-        dtype=int,
+        dtype=np.int64,
     )
 
     if to_pandas:
         pd = pytest.importorskip("pandas")
         # convert second feature to a object
-        X_obj = np.array(["cat", "dog"], dtype=object)[X[:, 1]]
-        X = pd.DataFrame({"feat0": X[:, 0], "feat1": X_obj}, columns=["feat0", "feat1"])
+        X_obj = np.array(["cat", "dog"], dtype=object)[X_int[:, 1]]
+        X_input = pd.DataFrame(
+            {"feat0": X_int[:, 0], "feat1": X_obj}, columns=["feat0", "feat1"]
+        )
         X_test = pd.DataFrame({"feat0": X_test[:, 0], "feat1": ["dog", "cat", "snake"]})
+    else:
+        X_input = X_int
 
-    # manually compute encoding
+    cv_splits = [([0, 2, 4, 6], [1, 3, 5, 7]), ([1, 3, 5, 7], [0, 2, 4, 6])]
+
+    # manually compute encoding for fit_transform
+    expected_X_fit_transform = np.empty_like(X_int, dtype=np.float64)
+    for f_idx, cats in enumerate(categories):
+        for train_idx, test_idx in cv_splits:
+            n_cats = len(cats)
+            current_encoding = np.zeros(n_cats, dtype=np.float64)
+            X_, y_ = X_int[train_idx, :], y[train_idx]
+            y_train_mean = np.mean(y_)
+            for c in range(n_cats):
+                y_subset = y_[X_[:, f_idx] == c]
+                current_sum = np.sum(y_subset) + smooth * y_train_mean
+                current_cnt = y_subset.shape[0] + smooth
+                current_encoding[c] = current_sum / current_cnt
+
+            expected_X_fit_transform[test_idx, f_idx] = np.take(
+                current_encoding, indices=X_int[test_idx, f_idx]
+            )
+
+    # manually compute encoding for transform
+    expected_encodings = []
+    for f_idx, cats in enumerate(categories):
+        n_cats = len(cats)
+        current_encoding = np.zeros(n_cats, dtype=np.float64)
+        for c in range(n_cats):
+            y_subset = y[X_int[:, f_idx] == c]
+            current_sum = np.sum(y_subset) + smooth * y_mean
+            current_cnt = y_subset.shape[0] + smooth
+            current_encoding[c] = current_sum / current_cnt
+        expected_encodings.append(current_encoding)
+
+    expected_X_test_transform = np.array(
+        [
+            [expected_encodings[0][0], expected_encodings[1][1]],
+            [y_mean, expected_encodings[1][0]],
+            [expected_encodings[0][1], y_mean],
+        ],
+        dtype=np.float64,
+    )
+
+    enc = TargetRegressorEncoder(smooth=smooth, cv=cv_splits)
+    X_fit_transform = enc.fit_transform(X_input, y)
+    assert_allclose(X_fit_transform, expected_X_fit_transform)
+
+    assert len(enc.encodings_) == 2
+    for i in range(2):
+        assert_allclose(enc.encodings_[i], expected_encodings[i])
+
+    X_test_transform = enc.transform(X_test)
+    assert_allclose(X_test_transform, expected_X_test_transform)
