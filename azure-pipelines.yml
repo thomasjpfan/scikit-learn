@@ -38,7 +38,7 @@ jobs:
         pip install pytest flake8 $(get_dep mypy min) $(get_dep black min)
       displayName: Install linters
     - bash: |
-        ./build_tools/azure/linting.sh
+        ./build_tools/linting.sh
 
 - template: build_tools/azure/posix.yml
   parameters:
