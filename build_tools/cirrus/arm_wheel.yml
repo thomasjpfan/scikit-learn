@@ -38,8 +38,10 @@ final_task:
     - macos arm64 wheels
   container:
     image: python:3.11.1
-  try_script:
-    - echo "wow"
+  always:
+    try_script:
+      - echo "wow"
+
 
 
 #   wheels_artifacts:
