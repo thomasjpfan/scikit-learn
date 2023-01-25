@@ -1,4 +1,5 @@
 macos_arm64_wheel_task:
+  alias: macos arm64 wheels
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
@@ -25,11 +26,21 @@ macos_arm64_wheel_task:
         CIBW_BUILD: cp311-macosx_arm64
 
   conda_script:
-    - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-    - bash ~/mambaforge.sh -b -p ~/mambaforge
+    # - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    # - bash ~/mambaforge.sh -b -p ~/mambaforge
 
   cibuildwheel_script:
-    - bash build_tools/wheels/build_wheels.sh
+    # - bash build_tools/wheels/build_wheels.sh
+    - exit 1
+
+final_task:
+  depends_on:
+    - macos arm64 wheels
+  container:
+    image: python:3.11.1
+  try_script:
+    - echo "wow"
+
 
 #   wheels_artifacts:
 #     path: "wheelhouse/*"
