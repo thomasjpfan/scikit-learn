@@ -35,6 +35,8 @@ macos_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
+      - python -m venv .venv
+      - source .venv/bin/activate
       - which python
       - python -m pip install defusedxml PyGithub
 
@@ -89,6 +91,8 @@ linux_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
+      - python -m venv .venv
+      - source .venv/bin/activate
       - which python
       - python -m pip install defusedxml PyGithub
 
