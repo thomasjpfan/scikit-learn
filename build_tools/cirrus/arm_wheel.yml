@@ -35,7 +35,7 @@ macos_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
-      - ./build_tools/cirrus/update_tracking_issue.sh macos_arm64_wheel
+      - ./build_tools/cirrus/update_tracking_on_failure.sh macos_arm64_wheel
 
 # final_task:
 #   depends_on:
@@ -88,7 +88,7 @@ linux_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
-      - ./build_tools/cirrus/update_tracking_issue.sh linux_arm64_wheel
+      - ./build_tools/cirrus/update_tracking_on_failure.sh linux_arm64_wheel
 
 
 #   wheels_artifacts:
