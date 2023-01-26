@@ -34,8 +34,9 @@ macos_arm64_wheel_task:
     - exit 1
 
   on_failure:
-    - which python
-    - python -m pip install defusedxml PyGithub
+    update_tracker_script:
+      - which python
+      - python -m pip install defusedxml PyGithub
 
 # final_task:
 #   depends_on:
@@ -87,8 +88,9 @@ linux_arm64_wheel_task:
     - exit 1
 
   on_failure:
-    - which python
-    - python -m pip install defusedxml PyGithub
+    update_tracker_script:
+      - which python
+      - python -m pip install defusedxml PyGithub
 
 #   wheels_artifacts:
 #     path: "wheelhouse/*"
