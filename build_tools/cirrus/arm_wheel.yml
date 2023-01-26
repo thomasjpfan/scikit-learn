@@ -35,10 +35,7 @@ macos_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
-      - python -m venv .venv
-      - source .venv/bin/activate
-      - which python
-      - python -m pip install defusedxml PyGithub
+      - ./build_tools/cirrus/update_tracking_issue.sh macos_arm64_wheel
 
 # final_task:
 #   depends_on:
@@ -91,10 +88,8 @@ linux_arm64_wheel_task:
 
   on_failure:
     update_tracker_script:
-      - python -m venv .venv
-      - source .venv/bin/activate
-      - which python
-      - python -m pip install defusedxml PyGithub
+      - ./build_tools/cirrus/update_tracking_issue.sh linux_arm64_wheel
+
 
 #   wheels_artifacts:
 #     path: "wheelhouse/*"
