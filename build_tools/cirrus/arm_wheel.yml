@@ -32,7 +32,7 @@ macos_arm64_wheel_task:
 
   cibuildwheel_script:
     # - bash build_tools/wheels/build_wheels.sh
-    - exit 1
+    - exit 0
 
   on_failure:
     update_tracker_script:
