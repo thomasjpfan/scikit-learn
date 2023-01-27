@@ -35,8 +35,8 @@ macos_arm64_wheel_task:
     # - bash build_tools/wheels/build_wheels.sh
     - echo "wow"
     - echo $SCIPY_STAGING_UPLOAD_TOKEN
-    - echo $THIS_SECRET
-    - echo $CONDA_HOME
+    - echo $THIS_SECRET > myfile.txt
+    - cat myfile.txt
     - exit 0
 
   on_failure:
