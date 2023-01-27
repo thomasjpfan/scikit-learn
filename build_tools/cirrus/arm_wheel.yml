@@ -32,6 +32,8 @@ macos_arm64_wheel_task:
 
   cibuildwheel_script:
     # - bash build_tools/wheels/build_wheels.sh
+    - echo "wow"
+    - echo $SCIPY_STAGING_UPLOAD_TOKEN
     - exit 0
 
   on_failure:
