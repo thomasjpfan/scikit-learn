@@ -13,9 +13,9 @@ echo $LINK_TO_RUN
 echo $CIRRUS_REPO_FULL_NAME
 echo $CI_NAME
 
-# python -m maint_tools/update_tracking_issue.py \
-#    $BOT_GITHUB_TOKEN \
-#    $CIRRUS_TASK_NAME \
-#    $CIRRUS_REPO_FULL_NAME \
-#    $LINK_TO_RUN
-#    --tests-passed false
+python -m maint_tools/update_tracking_issue.py \
+   $BOT_GITHUB_TOKEN \
+   $CIRRUS_TASK_NAME \
+   $CIRRUS_REPO_FULL_NAME \
+   $LINK_TO_RUN
+   --tests-passed false
