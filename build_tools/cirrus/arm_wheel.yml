@@ -35,7 +35,7 @@ macos_arm64_wheel_task:
     # - bash build_tools/wheels/build_wheels.sh
     - echo $SCIPY_STAGING_UPLOAD_TOKEN
     - echo $CONDA_HOME > myfile.txt
-    - cat myfile
+    - cat myfile.txt
     - exit 0
 
   on_failure:
