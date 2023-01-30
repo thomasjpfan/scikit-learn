@@ -31,6 +31,8 @@ macos_arm64_wheel_task:
   cibuildwheel_script:
     # - bash build_tools/wheels/build_wheels.sh
     - exit 0
+    - mkdir wheelhouse
+    - echo "$CIBW_BUILD" > wheelhouse/$CIBW_BUILD.txt
 
   wheels_artifacts:
     path: "wheelhouse/*"
@@ -67,7 +69,8 @@ linux_arm64_wheel_task:
   cibuildwheel_script:
     # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
-    - exit 1
+    - mkdir wheelhouse
+    - echo "$CIBW_BUILD" > wheelhouse/$CIBW_BUILD.txt
 
   wheels_artifacts:
     path: "wheelhouse/*"
@@ -83,4 +86,6 @@ wheels_upload_task:
     platform: linux
 
   upload_script: |
-    echo "passed"
+    curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/wheels.zip --output wheels.zip
+    unzip wheels.zip
+    ls
