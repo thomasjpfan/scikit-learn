@@ -1,6 +1,6 @@
 # Update tracking issue if Cirrus fails nightly job
 
-# Only update for nightly jobs
+# Only update for nightly jobs and when the bot token is set
 echo $CIRRUS_CRON
 if [[ -z $BOT_GITHUB_TOKEN ]]; then
    exit 0
