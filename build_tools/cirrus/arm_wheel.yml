@@ -80,9 +80,14 @@ wheels_upload_task:
     - macos_arm64_wheel
     - linux_arm64_wheel
   container:
-    image: python:3.11
-
+    image: continuumio/miniconda3:22.11.1
   upload_script: |
+    if [[ "$CIRRUS_CRON" == "nightly" ]]; then
+      export GITHUB_EVENT_NAME="schedule"
+    fi
+
+    echo "CIRRUS_PR $CIRRUS_PR"
+
     curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/wheels.zip --output wheels.zip
     unzip wheels.zip
     ls wheelhouse
