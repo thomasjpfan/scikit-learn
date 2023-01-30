@@ -81,13 +81,20 @@ wheels_upload_task:
     - linux_arm64_wheel
   container:
     image: continuumio/miniconda3:22.11.1
+  # Artifacts are not uploaded on PRs
+  only_if: $CIRRUS_PR == ""
+  env:
+    WHEELHOUSE_PATH: wheelhouse
   upload_script: |
+    conda install curl unzip -y
+
     if [[ "$CIRRUS_CRON" == "nightly" ]]; then
       export GITHUB_EVENT_NAME="schedule"
     fi
 
-    echo "CIRRUS_PR $CIRRUS_PR"
-
+    # Download and show wheels
     curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/wheels.zip --output wheels.zip
     unzip wheels.zip
     ls wheelhouse
+
+    bash build_tools/github/upload_anaconda.sh
