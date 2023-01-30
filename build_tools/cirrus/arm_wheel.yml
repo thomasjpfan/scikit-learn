@@ -1,5 +1,4 @@
 macos_arm64_wheel_task:
-  alias: macos arm64 wheels
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
@@ -15,8 +14,6 @@ macos_arm64_wheel_task:
     CIBW_BUILD_VERBOSITY: 1
     PATH: $HOME/mambaforge/bin/:$PATH
     CONDA_HOME: $HOME/mambaforge
-    # BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-    BOT_GITHUB_TOKEN: ENCRYPTED[377be83afdaf9e8fa8bac105022bb1d362f72fff8501c2b5e827018b82270111828fb542fd7bd56bbfac9745603bd535]
   matrix:
     # - env:
     #     CIBW_BUILD: cp38-macosx_arm64
@@ -27,33 +24,18 @@ macos_arm64_wheel_task:
     - env:
         CIBW_BUILD: cp311-macosx_arm64
 
-  conda_script:
-    - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-    - bash ~/mambaforge.sh -b -p ~/mambaforge
+  # conda_script:
+    # - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    # - bash ~/mambaforge.sh -b -p ~/mambaforge
 
   cibuildwheel_script:
-    - exit 1
+    # - bash build_tools/wheels/build_wheels.sh
+    - exit 0
 
-  on_failure:
-    update_tracker_script:
-      - ./build_tools/cirrus/update_tracking_on_failure.sh
-
-# final_task:
-#   depends_on:
-#     - macos arm64 wheels
-#   container:
-#     image: python:3.11.1
-#   always:
-#     try_script:
-#       - echo "wow"
-
-
-
-#   wheels_artifacts:
-#     path: "wheelhouse/*"
+  wheels_artifacts:
+    path: "wheelhouse/*"
 
 linux_arm64_wheel_task:
-  alias: linux_arm64_wheel
   compute_engine_instance:
     image_project: cirrus-images
     image: family/docker-builder-arm64
@@ -72,8 +54,6 @@ linux_arm64_wheel_task:
     CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
     CIBW_BUILD_VERBOSITY: 1
-    # BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-    BOT_GITHUB_TOKEN: ENCRYPTED[377be83afdaf9e8fa8bac105022bb1d362f72fff8501c2b5e827018b82270111828fb542fd7bd56bbfac9745603bd535]
   matrix:
     # - env:
     #     CIBW_BUILD: cp38-manylinux_aarch64
@@ -85,14 +65,22 @@ linux_arm64_wheel_task:
         CIBW_BUILD: cp311-manylinux_aarch64
 
   cibuildwheel_script:
-    - apt install -y python3 python-is-python3
+    # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
     - exit 1
 
-  on_failure:
-    update_tracker_script:
-      - ./build_tools/cirrus/update_tracking_on_failure.sh
+  wheels_artifacts:
+    path: "wheelhouse/*"
 
 
-# #   wheels_artifacts:
-# #     path: "wheelhouse/*"
+wheels_upload_task:
+  depends_on:
+    - macos_arm64_wheel
+    - linux_arm64_wheel
+  compute_engine_instance:
+    image_project: cirrus-images
+    image: family/docker-builder
+    platform: linux
+
+  upload_script: |
+    echo "passed"
