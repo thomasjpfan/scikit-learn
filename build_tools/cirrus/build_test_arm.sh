@@ -25,6 +25,7 @@ setup_ccache() {
 mamba install "$(get_dep conda-lock min)" -y
 conda-lock install --name $CONDA_ENV_NAME $LOCK_FILE
 source activate $CONDA_ENV_NAME
+mamba install compilers
 
 setup_ccache
 
