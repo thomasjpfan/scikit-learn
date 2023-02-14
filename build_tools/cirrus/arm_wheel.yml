@@ -1,6 +1,6 @@
 macos_arm64_wheel_task:
-  allow_failures: true
   alias: macos_arm64_wheels
+  allow_failures: true
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
@@ -33,10 +33,17 @@ macos_arm64_wheel_task:
 
   cibuildwheel_script:
     - exit 1
+    - echo "success" > status.txt
 
-  # on_failure:
-  #   update_tracker_script:
-  #     - ./build_tools/cirrus/update_tracking_on_failure.sh
+  on_failure:
+    update_tracker_script:
+      # - ./build_tools/cirrus/update_tracking_on_failure.sh
+      - echo "failed" > status.txt
+      # - curl -s -X POST --data-binary @status.txt http://$CIRRUS_HTTP_CACHE_HOST/${FILENAME}
+
+  always:
+    status_artifacts:
+      path: status.txt
 
 final_task:
   depends_on:
@@ -45,7 +52,9 @@ final_task:
     image: python:3.11.1
   always:
     try_script:
-      - echo "wow"
+      - curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/status.zip --output status.zip
+      - unzip wheels.zip
+      - cat status.txt
 
 
 
