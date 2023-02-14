@@ -30,16 +30,17 @@ macos_arm64_wheel_task:
   #   - bash ~/mambaforge.sh -b -p ~/mambaforge
 
   cibuildwheel_script:
+    - mkdir status # to store status
     - exit 1
-    - echo "true" > passed.txt
+    - echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
     fail_status_script:
-      - echo "false" > passed.txt
+      - echo "false" > status/$CIRRUS_TASK_ID.txt
 
   always:
-    passed_artifacts:
-      path: passed.txt
+    status_artifacts:
+      path: "status/*"
 
 linux_arm64_wheel_task:
   allow_failures: true
@@ -54,10 +55,10 @@ linux_arm64_wheel_task:
     CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
     CONFTEST_NAME: conftest.py
     CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
-                      OPENBLAS_NUM_THREADS=2
-                      SKLEARN_SKIP_NETWORK_TESTS=1
-                      SKLEARN_BUILD_PARALLEL=5
-                      CPU_COUNT=4
+      OPENBLAS_NUM_THREADS=2
+      SKLEARN_SKIP_NETWORK_TESTS=1
+      SKLEARN_BUILD_PARALLEL=5
+      CPU_COUNT=4
     CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
     CIBW_BUILD_VERBOSITY: 1
@@ -67,24 +68,25 @@ linux_arm64_wheel_task:
     #     CIBW_BUILD: cp38-manylinux_aarch64
     # - env:
     #     CIBW_BUILD: cp39-manylinux_aarch64
-    # - env:
-    #     CIBW_BUILD: cp310-manylinux_aarch64
+    - env:
+        CIBW_BUILD: cp310-manylinux_aarch64
     - env:
         CIBW_BUILD: cp311-manylinux_aarch64
 
   cibuildwheel_script:
+    - mkdir status # to store status
     # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
     - exit 1
-    - echo "true" > passed.txt
+    - echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
     fail_status_script:
-      - echo "false" > passed.txt
+      - echo "false" > status/$CIRRUS_TASK_ID.txt
 
   always:
-    passed_artifacts:
-      path: passed.txt
+    status_artifacts:
+      path: "status/*"
 
 # #   wheels_artifacts:
 # #     path: "wheelhouse/*"
