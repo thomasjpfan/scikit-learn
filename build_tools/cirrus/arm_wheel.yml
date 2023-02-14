@@ -41,18 +41,6 @@ macos_arm64_wheel_task:
     passed_artifacts:
       path: passed.txt
 
-update_status_task:
-  depends_on:
-    - macos_arm64_wheel
-    - linux_arm64_wheel
-  # only_if: $CIRRUS_CRON == 'nightly'
-  env:
-    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-  container:
-    image: python:3.11.1
-  update_status_script:
-    - ./build_tools/cirrus/update_tracking_on_failure.sh
-
 linux_arm64_wheel_task:
   allow_failures: true
   compute_engine_instance:
@@ -100,3 +88,15 @@ linux_arm64_wheel_task:
 
 # #   wheels_artifacts:
 # #     path: "wheelhouse/*"
+
+update_status_task:
+  depends_on:
+    - macos_arm64_wheel
+    - linux_arm64_wheel
+  # only_if: $CIRRUS_CRON == 'nightly'
+  env:
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
+  container:
+    image: python:3.11.1
+  update_status_script:
+    - ./build_tools/cirrus/update_tracking_on_failure.sh
