@@ -30,13 +30,12 @@ macos_arm64_wheel_task:
   #   - bash ~/mambaforge.sh -b -p ~/mambaforge
 
   cibuildwheel_script:
-    - mkdir status # to store status
     - exit 1
-    - echo "true" > status/$CIRRUS_TASK_ID.txt
+    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
     fail_status_script:
-      - echo "false" > status/$CIRRUS_TASK_ID.txt
+      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
 
   always:
     status_artifacts:
@@ -74,15 +73,14 @@ linux_arm64_wheel_task:
         CIBW_BUILD: cp311-manylinux_aarch64
 
   cibuildwheel_script:
-    - mkdir status # to store status
     # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
     - exit 1
-    - echo "true" > status/$CIRRUS_TASK_ID.txt
+    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
     fail_status_script:
-      - echo "false" > status/$CIRRUS_TASK_ID.txt
+      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
 
   always:
     status_artifacts:
