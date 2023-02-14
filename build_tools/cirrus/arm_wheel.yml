@@ -89,7 +89,7 @@ linux_arm64_wheel_task:
 # #   wheels_artifacts:
 # #     path: "wheelhouse/*"
 
-update_status_task:
+update_tracker_task:
   depends_on:
     - macos_arm64_wheel
     - linux_arm64_wheel
@@ -98,5 +98,5 @@ update_status_task:
     image: python:3.11.1
   env:
     BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-  update_status_script:
+  update_tracker_script:
     - bash build_tools/cirrus/update_tracking_on_failure.sh
