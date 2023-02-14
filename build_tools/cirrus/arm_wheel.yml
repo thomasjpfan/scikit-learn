@@ -50,11 +50,10 @@ final_task:
     - macos_arm64_wheels
   container:
     image: python:3.11.1
-  always:
-    try_script:
-      - curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/status.zip --output status.zip
-      - unzip wheels.zip
-      - cat status.txt
+  try_script:
+    - curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/status.zip --output status.zip
+    - unzip status.zip
+    - cat status.txt
 
 
 
