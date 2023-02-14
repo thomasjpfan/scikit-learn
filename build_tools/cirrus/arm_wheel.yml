@@ -1,5 +1,4 @@
 macos_arm64_wheel_task:
-  alias: macos_arm64_wheels
   allow_failures: true
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
@@ -7,10 +6,10 @@ macos_arm64_wheel_task:
     CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
     CONFTEST_NAME: conftest.py
     CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
-                      OPENBLAS_NUM_THREADS=2
-                      SKLEARN_SKIP_NETWORK_TESTS=1
-                      SKLEARN_BUILD_PARALLEL=5
-                      CPU_COUNT=2
+      OPENBLAS_NUM_THREADS=2
+      SKLEARN_SKIP_NETWORK_TESTS=1
+      SKLEARN_BUILD_PARALLEL=5
+      CPU_COUNT=2
     CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
     CIBW_BUILD_VERBOSITY: 1
@@ -35,76 +34,69 @@ macos_arm64_wheel_task:
     - echo "true" > passed.txt
 
   on_failure:
-    update_tracker_script:
-      # - ./build_tools/cirrus/update_tracking_on_failure.sh
+    fail_status_script:
       - echo "false" > passed.txt
 
   always:
     passed_artifacts:
       path: passed.txt
 
-update_task_task:
+update_status_task:
   depends_on:
-    - macos_arm64_wheels
+    - macos_arm64_wheel
+    - linux_arm64_wheel
   # only_if: $CIRRUS_CRON == 'nightly'
   env:
     BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
   container:
     image: python:3.11.1
   update_status_script:
-    - curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/passed.zip --output passed.zip
-    - unzip passed.zip
-    - cat passed.txt
-    - echo $CIRRUS_TASK_NAME
-    - LINK_TO_RUN="https://cirrus-ci.com/build/$CIRRUS_BUILD_ID"
-    - echo $LINK_TO_RUN
+    - ./build_tools/cirrus/update_tracking_on_failure.sh
 
+linux_arm64_wheel_task:
+  allow_failures: true
+  compute_engine_instance:
+    image_project: cirrus-images
+    image: family/docker-builder-arm64
+    architecture: arm64
+    platform: linux
+    cpu: 4
+    memory: 4G
+  env:
+    CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
+    CONFTEST_NAME: conftest.py
+    CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
+                      OPENBLAS_NUM_THREADS=2
+                      SKLEARN_SKIP_NETWORK_TESTS=1
+                      SKLEARN_BUILD_PARALLEL=5
+                      CPU_COUNT=4
+    CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
+    CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
+    CIBW_BUILD_VERBOSITY: 1
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
+  matrix:
+    # - env:
+    #     CIBW_BUILD: cp38-manylinux_aarch64
+    # - env:
+    #     CIBW_BUILD: cp39-manylinux_aarch64
+    # - env:
+    #     CIBW_BUILD: cp310-manylinux_aarch64
+    - env:
+        CIBW_BUILD: cp311-manylinux_aarch64
 
+  cibuildwheel_script:
+    # - apt install -y python3 python-is-python3
+    # - bash build_tools/wheels/build_wheels.sh
+    - exit 1
+    - echo "true" > passed.txt
 
-#   wheels_artifacts:
-#     path: "wheelhouse/*"
+  on_failure:
+    fail_status_script:
+      - echo "false" > passed.txt
 
-# linux_arm64_wheel_task:
-#   allow_failures: true
-#   alias: linux_arm64_wheel
-#   compute_engine_instance:
-#     image_project: cirrus-images
-#     image: family/docker-builder-arm64
-#     architecture: arm64
-#     platform: linux
-#     cpu: 4
-#     memory: 4G
-#   env:
-#     CONFTEST_PATH: ${CIRRUS_WORKING_DIR}/conftest.py
-#     CONFTEST_NAME: conftest.py
-#     CIBW_ENVIRONMENT: OMP_NUM_THREADS=2
-#                       OPENBLAS_NUM_THREADS=2
-#                       SKLEARN_SKIP_NETWORK_TESTS=1
-#                       SKLEARN_BUILD_PARALLEL=5
-#                       CPU_COUNT=4
-#     CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
-#     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
-#     CIBW_BUILD_VERBOSITY: 1
-#     BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-#   matrix:
-#     # - env:
-#     #     CIBW_BUILD: cp38-manylinux_aarch64
-#     # - env:
-#     #     CIBW_BUILD: cp39-manylinux_aarch64
-#     # - env:
-#     #     CIBW_BUILD: cp310-manylinux_aarch64
-#     - env:
-#         CIBW_BUILD: cp311-manylinux_aarch64
-
-#   cibuildwheel_script:
-#     - apt install -y python3 python-is-python3
-#     # - bash build_tools/wheels/build_wheels.sh
-#     - exit 1
-
-#   on_failure:
-#     update_tracker_script:
-#       - ./build_tools/cirrus/update_tracking_on_failure.sh
-
+  always:
+    passed_artifacts:
+      path: passed.txt
 
 # #   wheels_artifacts:
 # #     path: "wheelhouse/*"
