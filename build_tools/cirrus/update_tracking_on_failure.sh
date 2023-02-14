@@ -8,7 +8,7 @@ echo $PASSED_LIST
 
 ALL_PASSED="true"
 for PASSED in $PASSED_LIST; do
-   if [[ "$passed" == "false" ]]; then
+   if [[ "$PASSED" == "false" ]]; then
       ALL_PASSED="false"
       break
    fi
