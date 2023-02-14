@@ -31,7 +31,7 @@ macos_arm64_wheel_task:
 
   cibuildwheel_script:
     - mkdir status # to store status
-    - exit 0
+    - exit 1
     - echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
@@ -68,8 +68,8 @@ linux_arm64_wheel_task:
     #     CIBW_BUILD: cp38-manylinux_aarch64
     # - env:
     #     CIBW_BUILD: cp39-manylinux_aarch64
-    - env:
-        CIBW_BUILD: cp310-manylinux_aarch64
+    # - env:
+    #     CIBW_BUILD: cp310-manylinux_aarch64
     - env:
         CIBW_BUILD: cp311-manylinux_aarch64
 
@@ -77,7 +77,7 @@ linux_arm64_wheel_task:
     - mkdir status # to store status
     # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
-    - exit 0
+    - exit 1
     - echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
@@ -96,9 +96,9 @@ update_status_task:
     - macos_arm64_wheel
     - linux_arm64_wheel
   # only_if: $CIRRUS_CRON == 'nightly'
-  env:
-    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
   container:
     image: python:3.11.1
+  env:
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
   update_status_script:
-    - ./build_tools/cirrus/update_tracking_on_failure.sh
+    - bash build_tools/cirrus/update_tracking_on_failure.sh
