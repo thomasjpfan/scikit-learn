@@ -15,6 +15,7 @@ macos_arm64_wheel_task:
     CIBW_BUILD_VERBOSITY: 1
     PATH: $HOME/mambaforge/bin/:$PATH
     CONDA_HOME: $HOME/mambaforge
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
   matrix:
     # - env:
     #     CIBW_BUILD: cp38-macosx_arm64
@@ -32,11 +33,10 @@ macos_arm64_wheel_task:
   cibuildwheel_script:
     - exit 1
     # - bash build_tools/wheels/build_wheels.sh
-    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
 
   on_failure:
-    fail_status_script:
-      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
+    update_tracker_script:
+      - bash build_tools/cirrus/update_tracking_on_failure.sh
 
   wheels_artifacts:
     path: "wheelhouse/*"
@@ -61,6 +61,7 @@ linux_arm64_wheel_task:
     CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
     CIBW_TEST_REQUIRES: pytest pandas threadpoolctl pytest-xdist
     CIBW_BUILD_VERBOSITY: 1
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
   matrix:
     # - env:
     #     CIBW_BUILD: cp38-manylinux_aarch64
@@ -74,11 +75,11 @@ linux_arm64_wheel_task:
   cibuildwheel_script:
     # - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
-    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
+    - exit 1
 
   on_failure:
-    fail_status_script:
-      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
+    update_tracker_script:
+      - bash build_tools/cirrus/update_tracking_on_failure.sh
 
   wheels_artifacts:
     path: "wheelhouse/*"
@@ -99,32 +100,15 @@ wheels_upload_task:
     # SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ENCRYPTED[8fade46af37fa645e57bd1ee21683337aa369ba56f6307ce13889f1e74df94e5bdd21d323baac21e332fd87b8949659a]
     ARTIFACTS_PATH: wheelhouse
   upload_script: |
-    ALL_PASSED=$(bash build_tools/cirrus/jobs_all_passed.sh)
-    if [[ "$ALL_PASSED" == "false" ]]; then
-      exit 1
+    conda install curl unzip -y
+
+    if [[ "$CIRRUS_CRON" == "nightly" ]]; then
+      export GITHUB_EVENT_NAME="schedule"
     fi
 
-    # conda install curl unzip -y
+    # Download and show wheels
+    curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/wheels.zip --output wheels.zip
+    unzip wheels.zip
+    ls wheelhouse
 
-    # if [[ "$CIRRUS_CRON" == "nightly" ]]; then
-    #   export GITHUB_EVENT_NAME="schedule"
-    # fi
-
-    # # Download and show wheels
-    # curl https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/wheels.zip --output wheels.zip
-    # unzip wheels.zip
-    # ls wheelhouse
-
-    # bash build_tools/github/upload_anaconda.sh
-
-update_tracker_task:
-  depends_on:
-    - macos_arm64_wheel
-    - linux_arm64_wheel
-  # only_if: $CIRRUS_CRON == 'nightly'
-  container:
-    image: python:3.11.1
-  env:
-    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
-  update_tracker_script:
-    - bash build_tools/cirrus/update_tracking_on_failure.sh
+    bash build_tools/github/upload_anaconda.sh
