@@ -1,4 +1,5 @@
 macos_arm64_wheel_task:
+  allow_failures: true  # allows update tracker task to run
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
@@ -30,11 +31,17 @@ macos_arm64_wheel_task:
 
   cibuildwheel_script:
     - bash build_tools/wheels/build_wheels.sh
+    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
+
+  on_failure:
+    fail_status_script:
+      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
 
   wheels_artifacts:
     path: "wheelhouse/*"
 
 linux_arm64_wheel_task:
+  allow_failures: true
   compute_engine_instance:
     image_project: cirrus-images
     image: family/docker-builder-arm64
@@ -66,6 +73,11 @@ linux_arm64_wheel_task:
   cibuildwheel_script:
     - apt install -y python3 python-is-python3
     - bash build_tools/wheels/build_wheels.sh
+    - mkdir status && echo "true" > status/$CIRRUS_TASK_ID.txt
+
+  on_failure:
+    fail_status_script:
+      - mkdir status && echo "false" > status/$CIRRUS_TASK_ID.txt
 
   wheels_artifacts:
     path: "wheelhouse/*"
@@ -86,6 +98,11 @@ wheels_upload_task:
     SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ENCRYPTED[8fade46af37fa645e57bd1ee21683337aa369ba56f6307ce13889f1e74df94e5bdd21d323baac21e332fd87b8949659a]
     ARTIFACTS_PATH: wheelhouse
   upload_script: |
+    ALL_PASSED=$(bash build_tools/cirrus/jobs_all_passed.sh)
+    if [[ "$ALL_PASSED" == "false" ]]; then
+      exit 1
+    fi
+
     conda install curl unzip -y
 
     if [[ "$CIRRUS_CRON" == "nightly" ]]; then
@@ -98,3 +115,15 @@ wheels_upload_task:
     ls wheelhouse
 
     bash build_tools/github/upload_anaconda.sh
+
+update_tracker_task:
+  depends_on:
+    - macos_arm64_wheel
+    - linux_arm64_wheel
+  # only_if: $CIRRUS_CRON == 'nightly'
+  container:
+    image: python:3.11.1
+  env:
+    BOT_GITHUB_TOKEN: ENCRYPTED[b80802a5f273fb36ab0ac4161586614e06de98e6115ac841c079dd321570ca060f7f4006e6caa5b18f2a0e7c09a73d74]
+  update_tracker_script:
+    - bash build_tools/cirrus/update_tracking_on_failure.sh
