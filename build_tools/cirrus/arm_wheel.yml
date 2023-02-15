@@ -1,5 +1,4 @@
 macos_arm64_wheel_task:
-  allow_failures: true  # allows update tracker task to run
   macos_instance:
     image: ghcr.io/cirruslabs/macos-monterey-xcode
   env:
@@ -26,9 +25,9 @@ macos_arm64_wheel_task:
     - env:
         CIBW_BUILD: cp311-macosx_arm64
 
-  # conda_script:
-  #   - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-  #   - bash ~/mambaforge.sh -b -p ~/mambaforge
+  conda_script:
+    - curl -L -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+    - bash ~/mambaforge.sh -b -p ~/mambaforge
 
   cibuildwheel_script:
     - exit 1
@@ -42,7 +41,6 @@ macos_arm64_wheel_task:
     path: "wheelhouse/*"
 
 linux_arm64_wheel_task:
-  allow_failures: true
   compute_engine_instance:
     image_project: cirrus-images
     image: family/docker-builder-arm64
@@ -73,7 +71,7 @@ linux_arm64_wheel_task:
         CIBW_BUILD: cp311-manylinux_aarch64
 
   cibuildwheel_script:
-    # - apt install -y python3 python-is-python3
+    - apt install -y python3 python-is-python3
     # - bash build_tools/wheels/build_wheels.sh
     - exit 1
 
@@ -96,8 +94,8 @@ wheels_upload_task:
   env:
     # Upload tokens have been encrypted via the CirrusCI interface:
     # https://cirrus-ci.org/guide/writing-tasks/#encrypted-variables
-    # SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN: ENCRYPTED[8f20120b18a07d8a11192b98bff1f562883558e1f4c53f8ead1577113785a4105ee6f14ad9b5dacf1803c19c4913fe1c]
-    # SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ENCRYPTED[8fade46af37fa645e57bd1ee21683337aa369ba56f6307ce13889f1e74df94e5bdd21d323baac21e332fd87b8949659a]
+    SCIKIT_LEARN_NIGHTLY_UPLOAD_TOKEN: ENCRYPTED[8f20120b18a07d8a11192b98bff1f562883558e1f4c53f8ead1577113785a4105ee6f14ad9b5dacf1803c19c4913fe1c]
+    SCIKIT_LEARN_STAGING_UPLOAD_TOKEN: ENCRYPTED[8fade46af37fa645e57bd1ee21683337aa369ba56f6307ce13889f1e74df94e5bdd21d323baac21e332fd87b8949659a]
     ARTIFACTS_PATH: wheelhouse
   upload_script: |
     conda install curl unzip -y
