@@ -1,7 +1,13 @@
 """Tools to support array_api."""
 import numpy
-from .._config import get_config
 import scipy.special as special
+
+# XXX: Direct input for testing, array_api_compat should be vendored
+import array_api_compat
+import array_api_compat.numpy
+from array_api_compat import device, size
+
+NUMPY_NAMES = {"numpy", "array_api_compat.numpy", "numpy.array_api"}
 
 
 class _ArrayAPIWrapper:
@@ -48,45 +54,6 @@ class _ArrayAPIWrapper:
             selected = [X[:, i] for i in indices]
         return self._namespace.stack(selected, axis=axis)
 
-
-class _NumPyApiWrapper:
-    """Array API compat wrapper for any numpy version
-
-    NumPy < 1.22 does not expose the numpy.array_api namespace. This
-    wrapper makes it possible to write code that uses the standard
-    Array API while working with any version of NumPy supported by
-    scikit-learn.
-
-    See the `get_namespace()` public function for more details.
-    """
-
-    def __getattr__(self, name):
-        return getattr(numpy, name)
-
-    def astype(self, x, dtype, *, copy=True, casting="unsafe"):
-        # astype is not defined in the top level NumPy namespace
-        return x.astype(dtype, copy=copy, casting=casting)
-
-    def asarray(self, x, *, dtype=None, device=None, copy=None):
-        # Support copy in NumPy namespace
-        if copy is True:
-            return numpy.array(x, copy=True, dtype=dtype)
-        else:
-            return numpy.asarray(x, dtype=dtype)
-
-    def unique_inverse(self, x):
-        return numpy.unique(x, return_inverse=True)
-
-    def unique_counts(self, x):
-        return numpy.unique(x, return_counts=True)
-
-    def unique_values(self, x):
-        return numpy.unique(x)
-
-    def concat(self, arrays, *, axis=None):
-        return numpy.concatenate(arrays, axis=axis)
-
-
 def get_namespace(*arrays):
     """Get namespace of arrays.
 
@@ -123,43 +90,28 @@ def get_namespace(*arrays):
     Returns
     -------
     namespace : module
-        Namespace shared by array objects.
+        Namespace shared by array objects. If any of the `arrays` are not arrays,
+        the namespace defaults to NumPy.
 
-    is_array_api : bool
-        True of the arrays are containers that implement the Array API spec.
+    is_array : bool
+        True if arrays are recognized arrays.
     """
-    # `arrays` contains one or more arrays, or possibly Python scalars (accepting
-    # those is a matter of taste, but doesn't seem unreasonable).
-    # Returns a tuple: (array_namespace, is_array_api)
+    try:
+        namespace, is_array = array_api_compat.get_namespace(*arrays), True
+    except ValueError as e:
+        if str(e).startswith("The input is not a supported array type"):
+            return numpy, False
+        raise
 
-    if not get_config()["array_api_dispatch"]:
-        return _NumPyApiWrapper(), False
+    if namespace.__name__ in {"numpy.array_api", "cupy.array_api"}:
+        namespace = _ArrayAPIWrapper(namespace)
 
-    namespaces = {
-        x.__array_namespace__() if hasattr(x, "__array_namespace__") else None
-        for x in arrays
-        if not isinstance(x, (bool, int, float, complex))
-    }
-
-    if not namespaces:
-        # one could special-case np.ndarray above or use np.asarray here if
-        # older numpy versions need to be supported.
-        raise ValueError("Unrecognized array input")
-
-    if len(namespaces) != 1:
-        raise ValueError(f"Multiple namespaces for array inputs: {namespaces}")
-
-    (xp,) = namespaces
-    if xp is None:
-        # Use numpy as default
-        return _NumPyApiWrapper(), False
-
-    return _ArrayAPIWrapper(xp), True
+    return namespace, is_array
 
 
 def _expit(X):
     xp, _ = get_namespace(X)
-    if xp.__name__ in {"numpy", "numpy.array_api"}:
+    if xp.__name__ in NUMPY_NAMES:
         return xp.asarray(special.expit(numpy.asarray(X)))
 
     return 1.0 / (1.0 + xp.exp(-X))
@@ -180,7 +132,7 @@ def _asarray_with_order(array, dtype=None, order=None, copy=None, xp=None):
     """
     if xp is None:
         xp, _ = get_namespace(array)
-    if xp.__name__ in {"numpy", "numpy.array_api"}:
+    if xp.__name__ in NUMPY_NAMES:
         # Use NumPy API to support order
         array = numpy.asarray(array, order=order, dtype=dtype)
         return xp.asarray(array, copy=copy)
@@ -189,19 +141,19 @@ def _asarray_with_order(array, dtype=None, order=None, copy=None, xp=None):
 
 
 def _convert_to_numpy(array, xp):
-    """Convert X into a NumPy ndarray.
+    """Convert X into a NumPy ndarray on the CPU."""
+    xp_name = xp.__name__
 
-    Only works on cupy.array_api and numpy.array_api and is used for testing.
-    """
-    supported_array_api = ["numpy.array_api", "cupy.array_api"]
-    if xp.__name__ not in supported_array_api:
-        support_array_api_str = ", ".join(supported_array_api)
-        raise ValueError(f"Supported namespaces are: {support_array_api_str}")
-
-    if xp.__name__ == "cupy.array_api":
+    if xp_name == "cupy.array_api":
         return array._array.get()
-    else:
+    elif xp_name in {"cupy", "array_api_compat.cupy"}:
+        return array.get()
+    elif xp_name in {"array_api_compat.torch", "torch"}:
+        return array.cpu().numpy()
+    elif xp_name in NUMPY_NAMES:
         return numpy.asarray(array)
+    else:
+        raise ValueError(f"{xp_name} is an unsupported namespace")
 
 
 def _estimator_with_converted_arrays(estimator, converter):
@@ -224,9 +176,8 @@ def _estimator_with_converted_arrays(estimator, converter):
 
     new_estimator = clone(estimator)
     for key, attribute in vars(estimator).items():
-        if hasattr(attribute, "__array_namespace__") or isinstance(
-            attribute, numpy.ndarray
-        ):
+        _, is_array = get_namespace(attribute)
+        if is_array:
             attribute = converter(attribute)
         setattr(new_estimator, key, attribute)
     return new_estimator

@@ -1,15 +1,15 @@
 import numpy
 from numpy.testing import assert_array_equal
+from numpy.testing import assert_allclose
 import pytest
 
 from sklearn.base import BaseEstimator
 from sklearn.utils._array_api import get_namespace
-from sklearn.utils._array_api import _NumPyApiWrapper
-from sklearn.utils._array_api import _ArrayAPIWrapper
+import array_api_compat
+
 from sklearn.utils._array_api import _asarray_with_order
 from sklearn.utils._array_api import _convert_to_numpy
 from sklearn.utils._array_api import _estimator_with_converted_arrays
-from sklearn._config import config_context
 
 pytestmark = pytest.mark.filterwarnings(
     "ignore:The numpy.array_api submodule:UserWarning"
@@ -18,99 +18,28 @@ pytestmark = pytest.mark.filterwarnings(
 
 def test_get_namespace_ndarray():
     """Test get_namespace on NumPy ndarrays."""
-    pytest.importorskip("numpy.array_api")
-
     X_np = numpy.asarray([[1, 2, 3]])
-
-    # Dispatching on Numpy regardless or the value of array_api_dispatch.
-    for array_api_dispatch in [True, False]:
-        with config_context(array_api_dispatch=array_api_dispatch):
-            xp_out, is_array_api = get_namespace(X_np)
-            assert not is_array_api
-            assert isinstance(xp_out, _NumPyApiWrapper)
+    xp_out, is_array = get_namespace(X_np)
+    assert is_array
+    assert xp_out is array_api_compat.numpy
 
 
 def test_get_namespace_array_api():
     """Test get_namespace for ArrayAPI arrays."""
     xp = pytest.importorskip("numpy.array_api")
 
-    X_np = numpy.asarray([[1, 2, 3]])
-    X_xp = xp.asarray(X_np)
-    with config_context(array_api_dispatch=True):
-        xp_out, is_array_api = get_namespace(X_xp)
-        assert is_array_api
-        assert isinstance(xp_out, _ArrayAPIWrapper)
+    X_xp = xp.asarray([[1, 2, 3]])
+    xp_out, is_array = get_namespace(X_xp)
+    assert is_array
+    assert xp_out.__name__ == "numpy.array_api"
 
-        # check errors
-        with pytest.raises(ValueError, match="Multiple namespaces"):
-            get_namespace(X_np, X_xp)
+def test_get_namespace_list():
+    """Test get_namespace for lists."""
 
-        with pytest.raises(ValueError, match="Unrecognized array input"):
-            get_namespace(1)
-
-
-class _AdjustableNameAPITestWrapper(_ArrayAPIWrapper):
-    """API wrapper that has an adjustable name. Used for testing."""
-
-    def __init__(self, array_namespace, name):
-        super().__init__(array_namespace=array_namespace)
-        self.__name__ = name
-
-
-def test_array_api_wrapper_astype():
-    """Test _ArrayAPIWrapper for ArrayAPIs that is not NumPy."""
-    numpy_array_api = pytest.importorskip("numpy.array_api")
-    xp_ = _AdjustableNameAPITestWrapper(numpy_array_api, "wrapped_numpy.array_api")
-    xp = _ArrayAPIWrapper(xp_)
-
-    X = xp.asarray(([[1, 2, 3], [3, 4, 5]]), dtype=xp.float64)
-    X_converted = xp.astype(X, xp.float32)
-    assert X_converted.dtype == xp.float32
-
-    X_converted = xp.asarray(X, dtype=xp.float32)
-    assert X_converted.dtype == xp.float32
-
-
-def test_array_api_wrapper_take_for_numpy_api():
-    """Test that fast path is called for numpy.array_api."""
-    numpy_array_api = pytest.importorskip("numpy.array_api")
-    # USe the same name as numpy.array_api
-    xp_ = _AdjustableNameAPITestWrapper(numpy_array_api, "numpy.array_api")
-    xp = _ArrayAPIWrapper(xp_)
-
-    X = xp.asarray(([[1, 2, 3], [3, 4, 5]]), dtype=xp.float64)
-    X_take = xp.take(X, xp.asarray([1]), axis=0)
-    assert hasattr(X_take, "__array_namespace__")
-    assert_array_equal(X_take, numpy.take(X, [1], axis=0))
-
-
-def test_array_api_wrapper_take():
-    """Test _ArrayAPIWrapper API for take."""
-    numpy_array_api = pytest.importorskip("numpy.array_api")
-    xp_ = _AdjustableNameAPITestWrapper(numpy_array_api, "wrapped_numpy.array_api")
-    xp = _ArrayAPIWrapper(xp_)
-
-    # Check take compared to NumPy's with axis=0
-    X_1d = xp.asarray([1, 2, 3], dtype=xp.float64)
-    X_take = xp.take(X_1d, xp.asarray([1]), axis=0)
-    assert hasattr(X_take, "__array_namespace__")
-    assert_array_equal(X_take, numpy.take(X_1d, [1], axis=0))
-
-    X = xp.asarray(([[1, 2, 3], [3, 4, 5]]), dtype=xp.float64)
-    X_take = xp.take(X, xp.asarray([0]), axis=0)
-    assert hasattr(X_take, "__array_namespace__")
-    assert_array_equal(X_take, numpy.take(X, [0], axis=0))
-
-    # Check take compared to NumPy's with axis=1
-    X_take = xp.take(X, xp.asarray([0, 2]), axis=1)
-    assert hasattr(X_take, "__array_namespace__")
-    assert_array_equal(X_take, numpy.take(X, [0, 2], axis=1))
-
-    with pytest.raises(ValueError, match=r"Only axis in \(0, 1\) is supported"):
-        xp.take(X, xp.asarray([0]), axis=2)
-
-    with pytest.raises(ValueError, match=r"Only X.ndim in \(1, 2\) is supported"):
-        xp.take(xp.asarray([[[0]]]), xp.asarray([0]), axis=0)
+    X = [1, 2, 3]
+    xp_out, is_array = get_namespace(X)
+    assert not is_array
+    assert xp_out is numpy
 
 
 @pytest.mark.parametrize("is_array_api", [True, False])
@@ -128,10 +57,21 @@ def test_asarray_with_order(is_array_api):
     assert X_new_np.flags["F_CONTIGUOUS"]
 
 
+class _AdjustableNameAPITestWrapper:
+    """API wrapper that has an adjustable name. Used for testing."""
+
+    def __init__(self, array_namespace, name):
+        self._namespace = array_namespace
+        self.__name__ = name
+
+    def __getattr__(self, name):
+        return getattr(self._namespace, name)
+
+
 def test_asarray_with_order_ignored():
     """Test _asarray_with_order ignores order for Generic ArrayAPI."""
     xp = pytest.importorskip("numpy.array_api")
-    xp_ = _AdjustableNameAPITestWrapper(xp, "wrapped.array_api")
+    xp_ = _AdjustableNameAPITestWrapper(xp, "unknown_namespace")
 
     X = numpy.asarray([[1.2, 3.4, 5.1], [3.4, 5.5, 1.2]], order="C")
     X = xp_.asarray(X)
@@ -146,12 +86,28 @@ def test_asarray_with_order_ignored():
 def test_convert_to_numpy_error():
     """Test convert to numpy errors for unsupported namespaces."""
     xp = pytest.importorskip("numpy.array_api")
-    xp_ = _AdjustableNameAPITestWrapper(xp, "wrapped.array_api")
+    xp_ = _AdjustableNameAPITestWrapper(xp, "unknown_namespace")
 
     X = xp_.asarray([1.2, 3.4])
 
-    with pytest.raises(ValueError, match="Supported namespaces are:"):
+    msg = "unknown_namespace is an unsupported namespace"
+    with pytest.raises(ValueError, match=msg):
         _convert_to_numpy(X, xp=xp_)
+
+@pytest.mark.parametrize("library", ["cupy", "torch", "cupy.array_api"])
+def test_convert_to_numpy_gpu(library):
+    xp = pytest.importorskip(library)
+
+    if library == "torch":
+        if not xp.has_cuda:
+            pytest.skip("test requires cuda")
+        X_gpu = xp.asarray([1.0, 2.0, 3.0], device="cuda")
+    else:
+        X_gpu = xp.asarray([1.0, 2.0, 3.0])
+
+    X_cpu = _convert_to_numpy(X_gpu, xp=xp)
+    expected_output = numpy.asarray([1.0, 2.0, 3.0])
+    assert_allclose(X_cpu, expected_output)
 
 
 class SimpleEstimator(BaseEstimator):

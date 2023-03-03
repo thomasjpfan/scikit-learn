@@ -21,7 +21,7 @@ from .linear_model._base import LinearClassifierMixin
 from .covariance import ledoit_wolf, empirical_covariance, shrunk_covariance
 from .utils.multiclass import unique_labels
 from .utils.validation import check_is_fitted
-from .utils._array_api import get_namespace, _expit
+from .utils._array_api import get_namespace, _expit, device, size
 from .utils.multiclass import check_classification_targets
 from .utils.extmath import softmax
 from .utils._param_validation import StrOptions, Interval, HasMethods
@@ -109,7 +109,7 @@ def _class_means(X, y):
     """
     xp, is_array_api = get_namespace(X)
     classes, y = xp.unique_inverse(y)
-    means = xp.zeros(shape=(classes.shape[0], X.shape[1]))
+    means = xp.zeros((classes.shape[0], X.shape[1]), device=device(X))
 
     if is_array_api:
         for i in range(classes.shape[0]):
@@ -490,6 +490,10 @@ class LinearDiscriminantAnalysis(
         else:
             svd = scipy.linalg.svd
 
+        if xp.__name__ == "array_api_compat.torch":
+            import torch
+            svd = torch.linalg.svd
+
         n_samples, n_features = X.shape
         n_classes = self.classes_.shape[0]
 
@@ -573,7 +577,7 @@ class LinearDiscriminantAnalysis(
         xp, _ = get_namespace(X)
 
         X, y = self._validate_data(
-            X, y, ensure_min_samples=2, dtype=[xp.float64, xp.float32]
+            X, y, ensure_min_samples=2, dtype=[xp.float32]
         )
         self.classes_ = unique_labels(y)
         n_samples, _ = X.shape
@@ -586,7 +590,7 @@ class LinearDiscriminantAnalysis(
 
         if self.priors is None:  # estimate priors from sample
             _, cnts = xp.unique_counts(y)  # non-negative ints
-            self.priors_ = xp.astype(cnts, xp.float64) / float(y.shape[0])
+            self.priors_ = xp.astype(cnts, X.dtype) / float(y.shape[0])
         else:
             self.priors_ = xp.asarray(self.priors)
 
@@ -634,13 +638,13 @@ class LinearDiscriminantAnalysis(
                 shrinkage=self.shrinkage,
                 covariance_estimator=self.covariance_estimator,
             )
-        if self.classes_.size == 2:  # treat binary case as a special case
+        if size(self.classes_) == 2:  # treat binary case as a special case
             coef_ = xp.asarray(self.coef_[1, :] - self.coef_[0, :], dtype=X.dtype)
             self.coef_ = xp.reshape(coef_, (1, -1))
             intercept_ = xp.asarray(
                 self.intercept_[1] - self.intercept_[0], dtype=X.dtype
             )
-            self.intercept_ = xp.reshape(intercept_, 1)
+            self.intercept_ = xp.reshape(intercept_, (1,))
         self._n_features_out = self._max_components
         return self
 

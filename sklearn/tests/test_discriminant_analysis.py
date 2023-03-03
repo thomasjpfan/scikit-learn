@@ -731,3 +731,31 @@ def test_lda_array_api(array_namespace):
             err_msg=f"{method} did not the return the same result",
             atol=1e-6,
         )
+
+
+def test_lda_array_torch_gpu():
+    """Check running on PyTorch GPU gives the same results as NumPy"""
+    torch = pytest.importorskip("torch")
+    if not torch.has_cuda:
+        pytest.skip("test requires cuda")
+
+    lda = LinearDiscriminantAnalysis()
+    lda.fit(X6, y6)
+
+    X_torch = torch.asarray(X6, device="cuda", dtype=torch.float32)
+    y_torch = torch.asarray(y6, device="cuda", dtype=torch.float32)
+    lda_xp = clone(lda)
+    lda_xp.fit(X_torch, y_torch)
+
+    array_attributes = {
+        key: value for key, value in vars(lda).items() if isinstance(value, np.ndarray)
+    }
+
+    for key, attribute in array_attributes.items():
+        lda_xp_param = getattr(lda_xp, key)
+        assert isinstance(lda_xp_param, torch.Tensor)
+
+        lda_xp_param_np = _convert_to_numpy(lda_xp_param, xp=torch)
+        assert_allclose(
+            attribute, lda_xp_param_np, err_msg=f"{key} not the same", atol=1e-3
+        )
