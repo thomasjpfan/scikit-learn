@@ -906,7 +906,7 @@ def check_array(
                     "if it contains a single sample.".format(array)
                 )
 
-        if dtype_numeric and array.dtype.kind in "USV":
+        if xp.__name__ != "array_api_compat.torch" and dtype_numeric and array.dtype.kind in "USV":
             raise ValueError(
                 "dtype='numeric' is not compatible with arrays of bytes/strings."
                 "Convert your data to numeric values explicitly instead."

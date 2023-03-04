@@ -759,3 +759,33 @@ def test_lda_array_torch_gpu():
         assert_allclose(
             attribute, lda_xp_param_np, err_msg=f"{key} not the same", atol=1e-3
         )
+
+    lda_xp.predict(X_torch)
+
+
+def test_lda_array_cupy_gpu():
+    cupy = pytest.importorskip("cupy")
+
+    lda = LinearDiscriminantAnalysis()
+    lda.fit(X6, y6)
+
+    X_cu = cupy.asarray(X6, dtype=cupy.float32)
+    y_cu = cupy.asarray(y6, dtype=cupy.float32)
+    lda_xp = clone(lda)
+    lda_xp.fit(X_cu, y_cu)
+
+    array_attributes = {
+        key: value for key, value in vars(lda).items() if isinstance(value, np.ndarray)
+    }
+
+    for key, attribute in array_attributes.items():
+        lda_xp_param = getattr(lda_xp, key)
+        assert isinstance(lda_xp_param, cupy.ndarray)
+
+        lda_xp_param_np = _convert_to_numpy(lda_xp_param, xp=cupy)
+        assert_allclose(
+            attribute, lda_xp_param_np, err_msg=f"{key} not the same", atol=1e-3
+        )
+
+
+    lda_xp.predict(X_cu)
