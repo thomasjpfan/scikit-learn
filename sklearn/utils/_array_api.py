@@ -146,7 +146,7 @@ def _convert_to_numpy(array, xp):
 
     if xp_name == "cupy.array_api":
         return array._array.get()
-    elif xp_name in {"cupy", "array_api_compat.cupy"}:
+    elif xp_name in {"array_api_compat.cupy", "cupy"}:
         return array.get()
     elif xp_name in {"array_api_compat.torch", "torch"}:
         return array.cpu().numpy()
