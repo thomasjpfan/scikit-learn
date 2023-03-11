@@ -30,7 +30,7 @@ class _ArrayAPIWrapper:
     def __getattr__(self, name):
         return getattr(self._namespace, name)
 
-    def take(self, X, indices, *, axis):
+    def take(self, X, indices, *, axis=0):
         # When array_api supports `take` we can use this directly
         # https://github.com/data-apis/array-api/issues/177
         if self._namespace.__name__ == "numpy.array_api":
