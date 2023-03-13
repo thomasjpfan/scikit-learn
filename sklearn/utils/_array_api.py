@@ -182,3 +182,48 @@ def _estimator_with_converted_arrays(estimator, converter):
             attribute = converter(attribute)
         setattr(new_estimator, key, attribute)
     return new_estimator
+
+
+def logsumexp(a, axis=None, b=None, keepdims=False, return_sign=False):
+    xp, is_array_api = get_namespace(a)
+
+    # Use SciPy if a is an ndarray
+    if not is_array_api:
+        return special.logsumexp(
+            a, axis=axis, b=b, keepdims=keepdims, return_sign=return_sign
+        )
+
+    if b is not None:
+        a, b = xp.broadcast_arrays(a, b)
+        if xp.any(b == 0):
+            a = a + 0.0  # promote to at least float
+            a[b == 0] = -xp.inf
+
+    a_max = xp.max(a, axis=axis, keepdims=True)
+
+    if a_max.ndim > 0:
+        a_max[~xp.isfinite(a_max)] = 0
+    elif not xp.isfinite(a_max):
+        a_max = 0
+
+    if b is not None:
+        b = xp.asarray(b)
+        tmp = b * xp.exp(a - a_max)
+    else:
+        tmp = xp.exp(a - a_max)
+
+    # suppress warnings about log of zero
+    s = xp.sum(tmp, axis=axis, keepdims=keepdims)
+    if return_sign:
+        sgn = xp.sign(s)
+        s *= sgn  # /= makes more sense but we need zero -> zero
+    out = xp.log(s)
+
+    if not keepdims:
+        a_max = xp.squeeze(a_max, axis=axis)
+    out += a_max
+
+    if return_sign:
+        return out, sgn
+    else:
+        return out

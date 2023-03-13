@@ -21,7 +21,7 @@ from ..utils._cython_blas cimport ColMajor, Trans, NoTrans
 
 from ..utils._random cimport our_rand_r
 
-ctypedef cnp.float64_t DOUBsklearn/utils/tests/test_array_api.pyLE
+ctypedef cnp.float64_t DOUBLE
 ctypedef cnp.uint32_t UINT32_t
 
 cnp.import_array()

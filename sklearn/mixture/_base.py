@@ -10,7 +10,6 @@ from time import time
 from numbers import Integral, Real
 
 import numpy as np
-from scipy.special import logsumexp
 
 from .. import cluster
 from ..cluster import kmeans_plusplus
@@ -19,6 +18,7 @@ from ..base import DensityMixin
 from ..exceptions import ConvergenceWarning
 from ..utils import check_random_state
 from ..utils.validation import check_is_fitted
+from ..utils._array_api import get_namespace, logsumexp, device
 from ..utils._param_validation import Interval, StrOptions
 
 
@@ -121,8 +121,10 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             )
             resp[np.arange(n_samples), label] = 1
         elif self.init_params == "random":
+            xp, _ = get_namespace(X)
             resp = random_state.uniform(size=(n_samples, self.n_components))
-            resp /= resp.sum(axis=1)[:, np.newaxis]
+            resp = xp.asarray(resp, device=device(X), dtype=X.dtype)
+            resp /= xp.reshape(xp.sum(resp, axis=1), (-1, 1))
         elif self.init_params == "random_from_data":
             resp = np.zeros((n_samples, self.n_components))
             indices = random_state.choice(
@@ -214,8 +216,9 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             Component labels.
         """
         self._validate_params()
+        xp, _ = get_namespace(X)
 
-        X = self._validate_data(X, dtype=[np.float64, np.float32], ensure_min_samples=2)
+        X = self._validate_data(X, dtype=[xp.float32], ensure_min_samples=2)
         if X.shape[0] < self.n_components:
             raise ValueError(
                 "Expected n_samples >= n_components "
@@ -228,7 +231,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         do_init = not (self.warm_start and hasattr(self, "converged_"))
         n_init = self.n_init if do_init else 1
 
-        max_lower_bound = -np.inf
+        max_lower_bound = -xp.inf
         self.converged_ = False
 
         random_state = check_random_state(self.random_state)
@@ -240,7 +243,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             if do_init:
                 self._initialize_parameters(X, random_state)
 
-            lower_bound = -np.inf if do_init else self.lower_bound_
+            lower_bound = -xp.inf if do_init else self.lower_bound_
 
             if self.max_iter == 0:
                 best_params = self._get_parameters()
@@ -262,7 +265,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
 
                 self._print_verbose_msg_init_end(lower_bound)
 
-                if lower_bound > max_lower_bound or max_lower_bound == -np.inf:
+                if lower_bound > max_lower_bound or max_lower_bound == -xp.inf:
                     max_lower_bound = lower_bound
                     best_params = self._get_parameters()
                     best_n_iter = n_iter
@@ -288,7 +291,7 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         # for any value of max_iter and tol (and any random_state).
         _, log_resp = self._e_step(X)
 
-        return log_resp.argmax(axis=1)
+        return xp.argmax(log_resp, axis=1)
 
     def _e_step(self, X):
         """E step.
@@ -306,8 +309,9 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
             Logarithm of the posterior probabilities (or responsibilities) of
             the point of each sample in X.
         """
+        xp, _ = get_namespace(X)
         log_prob_norm, log_resp = self._estimate_log_prob_resp(X)
-        return np.mean(log_prob_norm), log_resp
+        return xp.mean(log_prob_norm), log_resp
 
     @abstractmethod
     def _m_step(self, X, log_resp):
@@ -526,11 +530,13 @@ class BaseMixture(DensityMixin, BaseEstimator, metaclass=ABCMeta):
         log_responsibilities : array, shape (n_samples, n_components)
             logarithm of the responsibilities
         """
+        xp, _ = get_namespace(X)
         weighted_log_prob = self._estimate_weighted_log_prob(X)
         log_prob_norm = logsumexp(weighted_log_prob, axis=1)
         with np.errstate(under="ignore"):
             # ignore underflow
-            log_resp = weighted_log_prob - log_prob_norm[:, np.newaxis]
+            log_resp = weighted_log_prob - xp.reshape(log_prob_norm, (-1, 1))
+
         return log_prob_norm, log_resp
 
     def _print_verbose_msg_init_beg(self, n_init):
