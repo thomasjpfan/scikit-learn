@@ -12,6 +12,7 @@ import pytest
 import numpy as np
 from scipy import stats, linalg
 
+from sklearn.base import clone
 from sklearn.cluster import KMeans
 from sklearn.covariance import EmpiricalCovariance
 from sklearn.datasets import make_spd_matrix
@@ -34,6 +35,7 @@ from sklearn.utils._testing import assert_almost_equal
 from sklearn.utils._testing import assert_array_almost_equal
 from sklearn.utils._testing import assert_array_equal
 from sklearn.utils._testing import ignore_warnings
+from sklearn.utils._array_api import _convert_to_numpy
 
 
 COVARIANCE_TYPE = ["full", "tied", "diag", "spherical"]
@@ -1335,3 +1337,30 @@ def test_gaussian_mixture_single_component_stable():
     X = rng.multivariate_normal(np.zeros(2), np.identity(2), size=3)
     gm = GaussianMixture(n_components=1)
     gm.fit(X).sample()
+
+
+def test_gaussian_mixture_torch():
+    """Check that that torch gives the same results as ndarrays."""
+    torch = pytest.importorskip("torch")
+
+    if not torch.has_cuda:
+        pytest.skip("test requires cuda")
+
+    rng = np.random.RandomState(0)
+    X = rng.rand(10, 4)
+    X_torch = torch.asarray(X, device="cuda", dtype=torch.float32)
+
+    gm = GaussianMixture(n_components=2, random_state=0, init_params="random")
+    gm.fit(X)
+
+    gm_torch = clone(gm)
+    gm_torch.fit(X_torch)
+
+    gm_attributes_array = {
+        key: value for key, value in vars(gm).items() if isinstance(value, np.ndarray)
+    }
+    for key in gm_attributes_array:
+        gm_torch_param = _convert_to_numpy(getattr(gm_torch, key))
+        assert_allclose(
+            gm_attributes_array[key], gm_torch_param, err_msg=f"{key} not the same"
+        )
