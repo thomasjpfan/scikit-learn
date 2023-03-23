@@ -733,19 +733,23 @@ def test_lda_array_api(array_namespace):
         )
 
 
-def test_lda_array_torch_gpu():
-    """Check running on PyTorch GPU gives the same results as NumPy"""
+@pytest.mark.parametrize("device", ["cuda", "cpu"])
+def test_lda_array_torch(device):
+    """Check running on PyTorch Tensors gives the same results as NumPy"""
     torch = pytest.importorskip("torch")
-    if not torch.has_cuda:
+    if device == "cuda" and not torch.has_cuda:
         pytest.skip("test requires cuda")
 
     lda = LinearDiscriminantAnalysis()
-    lda.fit(X6, y6)
+    X_np = X6.astype(np.float32)
+    y_np = y6.astype(np.float32)
+    lda.fit(X_np, y_np)
 
-    X_torch = torch.asarray(X6, device="cuda", dtype=torch.float32)
-    y_torch = torch.asarray(y6, device="cuda", dtype=torch.float32)
+    X_torch = torch.asarray(X_np, device=device, dtype=torch.float32)
+    y_torch = torch.asarray(y_np, device=device, dtype=torch.float32)
     lda_xp = clone(lda)
-    lda_xp.fit(X_torch, y_torch)
+    with config_context(array_api_dispatch=True):
+        lda_xp.fit(X_torch, y_torch)
 
     array_attributes = {
         key: value for key, value in vars(lda).items() if isinstance(value, np.ndarray)
@@ -760,32 +764,26 @@ def test_lda_array_torch_gpu():
             attribute, lda_xp_param_np, err_msg=f"{key} not the same", atol=1e-3
         )
 
-    lda_xp.predict(X_torch)
+    # Check predictions are the same
+    methods = (
+        "decision_function",
+        "predict",
+        "predict_log_proba",
+        "predict_proba",
+        "transform",
+    )
+    for method in methods:
+        result = getattr(lda, method)(X_np)
+        with config_context(array_api_dispatch=True):
+            result_xp = getattr(lda_xp, method)(X_torch)
 
+        assert isinstance(result_xp, torch.Tensor)
 
-def test_lda_array_cupy_gpu():
-    cupy = pytest.importorskip("cupy")
+        result_xp_np = _convert_to_numpy(result_xp, xp=torch)
 
-    lda = LinearDiscriminantAnalysis()
-    lda.fit(X6, y6)
-
-    X_cu = cupy.asarray(X6, dtype=cupy.float32)
-    y_cu = cupy.asarray(y6, dtype=cupy.float32)
-    lda_xp = clone(lda)
-    lda_xp.fit(X_cu, y_cu)
-
-    array_attributes = {
-        key: value for key, value in vars(lda).items() if isinstance(value, np.ndarray)
-    }
-
-    for key, attribute in array_attributes.items():
-        lda_xp_param = getattr(lda_xp, key)
-        assert isinstance(lda_xp_param, cupy.ndarray)
-
-        lda_xp_param_np = _convert_to_numpy(lda_xp_param, xp=cupy)
         assert_allclose(
-            attribute, lda_xp_param_np, err_msg=f"{key} not the same", atol=1e-3
+            result,
+            result_xp_np,
+            err_msg=f"{method} did not the return the same result",
+            atol=1e-6,
         )
-
-
-    lda_xp.predict(X_cu)

@@ -573,7 +573,7 @@ class LinearDiscriminantAnalysis(
         xp, _ = get_namespace(X)
 
         X, y = self._validate_data(
-            X, y, ensure_min_samples=2, dtype=[xp.float32]
+            X, y, ensure_min_samples=2, dtype=[xp.float64, xp.float32]
         )
         self.classes_ = unique_labels(y)
         n_samples, _ = X.shape
@@ -588,7 +588,7 @@ class LinearDiscriminantAnalysis(
             _, cnts = xp.unique_counts(y)  # non-negative ints
             self.priors_ = xp.astype(cnts, X.dtype) / float(y.shape[0])
         else:
-            self.priors_ = xp.asarray(self.priors)
+            self.priors_ = xp.asarray(self.priors, dtype=X.dtype)
 
         if xp.any(self.priors_ < 0):
             raise ValueError("priors must be non-negative")
@@ -690,7 +690,7 @@ class LinearDiscriminantAnalysis(
         check_is_fitted(self)
         xp, is_array_api = get_namespace(X)
         decision = self.decision_function(X)
-        if self.classes_.size == 2:
+        if size(self.classes_) == 2:
             proba = _expit(decision)
             return xp.stack([1 - proba, proba], axis=1)
         else:

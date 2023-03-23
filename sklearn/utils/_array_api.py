@@ -5,11 +5,13 @@ import scipy.special as special
 # XXX: Direct input for testing, array_api_compat should be vendored
 import array_api_compat
 import array_api_compat.numpy
-from array_api_compat import device, size
+from array_api_compat import device, size  # noqa
 
 from .._config import get_config
 
-NUMPY_NAMES = {"numpy", "array_api_compat.numpy", "numpy.array_api"}
+
+def _is_numpy_namespace(xp):
+    return xp.__name__ in {"numpy", "array_api_compat.numpy", "numpy.array_api"}
 
 
 class _ArrayAPIWrapper:
@@ -56,6 +58,42 @@ class _ArrayAPIWrapper:
             selected = [X[:, i] for i in indices]
         return self._namespace.stack(selected, axis=axis)
 
+    def isdtype(self, dtype, kind):
+        """Returns a boolean indicating whether a provided dtype is of type "kind".
+
+        Included in the v2022.12 of the Array API spec.
+        https://data-apis.org/array-api/latest/API_specification/generated/array_api.isdtype.html
+        """
+        if isinstance(kind, tuple):
+            return any(self._isdtype_single(dtype, k) for k in kind)
+        else:
+            return self._isdtype_single(dtype, kind)
+
+    def _isdtype_single(self, dtype, kind):
+        xp = self._namespace
+        if isinstance(kind, str):
+            if kind == "bool":
+                return dtype == xp.bool
+            elif kind == "signed integer":
+                return dtype in {xp.int8, xp.int16, xp.int32, xp.int64}
+            elif kind == "unsigned integer":
+                return dtype in {xp.uint8, xp.uint16, xp.uint32, xp.uint64}
+            elif kind == "integral":
+                return self.isdtype(dtype, ("signed integer", "unsigned integer"))
+            elif kind == "real floating":
+                return {xp.float32, xp.float64}
+            elif kind == "complex floating":
+                return {xp.complex64, xp.complex128}
+            elif kind == "numeric":
+                return self.isdtype(
+                    dtype, ("integral", "real floating", "complex floating")
+                )
+            else:
+                raise ValueError(f"Unrecognized data type kind: {kind!r}")
+        else:
+            return dtype == kind
+
+
 def get_namespace(*arrays):
     """Get namespace of arrays.
 
@@ -98,9 +136,14 @@ def get_namespace(*arrays):
     is_array : bool
         True if arrays are recognized arrays.
     """
-    if not get_config()["array_api_dispatch"]:
-        return array_api_compat.numpy, False
+    return _get_namespace(
+        *arrays, array_api_dispatch=get_config()["array_api_dispatch"]
+    )
 
+
+def _get_namespace(*arrays, array_api_dispatch=False):
+    if not array_api_dispatch:
+        return array_api_compat.numpy, False
     try:
         namespace, is_array = array_api_compat.get_namespace(*arrays), True
     except TypeError as e:
@@ -116,7 +159,7 @@ def get_namespace(*arrays):
 
 def _expit(X):
     xp, _ = get_namespace(X)
-    if xp.__name__ in NUMPY_NAMES:
+    if _is_numpy_namespace(xp):
         return xp.asarray(special.expit(numpy.asarray(X)))
 
     return 1.0 / (1.0 + xp.exp(-X))
@@ -137,11 +180,12 @@ def _asarray_with_order(array, dtype=None, order=None, copy=None, xp=None):
     """
     if xp is None:
         xp, _ = get_namespace(array)
-    if xp.__name__ in NUMPY_NAMES:
+    if _is_numpy_namespace(xp):
         # Use NumPy API to support order
-        array = numpy.asarray(array, order=order, dtype=dtype)
         if copy is True:
-            array = numpy.array(array)
+            array = numpy.array(array, order=order, dtype=dtype)
+        else:
+            array = numpy.asarray(array, order=order, dtype=dtype)
         return xp.asarray(array)
     else:
         return xp.asarray(array, dtype=dtype, copy=copy)
@@ -151,14 +195,14 @@ def _convert_to_numpy(array, xp):
     """Convert X into a NumPy ndarray on the CPU."""
     xp_name = xp.__name__
 
+    if _is_numpy_namespace(xp):
+        return numpy.asarray(array)
     if xp_name == "cupy.array_api":
         return array._array.get()
     elif xp_name in {"array_api_compat.cupy", "cupy"}:
         return array.get()
     elif xp_name in {"array_api_compat.torch", "torch"}:
         return array.cpu().numpy()
-    elif xp_name in NUMPY_NAMES:
-        return numpy.asarray(array)
     else:
         raise ValueError(f"{xp_name} is an unsupported namespace")
 
@@ -182,8 +226,9 @@ def _estimator_with_converted_arrays(estimator, converter):
     from sklearn.base import clone
 
     new_estimator = clone(estimator)
+
     for key, attribute in vars(estimator).items():
-        _, is_array = get_namespace(attribute)
+        _, is_array = _get_namespace(attribute, array_api_dispatch=True)
         if is_array:
             attribute = converter(attribute)
         setattr(new_estimator, key, attribute)
