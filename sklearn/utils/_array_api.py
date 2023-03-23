@@ -226,7 +226,6 @@ def _estimator_with_converted_arrays(estimator, converter):
     from sklearn.base import clone
 
     new_estimator = clone(estimator)
-
     for key, attribute in vars(estimator).items():
         _, is_array = _get_namespace(attribute, array_api_dispatch=True)
         if is_array:
