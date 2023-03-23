@@ -2,16 +2,20 @@
 import numpy
 import scipy.special as special
 
-# XXX: Direct input for testing, array_api_compat should be vendored
-import array_api_compat
-import array_api_compat.numpy
-from array_api_compat import device, size  # noqa
+import sklearn.externals._array_api_compat as array_api_compat
+
+import sklearn.externals._array_api_compat.numpy as array_api_compat_numpy
+from sklearn.externals._array_api_compat import device, size  # noqa
 
 from .._config import get_config
 
 
 def _is_numpy_namespace(xp):
-    return xp.__name__ in {"numpy", "array_api_compat.numpy", "numpy.array_api"}
+    return xp.__name__ in {
+        "numpy",
+        "sklearn.externals._array_api_compat.numpy",
+        "numpy.array_api",
+    }
 
 
 class _ArrayAPIWrapper:
@@ -143,12 +147,12 @@ def get_namespace(*arrays):
 
 def _get_namespace(*arrays, array_api_dispatch=False):
     if not array_api_dispatch:
-        return array_api_compat.numpy, False
+        return array_api_compat_numpy, False
     try:
         namespace, is_array = array_api_compat.get_namespace(*arrays), True
     except TypeError as e:
         if str(e).startswith("The input is not a supported array type"):
-            return array_api_compat.numpy, False
+            return array_api_compat_numpy, False
         raise
 
     if namespace.__name__ in {"numpy.array_api", "cupy.array_api"}:
@@ -197,12 +201,12 @@ def _convert_to_numpy(array, xp):
 
     if _is_numpy_namespace(xp):
         return numpy.asarray(array)
-    if xp_name == "cupy.array_api":
-        return array._array.get()
-    elif xp_name in {"array_api_compat.cupy", "cupy"}:
-        return array.get()
-    elif xp_name in {"array_api_compat.torch", "torch"}:
+    elif xp_name in {"sklearn.externals._array_api_compat.torch", "torch"}:
         return array.cpu().numpy()
+    elif xp_name == "cupy.array_api":
+        return array._array.get()
+    elif xp_name in {"sklearn.externals._array_api_compat.cupy", "cupy"}:
+        return array.get()
     else:
         raise ValueError(f"{xp_name} is an unsupported namespace")
 
