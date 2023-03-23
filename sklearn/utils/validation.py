@@ -111,7 +111,7 @@ def _assert_all_finite(
             raise ValueError("Input contains NaN")
 
     # We need only consider float arrays, hence can early return for all else.
-    if xp.__name__ != "array_api_compat.torch" and X.dtype.kind not in "fc":
+    if not xp.isdtype(X.dtype, ("real floating", "complex floating")):
         return
 
     # First try an O(n) time, O(1) space solution for the common case that
@@ -862,6 +862,7 @@ def check_array(
             try:
                 warnings.simplefilter("error", ComplexWarning)
                 if xp.__name__ != "array_api_compat.torch" and dtype is not None and np.dtype(dtype).kind in "iu":
+                # if xp.isdtype(dtype, ("integral")):
                     # Conversion float -> int should not contain NaN or
                     # inf (numpy#14412). We cannot use casting='safe' because
                     # then conversion float -> int would be disallowed.
@@ -906,7 +907,7 @@ def check_array(
                     "if it contains a single sample.".format(array)
                 )
 
-        if xp.__name__ != "array_api_compat.torch" and dtype_numeric and array.dtype.kind in "USV":
+        if not is_array_api and dtype_numeric and array.dtype.kind in "USV":
             raise ValueError(
                 "dtype='numeric' is not compatible with arrays of bytes/strings."
                 "Convert your data to numeric values explicitly instead."

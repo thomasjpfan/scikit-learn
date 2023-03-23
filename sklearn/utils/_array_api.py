@@ -7,6 +7,8 @@ import array_api_compat
 import array_api_compat.numpy
 from array_api_compat import device, size
 
+from .._config import get_config
+
 NUMPY_NAMES = {"numpy", "array_api_compat.numpy", "numpy.array_api"}
 
 
@@ -96,11 +98,14 @@ def get_namespace(*arrays):
     is_array : bool
         True if arrays are recognized arrays.
     """
+    if not get_config()["array_api_dispatch"]:
+        return array_api_compat.numpy, False
+
     try:
         namespace, is_array = array_api_compat.get_namespace(*arrays), True
-    except ValueError as e:
+    except TypeError as e:
         if str(e).startswith("The input is not a supported array type"):
-            return numpy, False
+            return array_api_compat.numpy, False
         raise
 
     if namespace.__name__ in {"numpy.array_api", "cupy.array_api"}:
@@ -135,7 +140,9 @@ def _asarray_with_order(array, dtype=None, order=None, copy=None, xp=None):
     if xp.__name__ in NUMPY_NAMES:
         # Use NumPy API to support order
         array = numpy.asarray(array, order=order, dtype=dtype)
-        return xp.asarray(array, copy=copy)
+        if copy is True:
+            array = numpy.array(array)
+        return xp.asarray(array)
     else:
         return xp.asarray(array, dtype=dtype, copy=copy)
 

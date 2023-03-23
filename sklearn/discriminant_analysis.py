@@ -490,10 +490,6 @@ class LinearDiscriminantAnalysis(
         else:
             svd = scipy.linalg.svd
 
-        if xp.__name__ == "array_api_compat.torch":
-            import torch
-            svd = torch.linalg.svd
-
         n_samples, n_features = X.shape
         n_classes = self.classes_.shape[0]
 
