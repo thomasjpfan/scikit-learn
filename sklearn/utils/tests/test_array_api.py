@@ -44,14 +44,30 @@ def test_get_namespace_array_api():
         assert xp_out is array_api_compat_numpy
 
 
-def test_get_namespace_array_api_is():
+@pytest.mark.parametrize("array_api_dispatch", [True, False])
+def test_get_namespace_array_api_isdtype(array_api_dispatch):
     """Test isdtype for ArrayAPI arrays."""
     xp = pytest.importorskip("numpy.array_api")
 
     X_xp = xp.asarray([[1, 2, 3]])
-    with config_context(array_api_dispatch=True):
-        xp_out, is_array_api = get_namespace(X_xp)
-        assert is_array_api
+    with config_context(array_api_dispatch=array_api_dispatch):
+        xp_out, _ = get_namespace(X_xp)
+        assert xp_out.isdtype(xp_out.float32, "real floating")
+        assert xp_out.isdtype(xp_out.float64, "real floating")
+        assert not xp_out.isdtype(xp_out.int32, "real floating")
+
+        assert xp_out.isdtype(xp_out.bool, "bool")
+        assert not xp_out.isdtype(xp_out.float32, "bool")
+
+        assert xp_out.isdtype(xp_out.int16, "signed integer")
+        assert not xp_out.isdtype(xp_out.uint32, "signed integer")
+
+        assert xp_out.isdtype(xp_out.uint16, "unsigned integer")
+        assert not xp_out.isdtype(xp_out.int64, "unsigned integer")
+
+        assert xp_out.isdtype(xp_out.int64, "numeric")
+        assert xp_out.isdtype(xp_out.float32, "numeric")
+        assert xp_out.isdtype(xp_out.uint32, "numeric")
 
 
 @pytest.mark.parametrize("array_api_dispatch", [True, False])

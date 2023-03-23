@@ -67,6 +67,9 @@ class _ArrayAPIWrapper:
 
         Included in the v2022.12 of the Array API spec.
         https://data-apis.org/array-api/latest/API_specification/generated/array_api.isdtype.html
+
+        This implementation does not support "complex floating" because it is not
+        required by scikit-laern.
         """
         if isinstance(kind, tuple):
             return any(self._isdtype_single(dtype, k) for k in kind)
@@ -85,9 +88,7 @@ class _ArrayAPIWrapper:
             elif kind == "integral":
                 return self.isdtype(dtype, ("signed integer", "unsigned integer"))
             elif kind == "real floating":
-                return {xp.float32, xp.float64}
-            elif kind == "complex floating":
-                return {xp.complex64, xp.complex128}
+                return dtype in {xp.float32, xp.float64}
             elif kind == "numeric":
                 return self.isdtype(
                     dtype, ("integral", "real floating", "complex floating")
