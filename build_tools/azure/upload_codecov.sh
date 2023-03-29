@@ -3,7 +3,7 @@
 set -e
 
 active_environment="$1"
-if [[ $active_environment == "true"]]; then
+if [[ $active_environment == "true" ]]; then
     export PATH=$HOME/miniconda3/bin:$PATH
     source activate $VIRTUALENV
 fi
