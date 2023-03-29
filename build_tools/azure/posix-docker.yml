@@ -117,8 +117,8 @@ jobs:
       condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'),
                      eq(variables['Build.Reason'], 'Schedule'))
     - script: |
-        $(pyTools.pythonLocation)/bin/pip install coverage
-        bash build_tools/azure/upload_codecov.sh false
+        conda create -n $VIRTUALENV python=3.10 coverage
+        bash build_tools/azure/upload_codecov.sh
       condition: and(succeeded(), eq(variables['COVERAGE'], 'true'),
                      eq(variables['SELECTED_TESTS'], ''))
       displayName: 'Upload To Codecov'

@@ -2,11 +2,8 @@
 
 set -e
 
-active_environment="$1"
-if [[ $active_environment == "true" ]]; then
-    export PATH=$HOME/miniconda3/bin:$PATH
-    source activate $VIRTUALENV
-fi
+export PATH=$HOME/miniconda3/bin:$PATH
+source activate $VIRTUALENV
 
 # Need to run codecov from a git checkout, so we copy .coverage
 # from TEST_DIR where pytest has been run
