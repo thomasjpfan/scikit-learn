@@ -2,6 +2,7 @@
 
 set -e
 
+# called when COVERAGE=="true" and DISTRIB=="conda"
 export PATH=$HOME/miniconda3/bin:$PATH
 source activate $VIRTUALENV
 
