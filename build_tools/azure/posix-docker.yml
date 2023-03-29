@@ -116,3 +116,8 @@ jobs:
         JUNIT_FILE: $(TEST_DIR)/$(JUNITXML)
       condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'),
                      eq(variables['Build.Reason'], 'Schedule'))
+    - script: |
+        build_tools/azure/upload_codecov.sh
+      condition: and(succeeded(), eq(variables['COVERAGE'], 'true'),
+                     eq(variables['SELECTED_TESTS'], ''))
+      displayName: 'Upload To Codecov'

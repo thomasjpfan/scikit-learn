@@ -2,9 +2,10 @@
 
 set -e
 
-# called when COVERAGE=="true" and DISTRIB=="conda"
-export PATH=$HOME/miniconda3/bin:$PATH
-source activate $VIRTUALENV
+# defines the show_installed_libraries function
+source build_tools/shared.sh
+
+activate_environment
 
 # Need to run codecov from a git checkout, so we copy .coverage
 # from TEST_DIR where pytest has been run
