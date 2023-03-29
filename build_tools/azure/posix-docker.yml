@@ -116,7 +116,9 @@ jobs:
         JUNIT_FILE: $(TEST_DIR)/$(JUNITXML)
       condition: and(succeededOrFailed(), eq(variables['CREATE_ISSUE_ON_TRACKER'], 'true'),
                      eq(variables['Build.Reason'], 'Schedule'))
-    - script: |
+    - bash: echo "##vso[task.prependpath]$CONDA/bin"
+      displayName: Add conda to PATH
+    - bash: |
         conda create -n $VIRTUALENV python=3.10 coverage -y
         bash build_tools/azure/upload_codecov.sh
       condition: and(succeeded(), eq(variables['COVERAGE'], 'true'),
