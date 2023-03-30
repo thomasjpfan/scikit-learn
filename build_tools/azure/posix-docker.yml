@@ -61,8 +61,10 @@ jobs:
         -w /io
         --detach
         --name skcontainer
+        -e BUILD_SOURCESDIRECTORY=/io
         -e TEST_DIR=/temp_dir
         -e CCACHE_DIR=/ccache
+        -e COVERAGE
         -e DISTRIB
         -e LOCK_FILE
         -e JUNITXML
