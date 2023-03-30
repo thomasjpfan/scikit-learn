@@ -122,6 +122,7 @@ jobs:
       displayName: Add conda to PATH
     - bash: |
         conda create -n $VIRTUALENV python=3.10 coverage -y
+        sudo chown -R $(whoami) $TEST_DIR
         bash build_tools/azure/upload_codecov.sh
       condition: and(succeeded(), eq(variables['COVERAGE'], 'true'),
                      eq(variables['SELECTED_TESTS'], ''))
