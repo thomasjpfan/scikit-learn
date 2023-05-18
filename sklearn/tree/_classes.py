@@ -178,7 +178,7 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
         return self.tree_.n_leaves
 
     def _support_missing_values(self, X):
-        return not issparse(X) and self._get_tags()["allow_nan"]
+        return self._get_tags()["allow_nan"]
 
     def _compute_feature_has_missing(self, X):
         """Return boolean mask denoting if there are missing values for each feature.
@@ -203,11 +203,13 @@ class BaseDecisionTree(MultiOutputMixin, BaseEstimator, metaclass=ABCMeta):
             return None
 
         with np.errstate(over="ignore"):
-            overall_sum = np.sum(X)
+            overall_sum = X.sum()
 
         if not np.isfinite(overall_sum):
             # Raise a ValueError in case of the presence of an infinite element.
-            _assert_all_finite_element_wise(X, xp=np, allow_nan=True, **common_kwargs)
+            _assert_all_finite_element_wise(
+                X.data if issparse(X) else X, xp=np, allow_nan=True, **common_kwargs
+            )
 
         # If the sum is not nan, then there are no missing values
         if not np.isnan(overall_sum):

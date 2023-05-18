@@ -1082,19 +1082,24 @@ cdef class SparsePartitioner:
             SIZE_t[::1] samples = self.samples
 
         self.extract_nnz(current_feature)
+
+        cdef:
+            SIZE_t start = self.start
+            SIZE_t end_non_missing = self.end - self.n_missing
+
         # Sort the positive and negative parts of `feature_values`
-        sort(&feature_values[self.start], &samples[self.start], self.end_negative - self.start)
-        if self.start_positive < self.end:
+        sort(&feature_values[start], &samples[start], self.end_negative - start)
+        if self.start_positive < end_non_missing:
             sort(
                 &feature_values[self.start_positive],
                 &samples[self.start_positive],
-                self.end - self.start_positive
+                end_non_missing - self.start_positive
             )
 
         # Update index_to_samples to take into account the sort
-        for p in range(self.start, self.end_negative):
+        for p in range(start, self.end_negative):
             index_to_samples[samples[p]] = p
-        for p in range(self.start_positive, self.end):
+        for p in range(self.start_positive, end_non_missing):
             index_to_samples[samples[p]] = p
 
         # Add one or two zeros in feature_values, if there is any
@@ -1105,10 +1110,6 @@ cdef class SparsePartitioner:
             if self.end_negative != self.start_positive:
                 feature_values[self.end_negative] = 0.
                 self.end_negative += 1
-
-        # XXX: When sparse supports missing values, this should be set to the
-        # number of missing values for current_feature
-        self.n_missing = 0
 
     cdef inline void find_min_max(
         self,
@@ -1158,13 +1159,14 @@ cdef class SparsePartitioner:
         cdef:
             SIZE_t p_next
             DTYPE_t[::1] feature_values = self.feature_values
+            SIZE_t end_non_missing = self.end - self.n_missing
 
         if p[0] + 1 != self.end_negative:
             p_next = p[0] + 1
         else:
             p_next = self.start_positive
 
-        while (p_next < self.end and
+        while (p_next < end_non_missing and
                 feature_values[p_next] <= feature_values[p[0]] + FEATURE_THRESHOLD):
             p[0] = p_next
             if p[0] + 1 != self.end_negative:
@@ -1197,13 +1199,15 @@ cdef class SparsePartitioner:
             SIZE_t[::1] index_to_samples = self.index_to_samples
             DTYPE_t[::1] feature_values = self.feature_values
             SIZE_t[::1] samples = self.samples
+            SIZE_t start = self.start
+            SIZE_t end_non_missing = self.end - self.n_missing
 
         if threshold < 0.:
-            p = self.start
+            p = start
             partition_end = self.end_negative
         elif threshold > 0.:
             p = self.start_positive
-            partition_end = self.end
+            partition_end = end_non_missing
         else:
             # Data are already split
             return zero_pos
@@ -1246,11 +1250,29 @@ cdef class SparsePartitioner:
         cdef SIZE_t indptr_start = self.X_indptr[feature],
         cdef SIZE_t indptr_end = self.X_indptr[feature + 1]
         cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
-        cdef SIZE_t n_samples = self.end - self.start
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t[::1] sorted_samples = self.sorted_samples
         cdef const INT32_t[::1] X_indices = self.X_indices
         cdef const DTYPE_t[::1] X_data = self.X_data
+        cdef SIZE_t k, current_end, index
+        cdef const unsigned char[::1] feature_has_missing = self.feature_has_missing
+
+        self.n_missing = 0
+        if feature_has_missing is not None and feature_has_missing[feature]:
+            for k in range(indptr_start, indptr_end):
+                if (
+                    self.start <= index_to_samples[X_indices[k]] < self.end and
+                    isnan(X_data[k])
+                ):
+                    self.n_missing += 1
+                    # swap feature_values and samples to the end
+                    current_end = self.end - self.n_missing
+                    feature_values[current_end] = X_data[k]
+                    index = index_to_samples[X_indices[k]]
+                    sparse_swap(index_to_samples, samples, index, current_end)
+
+        cdef SIZE_t end_non_missing = self.end - self.n_missing
+        cdef SIZE_t n_samples = end_non_missing - self.start
 
         # Use binary search if n_samples * log(n_indices) <
         # n_indices and index_to_samples approach otherwise.
@@ -1261,18 +1283,17 @@ cdef class SparsePartitioner:
                 n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
             extract_nnz_binary_search(X_indices, X_data,
                                       indptr_start, indptr_end,
-                                      samples, self.start, self.end,
+                                      samples, self.start, end_non_missing,
                                       index_to_samples,
                                       feature_values,
                                       &self.end_negative, &self.start_positive,
                                       sorted_samples, &self.is_samples_sorted)
-
         # Using an index to samples  technique to extract non zero values
         # index_to_samples is a mapping from X_indices to samples
         else:
             extract_nnz_index_to_samples(X_indices, X_data,
                                          indptr_start, indptr_end,
-                                         samples, self.start, self.end,
+                                         samples, self.start, end_non_missing,
                                          index_to_samples,
                                          feature_values,
                                          &self.end_negative, &self.start_positive)

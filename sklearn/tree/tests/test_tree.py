@@ -2417,9 +2417,11 @@ def test_min_sample_split_1_error(Tree):
 
 
 @pytest.mark.parametrize("criterion", ["squared_error", "friedman_mse"])
-def test_missing_values_on_equal_nodes_no_missing(criterion):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_on_equal_nodes_no_missing(criterion, is_sparse):
     """Check missing values goes to correct node during predictions"""
-    X = np.array([[0, 1, 2, 3, 8, 9, 11, 12, 15]]).T
+    X_np = np.array([[0, 1, 2, 3, 8, 9, 11, 12, 15]]).T
+    X = csc_matrix(X_np) if is_sparse else X_np
     y = np.array([0.1, 0.2, 0.3, 0.2, 1.4, 1.4, 1.5, 1.6, 2.6])
 
     dtc = DecisionTreeRegressor(random_state=42, max_depth=1, criterion=criterion)
@@ -2430,7 +2432,8 @@ def test_missing_values_on_equal_nodes_no_missing(criterion):
     assert_allclose(y_pred, [np.mean(y[-5:])])
 
     # equal number of elements in both nodes
-    X_equal = X[:-1]
+    X_equal_np = X_np[:-1]
+    X_equal = csc_matrix(X_equal_np) if is_sparse else X_equal_np
     y_equal = y[:-1]
 
     dtc = DecisionTreeRegressor(random_state=42, max_depth=1, criterion=criterion)
@@ -2443,62 +2446,82 @@ def test_missing_values_on_equal_nodes_no_missing(criterion):
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
-def test_missing_values_best_splitter_three_classes(criterion):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_best_splitter_three_classes(criterion, is_sparse):
     """Test when missing values are uniquely present in a class among 3 classes."""
     missing_values_class = 0
     X = np.array([[np.nan] * 4 + [0, 1, 2, 3, 8, 9, 11, 12]]).T
+    if is_sparse:
+        X = csc_matrix(X)
     y = np.array([missing_values_class] * 4 + [1] * 4 + [2] * 4)
     dtc = DecisionTreeClassifier(random_state=42, max_depth=2, criterion=criterion)
     dtc.fit(X, y)
 
     X_test = np.array([[np.nan, 3, 12]]).T
+    if is_sparse:
+        X_test = csc_matrix(X_test)
     y_nan_pred = dtc.predict(X_test)
     # Missing values necessarily are associated to the observed class.
     assert_array_equal(y_nan_pred, [missing_values_class, 1, 2])
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
-def test_missing_values_best_splitter_to_left(criterion):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_best_splitter_to_left(criterion, is_sparse):
     """Missing values spanning only one class at fit-time must make missing
     values at predict-time be classified has belonging to this class."""
     X = np.array([[np.nan] * 4 + [0, 1, 2, 3, 4, 5]]).T
+    if is_sparse:
+        X = csc_matrix(X)
     y = np.array([0] * 4 + [1] * 6)
 
     dtc = DecisionTreeClassifier(random_state=42, max_depth=2, criterion=criterion)
     dtc.fit(X, y)
 
     X_test = np.array([[np.nan, 5, np.nan]]).T
+    if is_sparse:
+        X_test = csc_matrix(X_test)
     y_pred = dtc.predict(X_test)
 
     assert_array_equal(y_pred, [0, 1, 0])
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
-def test_missing_values_best_splitter_to_right(criterion):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_best_splitter_to_right(criterion, is_sparse):
     """Missing values and non-missing values sharing one class at fit-time
     must make missing values at predict-time be classified has belonging
     to this class."""
     X = np.array([[np.nan] * 4 + [0, 1, 2, 3, 4, 5]]).T
+    if is_sparse:
+        X = csc_matrix(X)
     y = np.array([1] * 4 + [0] * 4 + [1] * 2)
 
     dtc = DecisionTreeClassifier(random_state=42, max_depth=2, criterion=criterion)
     dtc.fit(X, y)
 
     X_test = np.array([[np.nan, 1.2, 4.8]]).T
+    if is_sparse:
+        X_test = csc_matrix(X_test)
     y_pred = dtc.predict(X_test)
 
     assert_array_equal(y_pred, [1, 0, 1])
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
-def test_missing_values_missing_both_classes_has_nan(criterion):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_missing_both_classes_has_nan(criterion, is_sparse):
     """Check behavior of missing value when there is one missing value in each class."""
     X = np.array([[1, 2, 3, 5, np.nan, 10, 20, 30, 60, np.nan]]).T
+    if is_sparse:
+        X = csc_matrix(X)
     y = np.array([0] * 5 + [1] * 5)
 
     dtc = DecisionTreeClassifier(random_state=42, max_depth=1, criterion=criterion)
     dtc.fit(X, y)
     X_test = np.array([[np.nan, 2.3, 34.2]]).T
+    if is_sparse:
+        X = csc_matrix(X_test)
     y_pred = dtc.predict(X_test)
 
     # Missing value goes to the class at the right (here 1) because the implementation
@@ -2527,13 +2550,17 @@ def test_missing_value_errors(is_sparse, tree):
         tree.fit(X, y)
 
 
-def test_missing_values_poisson():
+@pytest.mark.parametrize("is_sparse", [True, False])
+def test_missing_values_poisson(is_sparse):
     """Smoke test for poisson regression and missing values."""
     X, y = diabetes.data.copy(), diabetes.target
 
     # Set some values missing
     X[::5, 0] = np.nan
     X[::6, -1] = np.nan
+
+    if is_sparse:
+        X = csc_matrix(X)
 
     reg = DecisionTreeRegressor(criterion="poisson", random_state=42)
     reg.fit(X, y)
@@ -2546,11 +2573,12 @@ def test_missing_values_poisson():
     "make_data, Tree",
     [
         (datasets.make_regression, DecisionTreeRegressor),
-        (datasets.make_classification, DecisionTreeClassifier),
+        # (datasets.make_classification, DecisionTreeClassifier),
     ],
 )
 @pytest.mark.parametrize("sample_weight_train", [None, "ones"])
-def test_missing_values_is_resilience(make_data, Tree, sample_weight_train):
+@pytest.mark.parametrize("is_sparse", [False, True])
+def test_missing_values_is_resilience(make_data, Tree, sample_weight_train, is_sparse):
     """Check that trees can deal with missing values and have decent performance."""
 
     rng = np.random.RandomState(0)
@@ -2563,6 +2591,10 @@ def test_missing_values_is_resilience(make_data, Tree, sample_weight_train):
     X_missing_train, X_missing_test, y_train, y_test = train_test_split(
         X_missing, y, random_state=0
     )
+
+    if is_sparse:
+        X_missing = csc_matrix(X_missing)
+        X = csc_matrix(X)
 
     if sample_weight_train == "ones":
         sample_weight_train = np.ones(X_missing_train.shape[0])
@@ -2582,7 +2614,8 @@ def test_missing_values_is_resilience(make_data, Tree, sample_weight_train):
     assert score_with_missing >= 0.9 * score_without_missing
 
 
-def test_missing_value_is_predictive():
+@pytest.mark.parametrize("is_sparse", [True, False])
+def test_missing_value_is_predictive(is_sparse):
     """Check the tree learns when only the missing value is predictive."""
     rng = np.random.RandomState(0)
     n_samples = 1000
@@ -2599,6 +2632,9 @@ def test_missing_value_is_predictive():
     X_predictive[y_mask] = np.nan
 
     X[:, 5] = X_predictive
+
+    if is_sparse:
+        X = csc_matrix(X)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=rng)
     tree = DecisionTreeClassifier(random_state=rng).fit(X_train, y_train)

@@ -13,6 +13,7 @@ from libc.math cimport log as ln
 from libc.math cimport isnan
 
 import numpy as np
+from scipy.sparse import isspmatrix_csc
 cimport numpy as cnp
 cnp.import_array()
 
@@ -449,8 +450,17 @@ cdef class WeightedMedianCalculator:
             return self.samples.get_value_from_index(self.k-1)
 
 
-def _any_isnan_axis0(const DTYPE_t[:, :] X):
+def _any_isnan_axis0(object X):
     """Same as np.any(np.isnan(X), axis=0)"""
+    if isinstance(X, np.ndarray):
+        return _any_isnan_axis0_numpy(X)
+    elif isspmatrix_csc(X):
+        return _any_isnan_axis0_csc(X.data, X.indices, X.indptr)
+    else:
+        raise TypeError("Only ndarray and csc matrices are supported")
+
+
+def _any_isnan_axis0_numpy(const DTYPE_t[:, :] X):
     cdef:
         int i, j
         int n_samples = X.shape[0]
@@ -465,4 +475,26 @@ def _any_isnan_axis0(const DTYPE_t[:, :] X):
                 if isnan(X[i, j]):
                     isnan_out[j] = True
                     break
+    return np.asarray(isnan_out)
+
+
+def _any_isnan_axis0_csc(
+    DTYPE_t[::1] data,
+    const int[::1] indices,
+    const int[::1] indptr,
+):
+    cdef:
+        int i, j
+        int n_features = indptr.shape[0] - 1
+        unsigned char[::1] isnan_out = np.zeros(n_features, dtype=np.bool_)
+
+    with nogil:
+        for j in range(n_features):
+            for i in range(indptr[j], indptr[j + 1]):
+                if isnan_out[j]:
+                    continue
+                if isnan(data[i]):
+                    isnan_out[j] = True
+                    break
+
     return np.asarray(isnan_out)
