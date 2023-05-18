@@ -1288,6 +1288,7 @@ cdef class SparsePartitioner:
                                       feature_values,
                                       &self.end_negative, &self.start_positive,
                                       sorted_samples, &self.is_samples_sorted)
+
         # Using an index to samples  technique to extract non zero values
         # index_to_samples is a mapping from X_indices to samples
         else:
