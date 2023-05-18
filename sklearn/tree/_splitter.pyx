@@ -1249,7 +1249,7 @@ cdef class SparsePartitioner:
         cdef DTYPE_t[::1] feature_values = self.feature_values
         cdef SIZE_t indptr_start = self.X_indptr[feature],
         cdef SIZE_t indptr_end = self.X_indptr[feature + 1]
-        cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
+        # cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t[::1] sorted_samples = self.sorted_samples
         cdef const INT32_t[::1] X_indices = self.X_indices
@@ -1272,15 +1272,16 @@ cdef class SparsePartitioner:
                     sparse_swap(index_to_samples, samples, index, current_end)
 
         cdef SIZE_t end_non_missing = self.end - self.n_missing
-        cdef SIZE_t n_samples = end_non_missing - self.start
+        # cdef SIZE_t n_samples = end_non_missing - self.start
 
         # Use binary search if n_samples * log(n_indices) <
         # n_indices and index_to_samples approach otherwise.
         # O(n_samples * log(n_indices)) is the running time of binary
         # search and O(n_indices) is the running time of index_to_samples
         # approach.
-        if ((1 - self.is_samples_sorted) * n_samples * log(n_samples) +
-                n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
+        # if ((1 - self.is_samples_sorted) * n_samples * log(n_samples) +
+        #         n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
+        if True:
             extract_nnz_binary_search(X_indices, X_data,
                                       indptr_start, indptr_end,
                                       samples, self.start, end_non_missing,

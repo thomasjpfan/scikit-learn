@@ -2643,34 +2643,35 @@ def test_missing_value_is_predictive(is_sparse):
     assert tree.score(X_test, y_test) >= 0.85
 
 
-# @pytest.mark.parametrize(
-#     "make_data, Tree",
-#     [
-#         (datasets.make_regression, DecisionTreeRegressor),
-#         (datasets.make_classification, DecisionTreeClassifier),
-#     ],
-# )
+@pytest.mark.parametrize(
+    "make_data, Tree",
+    [
+        (datasets.make_regression, DecisionTreeRegressor),
+        # (datasets.make_classification, DecisionTreeClassifier),
+    ],
+)
 # @pytest.mark.parametrize("is_sparse", [True, False])
-# def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
-#     """Check sample weight is correctly handled with missing values."""
-#     rng = np.random.RandomState(0)
-#     n_samples, n_features = 1000, 10
-#     X, y = make_data(n_samples=n_samples, n_features=n_features, random_state=rng)
+@pytest.mark.parametrize("is_sparse", [True])
+def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
+    """Check sample weight is correctly handled with missing values."""
+    rng = np.random.RandomState(0)
+    n_samples, n_features = 1000, 10
+    X, y = make_data(n_samples=n_samples, n_features=n_features, random_state=rng)
 
-#     # Create dataset with missing values
-#     X[rng.choice([False, True], size=X.shape, p=[0.9, 0.1])] = np.nan
+    # Create dataset with missing values
+    X[rng.choice([False, True], size=X.shape, p=[0.9, 0.1])] = np.nan
 
-#     if is_sparse:
-#         X = csr_matrix(X)
+    if is_sparse:
+        X = csr_matrix(X)
 
-#     # Zero sample weight is the same as removing the sample
-#     sample_weight = np.ones(X.shape[0])
-#     sample_weight[::2] = 0.0
+    # Zero sample weight is the same as removing the sample
+    sample_weight = np.ones(X.shape[0])
+    sample_weight[::2] = 0.0
 
-#     tree_with_sw = Tree(random_state=0)
-#     tree_with_sw.fit(X, y, sample_weight=sample_weight)
+    tree_with_sw = Tree(random_state=0)
+    tree_with_sw.fit(X, y, sample_weight=sample_weight)
 
-#     tree_samples_removed = Tree(random_state=0)
-#     tree_samples_removed.fit(X[1::2, :], y[1::2])
+    tree_samples_removed = Tree(random_state=0)
+    tree_samples_removed.fit(X[1::2, :], y[1::2])
 
-#     assert_allclose(tree_samples_removed.predict(X), tree_with_sw.predict(X))
+    assert_allclose(tree_samples_removed.predict(X), tree_with_sw.predict(X))
