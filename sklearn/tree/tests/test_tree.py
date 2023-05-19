@@ -2650,8 +2650,7 @@ def test_missing_value_is_predictive(is_sparse):
         # (datasets.make_classification, DecisionTreeClassifier),
     ],
 )
-# @pytest.mark.parametrize("is_sparse", [True, False])
-@pytest.mark.parametrize("is_sparse", [True])
+@pytest.mark.parametrize("is_sparse", [True, False])
 def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
     """Check sample weight is correctly handled with missing values."""
     rng = np.random.RandomState(0)
@@ -2662,7 +2661,7 @@ def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
     X[rng.choice([False, True], size=X.shape, p=[0.9, 0.1])] = np.nan
 
     if is_sparse:
-        X = csr_matrix(X)
+        X = csc_matrix(X)
 
     # Zero sample weight is the same as removing the sample
     sample_weight = np.ones(X.shape[0])
@@ -2675,3 +2674,30 @@ def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
     tree_samples_removed.fit(X[1::2, :], y[1::2])
 
     assert_allclose(tree_samples_removed.predict(X), tree_with_sw.predict(X))
+
+
+@pytest.mark.parametrize(
+    "make_data, Tree",
+    [
+        (datasets.make_regression, DecisionTreeRegressor),
+        # (datasets.make_classification, DecisionTreeClassifier),
+    ],
+)
+def test_dense_sparse_consistent_missing_values(make_data, Tree):
+    """Check dense and sparse data gives the same predictions with missing_values."""
+    rng = np.random.RandomState(0)
+    n_samples, n_features = 1000, 4
+    X, y = make_data(n_samples=n_samples, n_features=n_features, random_state=rng)
+
+    # Create dataset with missing values
+    X[rng.choice([False, True], size=X.shape, p=[0.9, 0.1])] = np.nan
+
+    X_sp = csc_matrix(X)
+
+    tree_dense = Tree(random_state=0, max_depth=2)
+    tree_dense.fit(X, y)
+
+    tree_sparse = Tree(random_state=0, max_depth=2)
+    tree_sparse.fit(X_sp, y)
+
+    assert_allclose(tree_dense.predict(X), tree_sparse.predict(X_sp))
