@@ -2446,7 +2446,9 @@ def test_missing_values_on_equal_nodes_no_missing(criterion, is_sparse):
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
-@pytest.mark.parametrize("is_sparse", [False, True])
+# @pytest.mark.parametrize("criterion", ["gini"])
+# @pytest.mark.parametrize("is_sparse", [True])
+@pytest.mark.parametrize("is_sparse", [True, False])
 def test_missing_values_best_splitter_three_classes(criterion, is_sparse):
     """Test when missing values are uniquely present in a class among 3 classes."""
     missing_values_class = 0
