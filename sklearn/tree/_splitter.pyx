@@ -1080,12 +1080,10 @@ cdef class SparsePartitioner:
             DTYPE_t[::1] feature_values = self.feature_values
             SIZE_t[::1] index_to_samples = self.index_to_samples
             SIZE_t[::1] samples = self.samples
+            SIZE_t start = self.start
 
         self.extract_nnz(current_feature)
-
-        cdef:
-            SIZE_t start = self.start
-            SIZE_t end_non_missing = self.end - self.n_missing
+        cdef SIZE_t end_non_missing = self.end - self.n_missing
 
         # Sort the positive and negative parts of `feature_values`
         sort(&feature_values[start], &samples[start], self.end_negative - start)
@@ -1249,12 +1247,13 @@ cdef class SparsePartitioner:
         cdef DTYPE_t[::1] feature_values = self.feature_values
         cdef SIZE_t indptr_start = self.X_indptr[feature],
         cdef SIZE_t indptr_end = self.X_indptr[feature + 1]
-        # cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
+        cdef SIZE_t n_indices = <SIZE_t>(indptr_end - indptr_start)
+        cdef SIZE_t n_samples = self.end - self.start
         cdef SIZE_t[::1] index_to_samples = self.index_to_samples
         cdef SIZE_t[::1] sorted_samples = self.sorted_samples
         cdef const INT32_t[::1] X_indices = self.X_indices
         cdef const DTYPE_t[::1] X_data = self.X_data
-        cdef SIZE_t k, current_end, index
+        cdef SIZE_t k
         cdef const unsigned char[::1] feature_has_missing = self.feature_has_missing
 
         self.n_missing = 0
@@ -1265,26 +1264,17 @@ cdef class SparsePartitioner:
                     isnan(X_data[k])
                 ):
                     self.n_missing += 1
-                    # swap feature_values and samples to the end
-                    current_end = self.end - self.n_missing
-                    feature_values[current_end] = X_data[k]
-                    index = index_to_samples[X_indices[k]]
-                    sparse_swap(index_to_samples, samples, index, current_end)
-
-        cdef SIZE_t end_non_missing = self.end - self.n_missing
-        # cdef SIZE_t n_samples = end_non_missing - self.start
 
         # Use binary search if n_samples * log(n_indices) <
         # n_indices and index_to_samples approach otherwise.
         # O(n_samples * log(n_indices)) is the running time of binary
         # search and O(n_indices) is the running time of index_to_samples
         # approach.
-        # if ((1 - self.is_samples_sorted) * n_samples * log(n_samples) +
-        #         n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
-        if True:
+        if ((1 - self.is_samples_sorted) * n_samples * log(n_samples) +
+                n_samples * log(n_indices) < EXTRACT_NNZ_SWITCH * n_indices):
             extract_nnz_binary_search(X_indices, X_data,
                                       indptr_start, indptr_end,
-                                      samples, self.start, end_non_missing,
+                                      samples, self.start, self.end, self.n_missing,
                                       index_to_samples,
                                       feature_values,
                                       &self.end_negative, &self.start_positive,
@@ -1295,7 +1285,7 @@ cdef class SparsePartitioner:
         else:
             extract_nnz_index_to_samples(X_indices, X_data,
                                          indptr_start, indptr_end,
-                                         samples, self.start, end_non_missing,
+                                         samples, self.start, self.end, self.n_missing,
                                          index_to_samples,
                                          feature_values,
                                          &self.end_negative, &self.start_positive)
@@ -1338,6 +1328,7 @@ cdef inline void extract_nnz_index_to_samples(const INT32_t[::1] X_indices,
                                               SIZE_t[::1] samples,
                                               SIZE_t start,
                                               SIZE_t end,
+                                              SIZE_t n_missing,
                                               SIZE_t[::1] index_to_samples,
                                               DTYPE_t[::1] feature_values,
                                               SIZE_t* end_negative,
@@ -1349,7 +1340,7 @@ cdef inline void extract_nnz_index_to_samples(const INT32_t[::1] X_indices,
     cdef INT32_t k
     cdef SIZE_t index
     cdef SIZE_t end_negative_ = start
-    cdef SIZE_t start_positive_ = end
+    cdef SIZE_t start_positive_ = end - n_missing
 
     for k in range(indptr_start, indptr_end):
         if start <= index_to_samples[X_indices[k]] < end:
@@ -1377,6 +1368,7 @@ cdef inline void extract_nnz_binary_search(const INT32_t[::1] X_indices,
                                            SIZE_t[::1] samples,
                                            SIZE_t start,
                                            SIZE_t end,
+                                           SIZE_t n_missing,
                                            SIZE_t[::1] index_to_samples,
                                            DTYPE_t[::1] feature_values,
                                            SIZE_t* end_negative,
@@ -1413,7 +1405,7 @@ cdef inline void extract_nnz_binary_search(const INT32_t[::1] X_indices,
     cdef SIZE_t index
     cdef SIZE_t k
     cdef SIZE_t end_negative_ = start
-    cdef SIZE_t start_positive_ = end
+    cdef SIZE_t start_positive_ = end - n_missing
 
     while (p < end and indptr_start < indptr_end):
         # Find index of sorted_samples[p] in X_indices

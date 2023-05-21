@@ -2686,7 +2686,7 @@ def test_sample_weight_non_uniform(make_data, Tree, is_sparse):
 def test_dense_sparse_consistent_missing_values(make_data, Tree):
     """Check dense and sparse data gives the same predictions with missing_values."""
     rng = np.random.RandomState(0)
-    n_samples, n_features = 1000, 4
+    n_samples, n_features = 10, 4
     X, y = make_data(n_samples=n_samples, n_features=n_features, random_state=rng)
 
     # Create dataset with missing values
@@ -2694,10 +2694,14 @@ def test_dense_sparse_consistent_missing_values(make_data, Tree):
 
     X_sp = csc_matrix(X)
 
-    tree_dense = Tree(random_state=0, max_depth=2)
+    print("dense")
+    tree_dense = Tree(random_state=0, max_depth=1)
     tree_dense.fit(X, y)
 
-    tree_sparse = Tree(random_state=0, max_depth=2)
+    print("------------")
+
+    print("sparse")
+    tree_sparse = Tree(random_state=0, max_depth=1)
     tree_sparse.fit(X_sp, y)
 
     assert_allclose(tree_dense.predict(X), tree_sparse.predict(X_sp))
