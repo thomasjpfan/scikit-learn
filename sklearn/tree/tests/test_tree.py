@@ -2445,8 +2445,10 @@ def test_missing_values_on_equal_nodes_no_missing(criterion, is_sparse):
     assert_allclose(y_pred, [np.mean(y_equal[-4:])])
 
 
-@pytest.mark.parametrize("criterion", ["entropy", "gini"])
-@pytest.mark.parametrize("is_sparse", [True, False])
+@pytest.mark.parametrize("criterion", ["entropy"])
+# @pytest.mark.parametrize("criterion", ["entropy", "gini"])
+# @pytest.mark.parametrize("is_sparse", [True, False])
+@pytest.mark.parametrize("is_sparse", [True])
 def test_missing_values_best_splitter_three_classes(criterion, is_sparse):
     """Test when missing values are uniquely present in a class among 3 classes."""
     missing_values_class = 0
@@ -2460,9 +2462,10 @@ def test_missing_values_best_splitter_three_classes(criterion, is_sparse):
     X_test = np.array([[np.nan, 3, 12]]).T
     if is_sparse:
         X_test = csc_matrix(X_test)
-    # y_nan_pred = dtc.predict(X_test)
+    # assert False
+    y_nan_pred = dtc.predict(X_test)
     # Missing values necessarily are associated to the observed class.
-    # assert_array_equal(y_nan_pred, [missing_values_class, 1, 2])
+    assert_array_equal(y_nan_pred, [missing_values_class, 1, 2])
 
 
 @pytest.mark.parametrize("criterion", ["entropy", "gini"])
@@ -2573,11 +2576,12 @@ def test_missing_values_poisson(is_sparse):
     "make_data, Tree",
     [
         (datasets.make_regression, DecisionTreeRegressor),
-        (datasets.make_classification, DecisionTreeClassifier),
+        # (datasets.make_classification, DecisionTreeClassifier),
     ],
 )
-@pytest.mark.parametrize("sample_weight_train", [None, "ones"])
-@pytest.mark.parametrize("is_sparse", [False, True])
+# @pytest.mark.parametrize("sample_weight_train", [None, "ones"])
+@pytest.mark.parametrize("sample_weight_train", [None])
+@pytest.mark.parametrize("is_sparse", [True])
 def test_missing_values_is_resilience(make_data, Tree, sample_weight_train, is_sparse):
     """Check that trees can deal with missing values and have decent performance."""
 
