@@ -1197,15 +1197,13 @@ cdef class SparsePartitioner:
             SIZE_t[::1] index_to_samples = self.index_to_samples
             DTYPE_t[::1] feature_values = self.feature_values
             SIZE_t[::1] samples = self.samples
-            SIZE_t start = self.start
-            SIZE_t end_non_missing = self.end - self.n_missing
 
         if threshold < 0.:
-            p = start
+            p = self.start
             partition_end = self.end_negative
         elif threshold > 0.:
             p = self.start_positive
-            partition_end = end_non_missing
+            partition_end = self.end - self.n_missing
         else:
             # Data are already split
             return zero_pos
@@ -1268,9 +1266,6 @@ cdef class SparsePartitioner:
                     feature_values[end_non_missing] = X_data[k]
                     index = index_to_samples[X_indices[k]]
                     sparse_swap(index_to_samples, samples, index, end_non_missing)
-
-        # with gil:
-        #     print("n_missing", self.n_missing)
 
         # Use binary search if n_samples * log(n_indices) <
         # n_indices and index_to_samples approach otherwise.
@@ -1350,45 +1345,19 @@ cdef inline void extract_nnz_index_to_samples(const INT32_t[::1] X_indices,
     cdef SIZE_t end_negative_ = start
     cdef SIZE_t start_positive_ = end - n_missing
 
-    # with gil:
-    #     print("Starting")
-    #     print("   start_positive_", start_positive_)
-    #     print("   end_negative_", end_negative_)
-    #     print("   start", start)
-    #     print("   end", end)
-    #     print("   n_missing", n_missing)
-
-    # with gil:
-    #     for k in range(indptr_start, indptr_end):
-    #         if (
-    #             start <= index_to_samples[X_indices[k]] < end
-    #         ):
-    #             print(X_data[k], end=", ")
-    #     print()
-
     for k in range(indptr_start, indptr_end):
         if start <= index_to_samples[X_indices[k]] < end:
             if X_data[k] > 0:
                 start_positive_ -= 1
-                # with gil:
-                #     print("pos", X_data[k])
-                #     print("start_positive_", start_positive_)
                 feature_values[start_positive_] = X_data[k]
                 index = index_to_samples[X_indices[k]]
-                # with gil:
-                #     print("index", index)
                 sparse_swap(index_to_samples, samples, index, start_positive_)
 
             elif X_data[k] < 0:
-                # with gil:
-                #     print("neg", X_data[k])
-                #     print("end_negative_", end_negative_)
                 feature_values[end_negative_] = X_data[k]
                 index = index_to_samples[X_indices[k]]
-                end_negative_ += 1
-                # with gil:
-                #     print("index", index)
                 sparse_swap(index_to_samples, samples, index, end_negative_)
+                end_negative_ += 1
 
     # Returned values
     end_negative[0] = end_negative_

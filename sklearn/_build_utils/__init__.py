@@ -81,7 +81,6 @@ def cythonize_extensions(extension):
         extension,
         nthreads=n_jobs,
         compiler_directives=compiler_directives,
-        gdb_debug=True,
     )
 
 
