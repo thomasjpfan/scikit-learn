@@ -1,7 +1,7 @@
 name: CIRun GPU
 
 on:
-  main:
+  push:
     branches:
       - main
   pull_request:
