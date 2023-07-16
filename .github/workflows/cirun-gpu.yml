@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - cirun_gpu
   pull_request:
     branches:
       - main
