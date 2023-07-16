@@ -1,0 +1,19 @@
+name: CIRun GPU
+
+on:
+  main:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+      - "[0-9]+.[0-9]+.X"
+
+jobs:
+  build:
+    runs-on: "cirun-aws-runner-${{ github.run_id }}"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run a one-line script
+        run: echo Hello, world!
