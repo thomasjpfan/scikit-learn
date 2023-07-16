@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: "cirun-aws-runner-${{ github.run_id }}"
+    runs-on: "cirun-aws-runner--${{ github.run_id }}"
 
     steps:
       - uses: actions/checkout@v3
