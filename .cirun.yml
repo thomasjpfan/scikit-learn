@@ -1,8 +1,8 @@
-runners:
-  - name: "aws-runner"
-    cloud: "aws"
-    instance_type: "t2.nano"
-    machine_image: "ami-06fd8a495a537da8b"
-    preemptible: false
-    labels:
-      - "cirun-aws-runner"
+# runners:
+#   - name: "aws-runner"
+#     cloud: "aws"
+#     instance_type: "t2.nano"
+#     machine_image: "ami-06fd8a495a537da8b"
+#     preemptible: false
+#     labels:
+#       - "cirun-aws-runner"

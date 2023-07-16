@@ -12,9 +12,20 @@ on:
 
 jobs:
   build:
-    runs-on: "cirun-aws-runner--${{ github.run_id }}"
-
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.14.1
+        env:
+          CIBW_BUILD: cp311-manylinux_x86_64
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+    # runs-on: "cirun-aws-runner--${{ github.run_id }}"
+
+    # steps:
+    #   - uses: actions/checkout@v3
+    #   - name: Run a one-line script
+    #     run: echo Hello, world!
