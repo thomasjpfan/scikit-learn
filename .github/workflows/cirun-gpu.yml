@@ -28,9 +28,12 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-    # runs-on: "cirun-aws-runner--${{ github.run_id }}"
 
-    # steps:
-    #   - uses: actions/checkout@v3
-    #   - name: Run a one-line script
-    #     run: echo Hello, world!
+    test:
+      runs-on: "cirun-aws-runner--${{ github.run_id }}"
+      needs: [build]
+      steps:
+        - name: Download wheel
+        - name: Install PyTorch, CuPy
+        - name: Install dependencies and scikit-learn
+        - name: Run tests
