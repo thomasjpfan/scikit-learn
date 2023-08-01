@@ -90,20 +90,6 @@ jobs:
           #   platform_id: manylinux_x86_64
           #   manylinux_image: manylinux2014
 
-          # Linux 64 bit manylinux_aarch64
-          # - os: ubuntu-latest
-          #   python: 38
-          #   platform_id: manylinux_aarch64
-          #   manylinux_image: manylinux2014
-          # - os: ubuntu-latest
-          #   python: 39
-          #   platform_id: manylinux_aarch64
-          #   manylinux_image: manylinux2014
-          - os: ubuntu-latest
-            python: 310
-            platform_id: manylinux_aarch64
-            manylinux_image: manylinux2014
-
           # MacOS x86_64
           # - os: macos-latest
           #   python: 38
@@ -118,16 +104,16 @@ jobs:
           #   python: 311
           #   platform_id: macosx_x86_64
 
-          # # MacOS arm64
-          # - os: macos-latest
-          #   python: 38
-          #   platform_id: macosx_arm64
-          # - os: macos-latest
-          #   python: 39
-          #   platform_id: macosx_arm64
-          # - os: macos-latest
-          #   python: 310
-          #   platform_id: macosx_arm64
+          # MacOS arm64
+          - os: macos-latest
+            python: 38
+            platform_id: macosx_arm64
+          - os: macos-latest
+            python: 39
+            platform_id: macosx_arm64
+          - os: macos-latest
+            python: 310
+            platform_id: macosx_arm64
 
     steps:
       - name: Checkout scikit-learn
@@ -137,12 +123,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.9" # update once build dependencies are available
-
-      - name: Set up QEMU
-        if: matrix.platform_id == 'manylinux_aarch64'
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: arm64
 
       - name: Build and test wheels
         env:
@@ -154,7 +134,7 @@ jobs:
           CIBW_ARCHS: all
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_TEST_SKIP: "*-macosx_arm64 *_aarch64"
+          CIBW_TEST_SKIP: "*-macosx_arm64"
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: bash build_tools/github/repair_windows_wheels.sh {wheel} {dest_dir}
           CIBW_BEFORE_TEST_WINDOWS: bash build_tools/github/build_minimal_windows_image.sh ${{ matrix.python }}
           CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
