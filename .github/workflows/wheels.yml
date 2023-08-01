@@ -89,6 +89,20 @@ jobs:
             platform_id: manylinux_x86_64
             manylinux_image: manylinux2014
 
+          # Linux 64 bit manylinux_aarch64
+          - os: ubuntu-latest
+            python: 38
+            platform_id: manylinux_aarch64
+            manylinux_image: manylinux2014
+          - os: ubuntu-latest
+            python: 39
+            platform_id: manylinux_aarch64
+            manylinux_image: manylinux2014
+          - os: ubuntu-latest
+            python: 310
+            platform_id: manylinux_aarch64
+            manylinux_image: manylinux2014
+
           # MacOS x86_64
           - os: macos-latest
             python: 38
@@ -103,6 +117,17 @@ jobs:
             python: 311
             platform_id: macosx_x86_64
 
+          # MacOS arm64
+          - os: macos-latest
+            python: 38
+            platform_id: macosx_arm64
+          - os: macos-latest
+            python: 39
+            platform_id: macosx_arm64
+          - os: macos-latest
+            python: 310
+            platform_id: macosx_arm64
+
     steps:
       - name: Checkout scikit-learn
         uses: actions/checkout@v3
@@ -110,14 +135,14 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # update once build dependencies are available
+          python-version: "3.9" # update once build dependencies are available
 
       - name: Build and test wheels
         env:
           CONFTEST_PATH: ${{ github.workspace }}/conftest.py
           CONFTEST_NAME: conftest.py
           CIBW_ENVIRONMENT: SKLEARN_SKIP_NETWORK_TESTS=1
-                            SKLEARN_BUILD_PARALLEL=3
+            SKLEARN_BUILD_PARALLEL=3
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_ARCHS: all
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
@@ -161,7 +186,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'  # update once build dependencies are available
+          python-version: "3.9" # update once build dependencies are available
 
       - name: Build source distribution
         run: bash build_tools/github/build_source.sh
