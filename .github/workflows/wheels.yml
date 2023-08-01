@@ -125,9 +125,9 @@ jobs:
           # - os: macos-latest
           #   python: 39
           #   platform_id: macosx_arm64
-          - os: macos-latest
-            python: 310
-            platform_id: macosx_arm64
+          # - os: macos-latest
+          #   python: 310
+          #   platform_id: macosx_arm64
 
     steps:
       - name: Checkout scikit-learn
@@ -137,6 +137,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.9" # update once build dependencies are available
+
+      - name: Set up QEMU
+        if: matrix.platform_id == 'manylinux_aarch64'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
 
       - name: Build and test wheels
         env:
