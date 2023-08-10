@@ -104,15 +104,15 @@ jobs:
             platform_id: macosx_x86_64
 
           # MacOS arm64
-          # The latest Python version is built and tested on CirrusCI
-          - os: macos-latest
-            python: 38
-            platform_id: macosx_arm64
+          # The oldest Python version is built and tested on CirrusCI
           - os: macos-latest
             python: 39
             platform_id: macosx_arm64
           - os: macos-latest
             python: 310
+            platform_id: macosx_arm64
+          - os: macos-latest
+            python: 311
             platform_id: macosx_arm64
 
     steps:
