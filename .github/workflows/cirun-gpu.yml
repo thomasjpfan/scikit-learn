@@ -44,9 +44,14 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: wheel
+          path: ~/wheel
 
       - name: Check wheel
         run: ls
+
+      - name: Check downloaded files
+        run: ls -R
+        working-directory: ~/wheel
 
       # - name: Install PyTorch, CuPy
       # - name: Install dependencies and scikit-learn
