@@ -30,12 +30,12 @@ jobs:
           name: wheel
           path: ./wheelhouse/*.whl
 
-    test:
-      runs-on: "cirun-aws-runner--${{ github.run_id }}"
-      needs: [build]
-      steps:
-        - name: Download wheel
-          uses: actions/download-artifact@v3
-        # - name: Install PyTorch, CuPy
-        # - name: Install dependencies and scikit-learn
-        # - name: Run tests
+  test:
+    runs-on: "cirun-aws-runner--${{ github.run_id }}"
+    needs: [build]
+    steps:
+      - name: Download wheel
+        uses: actions/download-artifact@v3
+      # - name: Install PyTorch, CuPy
+      # - name: Install dependencies and scikit-learn
+      # - name: Run tests
