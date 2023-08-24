@@ -27,6 +27,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
+          name: wheel
           path: ./wheelhouse/*.whl
 
     test:
@@ -34,6 +35,7 @@ jobs:
       needs: [build]
       steps:
         - name: Download wheel
-        - name: Install PyTorch, CuPy
-        - name: Install dependencies and scikit-learn
-        - name: Run tests
+          uses: actions/download-artifact@v3
+        # - name: Install PyTorch, CuPy
+        # - name: Install dependencies and scikit-learn
+        # - name: Run tests
