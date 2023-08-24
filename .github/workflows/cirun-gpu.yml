@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: wheel
+          name: wheelhouse
           path: ./wheelhouse/*.txt
 
   test:
@@ -43,15 +43,11 @@ jobs:
       - name: Download wheel
         uses: actions/download-artifact@v3
         with:
-          name: wheel
-          path: wheel
+          name: wheelhouse
+          path: wheelhouse
 
       - name: Check cwd
-        run: echo $PWD
-
-      - name: Check downloaded files
         run: ls -R
-        working-directory: wheel
 
       # - name: Install PyTorch, CuPy
       # - name: Install dependencies and scikit-learn
