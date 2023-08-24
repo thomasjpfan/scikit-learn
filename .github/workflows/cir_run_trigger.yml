@@ -1,0 +1,21 @@
+name: CIRun Trigger
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.label.name == 'gpu' }}
+    steps:
+      - name: Remove label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.removeLabels({
+              issue_number: context.issue.number,
+              owner: context.issue.owner,
+              repo: context.repo.repo,
+              labels: ['gpu']
+            })
