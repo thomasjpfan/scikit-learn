@@ -39,13 +39,14 @@ jobs:
     runs-on: "cirun-aws-runner--${{ github.run_id }}"
     needs: [build]
     steps:
+      - uses: actions/checkout@v3
       - name: Download wheel
         uses: actions/download-artifact@v3
         with:
           name: wheel
 
       - name: Check wheel
-        run: ls wheel
+        run: ls
 
       # - name: Install PyTorch, CuPy
       # - name: Install dependencies and scikit-learn
