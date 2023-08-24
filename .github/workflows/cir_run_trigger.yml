@@ -13,7 +13,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.removeLabels({
+            github.rest.issues.removeLabel({
               issue_number: context.issue.number,
               owner: context.issue.owner,
               repo: context.repo.repo,
