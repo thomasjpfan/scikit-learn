@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Download wheel
         uses: actions/download-artifact@v3
+        with:
+          name: wheel
       # - name: Install PyTorch, CuPy
       # - name: Install dependencies and scikit-learn
       # - name: Run tests
