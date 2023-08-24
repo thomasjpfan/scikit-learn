@@ -19,16 +19,21 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.14.1
-        env:
-          CIBW_BUILD: cp311-manylinux_x86_64
-          CIBW_BUILD_VERBOSITY: 1
+      # - name: Build wheels
+      # uses: pypa/cibuildwheel@v2.14.1
+      # env:
+      #   CIBW_BUILD: cp311-manylinux_x86_64
+      #   CIBW_BUILD_VERBOSITY: 1
+
+      - name: Create file
+        run: |
+          mkdir wheelhouse
+          echo "This is cool" > wheelhouse/hello.txt
 
       - uses: actions/upload-artifact@v3
         with:
           name: wheel
-          path: ./wheelhouse/*.whl
+          path: ./wheelhouse/*.txt
 
   test:
     runs-on: "cirun-aws-runner--${{ github.run_id }}"
