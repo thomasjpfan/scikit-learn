@@ -10,7 +10,7 @@ on:
 jobs:
   # build:
   #   runs-on: ubuntu-22.04
-  #   if: ${{ github.event.label.name == 'gpu' }}
+  #   if: ${{ github.event_name == 'pull_request' && github.event.label.name == 'gpu' }}
   #   steps:
   #     - name: Remove label
   #       uses: actions/github-script@v6
