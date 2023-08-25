@@ -46,7 +46,8 @@ jobs:
       - name: Which Python
         run: |
           which python
-      - name: |
+      - name: Which conda
+        run: |
           which conda
       - name: Install dependencies
         run: |
