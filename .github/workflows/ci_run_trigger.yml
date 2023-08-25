@@ -3,6 +3,9 @@ name: CIRun Trigger
 on:
   pull_request_target:
     types: [labeled]
+  push:
+    branches:
+      - "main"
 
 jobs:
   build:
@@ -40,15 +43,7 @@ jobs:
       run:
         shell: bash -el {0}
     steps:
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          activate-environment: pytorch
-      - name: Which Python
-        run: |
-          which python
-      - name: Which conda
-        run: |
-          which conda
       - name: Install dependencies
         run: |
+          conda activate pytorch
           pip install array_api_compat pytest pytest-xdist cupy-cuda12x
