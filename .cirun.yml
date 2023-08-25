@@ -3,7 +3,7 @@ runners:
     cloud: "aws"
     instance_type: "t2.nano"
     region: "us-east-1"
-    machine_image: "ami-06fd8a495a537da8b"
+    machine_image: "ami-08a52ddb321b32a8c"
     preemptible: false
     labels:
       - "cirun-aws-runner"
