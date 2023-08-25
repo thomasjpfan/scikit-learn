@@ -1,24 +1,26 @@
 name: CIRun Trigger
 
 on:
-  pull_request_target:
-    types: [labeled]
+  # pull_request_target:
+  #   types: [labeled]
+  push:
+    - main
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    if: ${{ github.event.label.name == 'gpu' }}
+    # if: ${{ github.event.label.name == 'gpu' }}
     steps:
-      - name: Remove label
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.removeLabel({
-              owner: context.issue.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              name: 'gpu'
-            })
+      #   - name: Remove label
+      #     uses: actions/github-script@v6
+      #     with:
+      #       script: |
+      #         github.rest.issues.removeLabel({
+      #           owner: context.issue.owner,
+      #           repo: context.repo.repo,
+      #           issue_number: context.issue.number,
+      #           name: 'gpu'
+      #         })
       # - uses: actions/checkout@v3
       # - name: Build wheel
       #   uses: pypa/cibuildwheel@v2.14.1
