@@ -40,7 +40,10 @@ jobs:
     # if: ${{ github.event.label.name == 'gpu' }}
     # needs: [build]
     steps:
-      - name: Install dependencies
+      - name: Check
         run: |
-          source activate pytorch
-          pip install array_api_compat pytest pytest-xdist cupy-cuda12x
+          echo "Wow"
+      # - name: Install dependencies
+      #   run: |
+      #     source activate pytorch
+      #     pip install array_api_compat pytest pytest-xdist cupy-cuda12x
