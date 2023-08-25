@@ -3,9 +3,6 @@ name: CIRun Trigger
 on:
   pull_request_target:
     types: [labeled]
-  # push:
-  #   branches:
-  #     - main
 
 jobs:
   build:
@@ -22,14 +19,6 @@ jobs:
               issue_number: context.issue.number,
               name: 'gpu'
             })
-      # - uses: actions/checkout@v3
-      # - name: Build wheel
-      #   uses: pypa/cibuildwheel@v2.14.1
-      #   env:
-      #     CIBW_BUILD: cp311-manylinux_x86_64
-      #     CIBW_BUILD_VERBOSITY: 1
-      #     CIBW_ENVIRONMENT: SKLEARN_BUILD_PARALLEL=3
-
       - name: Create file
         run: |
           mkdir wheelhouse
