@@ -1,0 +1,53 @@
+name: CIRun Trigger
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: ${{ github.event.label.name == 'gpu' }}
+  steps:
+    - name: Remove label
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.removeLabel({
+            owner: context.issue.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            name: 'gpu'
+          })
+    # - uses: actions/checkout@v3
+    # - name: Build wheel
+    #   uses: pypa/cibuildwheel@v2.14.1
+    #   env:
+    #     CIBW_BUILD: cp311-manylinux_x86_64
+    #     CIBW_BUILD_VERBOSITY: 1
+    #     CIBW_ENVIRONMENT: SKLEARN_BUILD_PARALLEL=3
+
+    # - uses: actions/upload-artifact@v3
+    #   with:
+    #     name: wheelhouse
+    #     path: ./wheelhouse/*.whl
+
+  test:
+    runs-on: "cirun-aws-runner--${{ github.run_id }}"
+    if: ${{ github.event.label.name == 'gpu' }}
+    needs: [build]
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: pytorch
+      - name: Which Python
+        run: |
+          which python
+      - name: |
+          which conda
+      - name: Install dependencies
+        run: |
+          pip install array_api_compat pytest pytest-xdist cupy-cuda12x
