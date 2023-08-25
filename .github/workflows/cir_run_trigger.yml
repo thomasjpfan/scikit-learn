@@ -19,7 +19,7 @@ jobs:
               issue_number: context.issue.number,
               name: 'gpu'
             })
-      - uses: actions/checkout@v3
+      # - uses: actions/checkout@v3
       # - name: Build wheel
       #   uses: pypa/cibuildwheel@v2.14.1
       #   env:
