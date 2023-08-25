@@ -42,5 +42,5 @@ jobs:
     steps:
       - name: Install dependencies
         run: |
-          conda activate pytorch
+          source activate pytorch
           pip install array_api_compat pytest pytest-xdist cupy-cuda12x
