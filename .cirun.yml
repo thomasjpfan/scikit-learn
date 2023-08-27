@@ -5,9 +5,9 @@ runners:
     # Cloud Provider: GCP
     cloud: "gcp"
     # Cheapest GPU on GCP
-    # gpu: "nvidia-tesla-t4"
+    gpu: "nvidia-tesla-t4"
     # Cheapest VM on GCP, with GPU attachable
-    instance_type: "e2-micro"
+    instance_type:
     # Ubuntu-20.4, can be seen from "gcloud compute images list"
     machine_image: "ubuntu-2204-jammy-v20230727"
     preemptible: false

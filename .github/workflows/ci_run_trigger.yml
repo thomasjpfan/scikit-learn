@@ -43,6 +43,10 @@ jobs:
       - name: Check
         run: |
           echo "Wow"
+      - name: Check nvidia
+        run: |
+          nvidia-smi
+
       # - name: Install dependencies
       #   run: |
       #     source activate pytorch
