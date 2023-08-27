@@ -9,9 +9,9 @@ runners:
     # Cheapest VM on GCP, with GPU attachable
     instance_type: "n1-standard-1"
     region: "us-central1-b"
-    machine_image: "scikit-learn-custom-gpu:scikit-learn-custom-gpu"
+    machine_image: "scikit-learn-gpu:scikit-learn-custom-gpu"
     preemptible: false
-    # Add this label in the "runs-on" param in .github/workflows/<workflow-name>.yml
+    # Add this label in the "runs-on" param in .github/workflows/ci_run_trigger.yml
     # So that this runner is created for running the workflow
     labels:
       - "cirun-gpu-runner"
