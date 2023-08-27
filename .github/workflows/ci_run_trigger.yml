@@ -36,7 +36,7 @@ jobs:
   #     path: ./wheelhouse/*.whl
 
   test:
-    runs-on: "cirun-aws-runner--${{ github.run_id }}"
+    runs-on: "cirun-gpu-runner--${{ github.run_id }}"
     # if: ${{ github.event.label.name == 'gpu' }}
     # needs: [build]
     steps:
