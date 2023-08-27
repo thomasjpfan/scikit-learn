@@ -9,8 +9,7 @@ runners:
     # Cheapest VM on GCP, with GPU attachable
     instance_type: "n1-standard-1"
     region: "us-central1-b"
-    # Ubuntu-20.4, can be seen from "gcloud compute images list"
-    machine_image: "pytorch-2-0-gpu-v20230807-ubuntu-2004-py310"
+    machine_image: "scikit-learn-custom-gpu:scikit-learn-custom-gpu"
     preemptible: false
     # Add this label in the "runs-on" param in .github/workflows/<workflow-name>.yml
     # So that this runner is created for running the workflow
