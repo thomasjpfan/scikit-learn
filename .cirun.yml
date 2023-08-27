@@ -8,6 +8,7 @@ runners:
     gpu: "nvidia-tesla-t4"
     # Cheapest VM on GCP, with GPU attachable
     instance_type: "n1-standard-1"
+    region: "us-central1-b"
     # Ubuntu-20.4, can be seen from "gcloud compute images list"
     machine_image: "ubuntu-2004-focal-v20221018"
     preemptible: false
