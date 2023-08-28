@@ -50,12 +50,14 @@ jobs:
       - name: Install dependencies
         run: |
           conda activate base
-          which pytest
+          python -m pip install array_api_compat
 
-      # - name: Install scikit-learn nightly
-      #   run: |
-      #     python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
+      - name: Install scikit-learn nightly
+        run: |
+          conda activate base
+          python -m pip uninstall scikit-learn
+          python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 
-      # - name: Run tests
-      #   run: |
-      #     python -m pytest --pyargs sklearn -k array_api -vvv
+      - name: Run tests
+        run: |
+          python -m pytest --pyargs sklearn -k array_api -vvv
