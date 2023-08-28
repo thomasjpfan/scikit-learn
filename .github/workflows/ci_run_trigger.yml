@@ -37,6 +37,9 @@ jobs:
 
   test:
     runs-on: "cirun-gpu-runner--${{ github.run_id }}"
+    defaults:
+      run:
+        shell: bash -el {0}
     # if: ${{ github.event.label.name == 'gpu' }}
     # needs: [build]
     steps:
@@ -46,8 +49,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          source activate base
-          python -m pip install array_api_compat pytest
+          conda activate base
+          which pytest
 
       # - name: Install scikit-learn nightly
       #   run: |

@@ -8,6 +8,7 @@ runners:
     gpu: "nvidia-tesla-t4"
     # Cheapest VM on GCP, with GPU attachable
     instance_type: "n1-standard-1"
+    region: "us-east4-c"
     machine_image: "third-campus-393023:scikit-learn-custom-gpu"
     preemptible: false
     # Add this label in the "runs-on" param in .github/workflows/ci_run_trigger.yml
