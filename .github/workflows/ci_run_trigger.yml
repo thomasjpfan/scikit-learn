@@ -60,4 +60,4 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m pytest --pyargs sklearn -k array_api -vvv
+          python -m pytest --color=yes --pyargs sklearn -k array_api -vvv
