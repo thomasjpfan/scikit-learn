@@ -55,7 +55,7 @@ jobs:
       - name: Install scikit-learn nightly
         run: |
           conda activate base
-          python -m pip uninstall scikit-learn
+          python -m pip uninstall -y scikit-learn
           python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 
       - name: Run tests
