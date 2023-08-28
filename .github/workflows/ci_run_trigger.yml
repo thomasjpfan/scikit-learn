@@ -40,14 +40,18 @@ jobs:
     # if: ${{ github.event.label.name == 'gpu' }}
     # needs: [build]
     steps:
-      - name: Check
-        run: |
-          echo "Wow"
       - name: Check nvidia
         run: |
           nvidia-smi
 
-      # - name: Install dependencies
-      #   run: |
-      #     source activate pytorch
-      #     pip install array_api_compat pytest pytest-xdist cupy-cuda12x
+      - name: Install dependencies
+        run: |
+          pip install array_api_compat
+
+      - name: Install scikit-learn nightly
+        run: |
+          pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
+
+      - name: Run tests
+        run: |
+          pytest --pyargs sklearn -k array_api -vvv
