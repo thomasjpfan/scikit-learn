@@ -13,7 +13,9 @@ from sklearn.utils import (
     _approximate_mode,
     _determine_key_type,
     _get_column_indices,
+    _get_column_indices_interchange,
     _message_with_time,
+    _polars_indexing,
     _print_elapsed_time,
     _safe_assign,
     _safe_indexing,
@@ -479,6 +481,7 @@ def test_safe_indexing_pandas_no_settingwithcopy_warning():
     [
         (10, r"all features must be in \[0, 2\]"),
         ("whatever", "A given column is not a column of the dataframe"),
+        (object(), "No valid specification of the columns"),
     ],
 )
 def test_get_column_indices_error(key, err_msg):
@@ -760,3 +763,60 @@ def test_safe_assign(array_type):
     _safe_assign(X, values, column_indexer=column_indexer)
 
     assert_allclose_dense_sparse(X, _convert_container(values, array_type))
+
+
+def test_get_column_indices_interchange():
+    """Check _get_column_indices_interchange for edge cases."""
+    pd = pytest.importorskip("pandas", minversion="1.5")
+
+    df = pd.DataFrame([[1, 2, 3], [4, 5, 6]], columns=["a", "b", "c"])
+    df_interchange = df.__dataframe__()
+
+    key_results = [
+        (slice(1, None), [1, 2]),
+        (slice(None, 2), [0, 1]),
+        (slice(1, 2), [1]),
+        (["b", "c"], [1, 2]),
+        (slice("a", "b"), [0, 1]),
+        (slice("a", None), [0, 1, 2]),
+        (slice(None, "a"), [0]),
+        (["c", "a"], [2, 0]),
+        ([], []),
+    ]
+    for key, result in key_results:
+        assert (
+            _get_column_indices_interchange(
+                df_interchange, key, _determine_key_type(key)
+            )
+            == result
+        )
+
+    msg = "A given column is not a column of the dataframe"
+    with pytest.raises(ValueError, match=msg):
+        _get_column_indices_interchange(df_interchange, ["not_a_column"], "str")
+
+
+def test_polars_indexing():
+    """Check _polars_indexing works as expected."""
+    pl = pytest.importorskip("polars", minversion="0.18.2")
+    df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6], "c": [1, 4, 1]})
+
+    from polars.testing import assert_frame_equal
+
+    str_keys = [["b"], ["a", "b"], ["b", "a", "c"], ["c"], ["a"]]
+
+    for key in str_keys:
+        out = _polars_indexing(df, key, "str", axis=1)
+        assert_frame_equal(df[key], out)
+
+    bool_keys = [([True, False, True], ["a", "c"]), ([False, False, True], ["c"])]
+
+    for bool_key, str_key in bool_keys:
+        out = _polars_indexing(df, bool_key, "bool", axis=1)
+        assert_frame_equal(df[str_key], out)
+
+    int_keys = [([0, 1], ["a", "b"]), ([2], ["c"])]
+
+    for int_key, str_key in int_keys:
+        out = _polars_indexing(df, int_key, "int", axis=1)
+        assert_frame_equal(df[str_key], out)
