@@ -10,10 +10,15 @@ from .._config import get_config
 from .fixes import parse_version
 
 
-def yield_namespace_device_dtype_combinations():
+def yield_namespace_device_dtype_combinations(dtype=None):
     """Yield supported namespace, device, dtype tuples for testing.
 
     Use this to test that an estimator works with all combinations.
+
+    Parameter
+    ---------
+    dtype : str
+        Custom dtype to return. Useful if test does not require all dtypes.
 
     Returns
     -------
@@ -28,6 +33,11 @@ def yield_namespace_device_dtype_combinations():
         The name of the data type to use for arrays. Can be None to indicate
         that the default value should be used.
     """
+    if dtype is None:
+        dtypes = ("float64", "float32")
+    else:
+        dtypes = [dtype]
+
     for array_namespace in [
         # The following is used to test the array_api_compat wrapper when
         # array_api_dispatch is enabled: in particular, the arrays used in the
@@ -41,11 +51,9 @@ def yield_namespace_device_dtype_combinations():
         "torch",
     ]:
         if array_namespace == "torch":
-            for device, dtype in itertools.product(
-                ("cpu", "cuda"), ("float64", "float32")
-            ):
+            for device, dtype in itertools.product(("cpu", "cuda"), dtypes):
                 yield array_namespace, device, dtype
-            yield array_namespace, "mps", "float32"
+            yield array_namespace, "mps", dtypes[-1]
         else:
             yield array_namespace, None, None
 

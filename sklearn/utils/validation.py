@@ -401,10 +401,9 @@ def check_consistent_length(*arrays):
     *arrays : list or tuple of input objects.
         Objects that will be checked for consistent length.
     """
-
     lengths = [_num_samples(X) for X in arrays if X is not None]
     uniques = np.unique(lengths)
-    if len(uniques) > 1:
+    if uniques.shape[0] > 1:
         raise ValueError(
             "Found input variables with inconsistent numbers of samples: %r"
             % [int(l) for l in lengths]

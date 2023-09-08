@@ -30,6 +30,7 @@ from ..utils import (
     indexable,
     metadata_routing,
 )
+from ..utils._array_api import get_namespace
 from ..utils._param_validation import Interval, RealNotInt, validate_params
 from ..utils.metadata_routing import _MetadataRequester
 from ..utils.multiclass import type_of_target
@@ -103,10 +104,11 @@ class BaseCrossValidator(_MetadataRequester, metaclass=ABCMeta):
         test : ndarray
             The testing set indices for that split.
         """
+        xp, _ = get_namespace(X)
         X, y, groups = indexable(X, y, groups)
-        indices = np.arange(_num_samples(X))
+        indices = xp.arange(_num_samples(X))
         for test_index in self._iter_test_masks(X, y, groups):
-            train_index = indices[np.logical_not(test_index)]
+            train_index = indices[xp.logical_not(test_index)]
             test_index = indices[test_index]
             yield train_index, test_index
 
@@ -117,8 +119,9 @@ class BaseCrossValidator(_MetadataRequester, metaclass=ABCMeta):
 
         By default, delegates to _iter_test_indices(X, y, groups)
         """
+        xp, _ = get_namespace(X)
         for test_index in self._iter_test_indices(X, y, groups):
-            test_mask = np.zeros(_num_samples(X), dtype=bool)
+            test_mask = xp.zeros(_num_samples(X), dtype=xp.bool)
             test_mask[test_index] = True
             yield test_mask
 

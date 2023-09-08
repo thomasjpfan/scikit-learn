@@ -108,6 +108,7 @@ Metrics
 Tools
 -----
 
+- :func:`model_selection.KFold`
 - :func:`model_selection.train_test_split`
 
 Coverage is expected to grow over time. Please follow the dedicated `meta-issue on GitHub

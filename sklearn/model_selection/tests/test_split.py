@@ -2024,3 +2024,48 @@ def test_splitter_set_split_request(cv):
         assert hasattr(cv, "set_split_request")
     elif cv in NO_GROUP_SPLITTERS:
         assert not hasattr(cv, "set_split_request")
+
+
+@pytest.mark.parametrize(
+    "array_namespace, device, dtype",
+    yield_namespace_device_dtype_combinations(dtype="int64"),
+)
+@pytest.mark.parametrize(
+    "cv",
+    [
+        KFold(n_splits=2),
+        # Remove skip when these splitters are supported
+        pytest.param(StratifiedKFold(n_splits=2), marks=pytest.mark.skip),
+        pytest.param(TimeSeriesSplit(n_splits=2), marks=pytest.mark.skip),
+        pytest.param(LeaveOneOut(), marks=pytest.mark.skip),
+        pytest.param(LeavePOut(p=2), marks=pytest.mark.skip),
+        pytest.param(ShuffleSplit(random_state=0), marks=pytest.mark.skip),
+        pytest.param(StratifiedShuffleSplit(test_size=0.5), marks=pytest.mark.skip),
+        pytest.param(RepeatedKFold(n_splits=2), marks=pytest.mark.skip),
+        pytest.param(RepeatedStratifiedKFold(n_splits=2), marks=pytest.mark.skip),
+    ],
+)
+def test_splitter_array_api(array_namespace, device, dtype, cv):
+    """Check that Array API arrays gives same splits as numpy."""
+    xp, device, dtype = _array_api_for_tests(array_namespace, device, dtype)
+    import array_api_compat
+
+    X_1d_np = np.asarray([1, 2, 3, 4])
+    y_np = np.asarray([1, 1, 2, 2])
+
+    X_1d_xp = xp.asarray(X_1d_np, device=device)
+    y_xp = xp.asarray(y_np, device=device)
+
+    splits_np = list(cv.split(X_1d_np, y_np))
+
+    with config_context(array_api_dispatch=True):
+        splits_xp = list(cv.split(X_1d_xp, y_xp))
+
+    for (train_idx_np, test_idx_np), (train_idx_xp, test_idx_xp) in zip(
+        splits_np, splits_xp
+    ):
+        assert array_api_compat.get_namespace(train_idx_xp) == xp
+        assert array_api_compat.get_namespace(test_idx_xp) == xp
+
+        assert_array_equal(train_idx_np, _convert_to_numpy(train_idx_xp, xp))
+        assert_array_equal(test_idx_np, _convert_to_numpy(test_idx_xp, xp))

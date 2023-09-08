@@ -215,6 +215,9 @@ Changelog
 - |Enhancement| :func:`sklearn.model_selection.train_test_split` now supports
   Array API compatible inputs. :pr:`26855` by `Tim Head`_.
 
+- |Enhancement| :class:`sklearn.model_selection.KFold` now supports
+  Array API compatible inputs. :pr:`xxxxx` by `Thomas Fan`_.
+
 :mod:`sklearn.neighbors`
 ........................
 
