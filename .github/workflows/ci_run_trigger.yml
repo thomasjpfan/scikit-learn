@@ -52,7 +52,7 @@ jobs:
         run: |
           conda create -n dev python=3.11
           conda activate dev
-          python -m pip install array_api_compat cupy-cuda12x pytest pytorch numpy scipy joblib threadpoolctl
+          python -m pip install array_api_compat cupy-cuda12x pytest torch numpy scipy joblib threadpoolctl
           python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 
       - name: Run tests
