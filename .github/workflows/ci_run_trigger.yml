@@ -48,17 +48,14 @@ jobs:
         run: |
           nvidia-smi
 
-      - name: Install dependencies
+      - name: Install dependencies and scikit-learn nightly
         run: |
-          conda activate base
-          python -m pip install array_api_compat cupy-cuda11x pytest
-
-      - name: Install scikit-learn nightly
-        run: |
-          conda activate base
-          python -m pip uninstall -y scikit-learn
+          conda create -n dev python=3.11
+          conda activate dev
+          python -m pip install array_api_compat cupy-cuda12x pytest pytorch numpy scipy joblib threadpoolctl
           python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 
       - name: Run tests
         run: |
-          python -m pytest --color=yes --pyargs sklearn -k array_api
+          conda activate dev
+          python -m pytest --color=yes --pyargs sklearn -k array_api -v
