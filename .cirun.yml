@@ -7,7 +7,7 @@ runners:
     # Cheapest GPU on GCP
     gpu: "nvidia-tesla-t4"
     # Cheapest VM on GCP, with GPU attachable
-    instance_type: "n1-standard-1"
+    instance_type: "n1-standard-2"
     machine_image: "third-campus-393023:scikit-learn-gpu-v3"
     region:
       - "us-central1-a"
