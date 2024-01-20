@@ -2,12 +2,9 @@
 # Reference: https://docs.cirun.io/reference/yaml
 runners:
   - name: "gpu-runner"
-    # Cloud Provider: GCP
     cloud: "gcp"
-    # Cheapest GPU on GCP
     gpu: "nvidia-tesla-t4"
-    # Cheapest VM on GCP, with GPU attachable
-    instance_type: "n1-standard-2"
+    instance_type: "n1-standard-1"
     machine_image: "third-campus-393023:scikit-learn-gpu-v3"
     region:
       - "us-central1-a"
