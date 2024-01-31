@@ -122,19 +122,13 @@ jobs:
       - name: Checkout scikit-learn
         uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - uses: conda-incubator/setup-miniconda@v3
         with:
-          python-version: "3.11" # update once build dependencies are available
-
-      - name: Install conda
-        run: |
-          # ARM runner does not have conda installed, so we install it
-          curl -L --retry 10 -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-          bash ~/mambaforge.sh -b -p ~/mambaforge
-        if: matrix.os == "macos-14"
+          auto-update-conda: true
+          python-version: "3.11"
 
       - name: Build and test wheels
+        shell: bash -el {0}
         env:
           CIBW_PRERELEASE_PYTHONS: ${{ matrix.prerelease }}
           CIBW_ENVIRONMENT: SKLEARN_SKIP_NETWORK_TESTS=1
