@@ -126,6 +126,7 @@ jobs:
         with:
           auto-update-conda: true
           python-version: "3.11"
+          miniconda-version: "latest"
 
       - name: Build and test wheels
         shell: bash -el {0}
