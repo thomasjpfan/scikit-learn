@@ -30,7 +30,7 @@ if [[ $(uname) == "Darwin" ]]; then
     sudo conda create -n build $OPENMP_URL
     PREFIX="$CONDA_HOME/envs/build"
 
-    export CIBW_ENVIRONMENT_MACOS="CC=/usr/bin/clang CXX=/usr/bin/clang++ CPPFLAGS='$CPPFLAGS -Xpreprocessor -fopenmp', CFLAGS='$CFLAGS -I$PREFIX/include' CXXFLAGS='$CXXFLAGS -I$PREFIX/include' LDFLAGS='$LDFLAGS -Wl,-rpath,$PREFIX/lib -L$PREFIX/lib -lomp'"
+    export CIBW_ENVIRONMENT_MACOS="CC=/usr/bin/clang CXX=/usr/bin/clang++ CPPFLAGS='$CPPFLAGS -Xpreprocessor -fopenmp' CFLAGS='$CFLAGS -I$PREFIX/include' CXXFLAGS='$CXXFLAGS -I$PREFIX/include' LDFLAGS='$LDFLAGS -Wl,-rpath,$PREFIX/lib -L$PREFIX/lib -lomp'"
     # export CC=/usr/bin/clang
     # export CXX=/usr/bin/clang++
     # export CPPFLAGS="$CPPFLAGS -Xpreprocessor -fopenmp"
