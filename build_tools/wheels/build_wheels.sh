@@ -15,10 +15,6 @@ if [[ $(uname) == "Darwin" ]]; then
             # This turns off the computation of the test program in
             # sklearn/_build_utils/pre_build_helpers.py
             export PYTHON_CROSSENV=1
-        else
-            # ARM runner does not have conda installed, so we install it
-            curl -L --retry 10 -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
-            bash ~/mambaforge.sh -b -p ~/mambaforge
         fi
 
         # SciPy requires 12.0 on arm to prevent kernel panics
@@ -41,7 +37,6 @@ if [[ $(uname) == "Darwin" ]]; then
     export CXXFLAGS="$CXXFLAGS -I$PREFIX/include"
     export LDFLAGS="$LDFLAGS -Wl,-rpath,$PREFIX/lib -L$PREFIX/lib -lomp"
 fi
-
 
 if [[ "$GITHUB_EVENT_NAME" == "schedule" || "$CIRRUS_CRON" == "nightly" ]]; then
     # Nightly build:  See also `../github/upload_anaconda.sh` (same branching).

@@ -127,6 +127,13 @@ jobs:
         with:
           python-version: "3.11" # update once build dependencies are available
 
+      - name: Install conda
+        run: |
+          # ARM runner does not have conda installed, so we install it
+          curl -L --retry 10 -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+          bash ~/mambaforge.sh -b -p ~/mambaforge
+        if: matrix.os == "macos-14"
+
       - name: Build and test wheels
         env:
           CIBW_PRERELEASE_PYTHONS: ${{ matrix.prerelease }}
