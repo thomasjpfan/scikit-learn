@@ -15,7 +15,12 @@ if [[ $(uname) == "Darwin" ]]; then
             # This turns off the computation of the test program in
             # sklearn/_build_utils/pre_build_helpers.py
             export PYTHON_CROSSENV=1
+        else
+            # ARM runner does not have conda installed, so we install it
+            curl -L --retry 10 -o ~/mambaforge.sh https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-MacOSX-arm64.sh
+            bash ~/mambaforge.sh -b -p ~/mambaforge
         fi
+
         # SciPy requires 12.0 on arm to prevent kernel panics
         # https://github.com/scipy/scipy/issues/14688
         # We use the same deployment target to match SciPy.
