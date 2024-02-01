@@ -158,7 +158,7 @@ jobs:
           # CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
           # CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
           # CIBW_TEST_COMMAND_WINDOWS: bash {project}/build_tools/github/test_windows_wheels.sh ${{ matrix.python }}
-          CIBW_BUILD_VERBOSITY: 1
+          CIBW_BUILD_VERBOSITY: 3
           CONDA_HOME: /usr/local/miniconda
 
         run: bash build_tools/wheels/build_wheels.sh
