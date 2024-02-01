@@ -133,7 +133,7 @@ jobs:
           python-version: "3.11" # update once build dependencies are available
 
       - name: Install conda for macos arm64
-        if: ${{ matrix.platform_id == "macosx_arm64" }}
+        # if: ${{ matrix.platform_id == 'macosx_arm64' }}
         run: |
           MINIFORGE_URL="https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh"
 
