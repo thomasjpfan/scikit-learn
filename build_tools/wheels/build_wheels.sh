@@ -64,4 +64,10 @@ fi
 # against the most recent version of the dependencies
 
 python -m pip install cibuildwheel
+echo $CC
+echo $CXX
+echo $CPPFLAGS
+echo $CFLAGS
+echo $CXXFLAGS
+echo $LDFLAGS
 python -m cibuildwheel --output-dir wheelhouse
