@@ -99,9 +99,9 @@ jobs:
           # - os: macos-latest
           #   python: 311
           #   platform_id: macosx_x86_64
-          - os: macos-latest
-            python: 312
-            platform_id: macosx_x86_64
+          # - os: macos-latest
+          #   python: 312
+          #   platform_id: macosx_x86_64
 
           # MacOS arm64
           # The wheel for the latest Python version is built and tested on
@@ -130,7 +130,18 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # update once build dependencies are available
+          python-version: "3.11" # update once build dependencies are available
+
+      - name: Install conda for macos arm64
+        if: ${{ matrix.platform_id == macosx_arm64 }}
+        run: |
+          MINIFORGE_URL="https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh"
+
+          # Install miniforge
+          curl -L --retry 10 $MINIFORGE_URL -o mambaforge.sh
+          MAMBAFORGE_PATH=$HOME/miniforge
+          bash ./mambaforge.sh -b -p $MAMBAFORGE_PATH
+          echo "$MAMBAFORGE_PATH/bin" >> $GITHUB_PATH
 
       - name: Build and test wheels
         shell: bash -el {0}
