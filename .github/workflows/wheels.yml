@@ -99,9 +99,9 @@ jobs:
           # - os: macos-latest
           #   python: 311
           #   platform_id: macosx_x86_64
-          # - os: macos-latest
-          #   python: 312
-          #   platform_id: macosx_x86_64
+          - os: macos-latest
+            python: 312
+            platform_id: macosx_x86_64
 
           # MacOS arm64
           # The wheel for the latest Python version is built and tested on
@@ -144,10 +144,11 @@ jobs:
           echo "$MINIFORGE_PATH/bin" >> $GITHUB_PATH
           echo "CONDA_HOME=$MINIFORGE_PATH" >> $GITHUB_ENV
 
-      # - name: Set conda environment for non-macos arm64 environments
-      #   run: |
-      #     # Non-macos arm64 envrionments already have conda installed
-      #     echo "CONDA_HOME=/usr/local/miniconda" >> $GITHUB_ENV
+      - name: Set conda environment for non-macos arm64 environments
+        if: ${{ matrix.platform_id != 'macosx_arm64' }}
+        run: |
+          # Non-macos arm64 envrionments already have conda installed
+          echo "CONDA_HOME=/usr/local/miniconda" >> $GITHUB_ENV
 
       - name: Build and test wheels
         env:
@@ -160,10 +161,10 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: bash build_tools/github/repair_windows_wheels.sh {wheel} {dest_dir}
           CIBW_BEFORE_TEST_WINDOWS: bash build_tools/github/build_minimal_windows_image.sh ${{ matrix.python }}
-          # CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
-          # CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
-          # CIBW_TEST_COMMAND_WINDOWS: bash {project}/build_tools/github/test_windows_wheels.sh ${{ matrix.python }}
-          CIBW_BUILD_VERBOSITY: 3
+          CIBW_TEST_REQUIRES: pytest pandas threadpoolctl
+          CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
+          CIBW_TEST_COMMAND_WINDOWS: bash {project}/build_tools/github/test_windows_wheels.sh ${{ matrix.python }}
+          CIBW_BUILD_VERBOSITY: 1
 
         run: bash build_tools/wheels/build_wheels.sh
 
