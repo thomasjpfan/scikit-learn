@@ -50,12 +50,12 @@ jobs:
 
       - name: Install dependencies and scikit-learn nightly
         run: |
-          conda create -n dev python=3.11
-          conda activate dev
-          python -m pip install array_api_compat cupy-cuda12x pytest torch numpy scipy joblib threadpoolctl
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install -U array_api_compat cupy-cuda12x pytest torch numpy scipy joblib threadpoolctl
           python -m pip install --pre --extra-index https://pypi.anaconda.org/scientific-python-nightly-wheels/simple scikit-learn
 
       - name: Run tests
         run: |
-          conda activate dev
+          source .venv/bin/activate
           python -m pytest --color=yes --pyargs sklearn -k array_api -v
