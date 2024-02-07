@@ -7,22 +7,13 @@ runners:
     instance_type: "n1-standard-4"
     machine_image: "third-campus-393023:scikit-learn-gpu-v3"
     region:
+      - "us-east1-c"
       - "us-central1-a"
       - "us-central1-b"
       - "us-central1-c"
       - "us-central1-f"
-      - "us-east1-c"
-      - "us-east1-d"
-      - "us-east4-a"
-      - "us-east4-b"
-      - "us-east4-c"
       - "us-west1-a"
       - "us-west1-b"
-      - "us-west2-b"
-      - "us-west2-c"
-      - "us-west3-b"
-      - "us-west4-a"
-      - "us-west4-b"
     preemptible: false
     # Add this label in the "runs-on" param in .github/workflows/ci_run_trigger.yml
     # So that this runner is created for running the workflow
