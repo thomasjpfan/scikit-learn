@@ -5,7 +5,7 @@ set -x
 
 PYTHON_VERSION=$1
 
-python build_tools/wheels/check_license.py
+python $PROJECT_DIR/build_tools/wheels/check_license.py
 
 # docker container run \
 #     --rm scikit-learn/minimal-windows \

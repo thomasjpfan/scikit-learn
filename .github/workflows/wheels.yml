@@ -177,9 +177,9 @@ jobs:
           CIBW_BEFORE_TEST_WINDOWS: bash build_tools/github/build_minimal_windows_image.sh ${{ matrix.python }}
           CIBW_BEFORE_TEST: bash {project}/build_tools/wheels/cibw_before_test.sh
           CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
-          # CIBW_TEST_REQUIRES: pytest pandas
+          CIBW_TEST_REQUIRES: pytest pandas
           CIBW_TEST_COMMAND: bash {project}/build_tools/wheels/test_wheels.sh
-          # CIBW_TEST_COMMAND_WINDOWS: bash {project}/build_tools/github/test_windows_wheels.sh ${{ matrix.python }}
+          CIBW_TEST_COMMAND_WINDOWS: bash {project}/build_tools/github/test_windows_wheels.sh ${{ matrix.python }}
           CIBW_BUILD_VERBOSITY: 1
 
         run: bash build_tools/wheels/build_wheels.sh

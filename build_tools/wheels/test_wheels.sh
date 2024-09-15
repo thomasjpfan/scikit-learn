@@ -4,7 +4,7 @@ set -e
 set -x
 
 # Check license was updated in the wheel
-python build_tools/wheels/check_license.py
+python $PROJECT_DIR/build_tools/wheels/check_license.py
 
 # python -c "import joblib; print(f'Number of cores (physical): \
 # {joblib.cpu_count()} ({joblib.cpu_count(only_physical_cores=True)})')"
