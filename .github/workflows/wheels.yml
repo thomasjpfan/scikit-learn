@@ -62,9 +62,9 @@ jobs:
           # - os: windows-latest
           #   python: 311
           #   platform_id: win_amd64
-          - os: windows-latest
-            python: 312
-            platform_id: win_amd64
+          # - os: windows-latest
+          #   python: 312
+          #   platform_id: win_amd64
 
           # Linux 64 bit manylinux2014
           # - os: ubuntu-latest
@@ -82,10 +82,10 @@ jobs:
           #   python: 311
           #   platform_id: manylinux_x86_64
           #   manylinux_image: manylinux2014
-          - os: ubuntu-latest
-            python: 312
-            platform_id: manylinux_x86_64
-            manylinux_image: manylinux2014
+          # - os: ubuntu-latest
+          #   python: 312
+          #   platform_id: manylinux_x86_64
+          #   manylinux_image: manylinux2014
           # - os: ubuntu-latest
           #   python: 313t
           #   platform_id: manylinux_x86_64
@@ -173,7 +173,7 @@ jobs:
           # toolchain
           CIBW_CONFIG_SETTINGS_WINDOWS: "setup-args=--vsenv"
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: bash build_tools/github/repair_windows_wheels.sh {wheel} {dest_dir}
-          CIBW_BEFORE_BUILD: bash build_tools/wheels/cibw_before_build.sh {project}
+          CIBW_BEFORE_BUILD: bash {project}/build_tools/wheels/cibw_before_build.sh {project}
           CIBW_BEFORE_TEST_WINDOWS: bash build_tools/github/build_minimal_windows_image.sh ${{ matrix.python }}
           CIBW_BEFORE_TEST: bash {project}/build_tools/wheels/cibw_before_test.sh
           CIBW_ENVIRONMENT_PASS_LINUX: RUNNER_OS
