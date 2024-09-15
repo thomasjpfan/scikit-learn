@@ -3,6 +3,8 @@
 set -e
 set -x
 
+PROJECT_DIR="$1"
+
 # Check license was updated in the wheel
 python $PROJECT_DIR/build_tools/wheels/check_license.py
 

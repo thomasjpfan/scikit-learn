@@ -4,6 +4,7 @@ set -e
 set -x
 
 PYTHON_VERSION=$1
+PROJECT_DIR=$2
 
 python $PROJECT_DIR/build_tools/wheels/check_license.py
 
