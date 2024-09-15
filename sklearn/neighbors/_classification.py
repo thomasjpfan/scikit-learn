@@ -1,12 +1,8 @@
 """Nearest Neighbor Classification"""
 
-# Authors: Jake Vanderplas <vanderplas@astro.washington.edu>
-#          Fabian Pedregosa <fabian.pedregosa@inria.fr>
-#          Alexandre Gramfort <alexandre.gramfort@inria.fr>
-#          Sparseness support by Lars Buitinck
-#          Multi-output support by Arnaud Joly <a.joly@ulg.ac.be>
-#
-# License: BSD 3 clause (C) INRIA, University of Amsterdam
+# Authors: The scikit-learn developers
+# SPDX-License-Identifier: BSD-3-Clause
+
 import warnings
 from numbers import Integral
 
@@ -20,9 +16,15 @@ from ..metrics._pairwise_distances_reduction import (
     RadiusNeighborsClassMode,
 )
 from ..utils._param_validation import StrOptions
+from ..utils.arrayfuncs import _all_with_any_reduction_axis_1
 from ..utils.extmath import weighted_mode
 from ..utils.fixes import _mode
-from ..utils.validation import _is_arraylike, _num_samples, check_is_fitted
+from ..utils.validation import (
+    _is_arraylike,
+    _num_samples,
+    check_is_fitted,
+    validate_data,
+)
 from ._base import KNeighborsMixin, NeighborsBase, RadiusNeighborsMixin, _get_weights
 
 
@@ -281,6 +283,12 @@ class KNeighborsClassifier(KNeighborsMixin, ClassifierMixin, NeighborsBase):
         n_outputs = len(classes_)
         n_queries = _num_samples(X)
         weights = _get_weights(neigh_dist, self.weights)
+        if weights is not None and _all_with_any_reduction_axis_1(weights, value=0):
+            raise ValueError(
+                "All neighbors of some sample is getting zero weights. "
+                "Please modify 'weights' to avoid this case if you are "
+                "using a user-defined function."
+            )
 
         y_pred = np.empty((n_queries, n_outputs), dtype=classes_[0].dtype)
         for k, classes_k in enumerate(classes_):
@@ -329,8 +337,8 @@ class KNeighborsClassifier(KNeighborsMixin, ClassifierMixin, NeighborsBase):
                 if self.metric == "precomputed":
                     X = _check_precomputed(X)
                 else:
-                    X = self._validate_data(
-                        X, accept_sparse="csr", reset=False, order="C"
+                    X = validate_data(
+                        self, X, accept_sparse="csr", reset=False, order="C"
                     )
 
                 probabilities = ArgKminClassMode.compute(
@@ -372,6 +380,12 @@ class KNeighborsClassifier(KNeighborsMixin, ClassifierMixin, NeighborsBase):
         weights = _get_weights(neigh_dist, self.weights)
         if weights is None:
             weights = np.ones_like(neigh_ind)
+        elif _all_with_any_reduction_axis_1(weights, value=0):
+            raise ValueError(
+                "All neighbors of some sample is getting zero weights. "
+                "Please modify 'weights' to avoid this case if you are "
+                "using a user-defined function."
+            )
 
         all_rows = np.arange(n_queries)
         probabilities = []
@@ -385,7 +399,6 @@ class KNeighborsClassifier(KNeighborsMixin, ClassifierMixin, NeighborsBase):
 
             # normalize 'votes' into real [0,1] probabilities
             normalizer = proba_k.sum(axis=1)[:, np.newaxis]
-            normalizer[normalizer == 0.0] = 1.0
             proba_k /= normalizer
 
             probabilities.append(proba_k)
@@ -395,8 +408,10 @@ class KNeighborsClassifier(KNeighborsMixin, ClassifierMixin, NeighborsBase):
 
         return probabilities
 
-    def _more_tags(self):
-        return {"multilabel": True}
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.classifier_tags.multi_label = True
+        return tags
 
 
 class RadiusNeighborsClassifier(RadiusNeighborsMixin, ClassifierMixin, NeighborsBase):
@@ -823,5 +838,7 @@ class RadiusNeighborsClassifier(RadiusNeighborsMixin, ClassifierMixin, Neighbors
 
         return probabilities
 
-    def _more_tags(self):
-        return {"multilabel": True}
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.classifier_tags.multi_label = True
+        return tags

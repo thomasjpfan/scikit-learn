@@ -1,11 +1,7 @@
-"""Calibration of predicted probabilities."""
+"""Methods for calibrating predicted probabilities."""
 
-# Author: Alexandre Gramfort <alexandre.gramfort@telecom-paristech.fr>
-#         Balazs Kegl <balazs.kegl@gmail.com>
-#         Jan Hendrik Metzen <jhm@informatik.uni-bremen.de>
-#         Mathieu Blondel <mathieu@mblondel.org>
-#
-# License: BSD 3 clause
+# Authors: The scikit-learn developers
+# SPDX-License-Identifier: BSD-3-Clause
 
 import warnings
 from inspect import signature
@@ -28,7 +24,7 @@ from .base import (
     clone,
 )
 from .isotonic import IsotonicRegression
-from .model_selection import check_cv, cross_val_predict
+from .model_selection import LeaveOneOut, check_cv, cross_val_predict
 from .preprocessing import LabelEncoder, label_binarize
 from .svm import LinearSVC
 from .utils import (
@@ -88,6 +84,11 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
     `estimator` if it exists, else on :term:`predict_proba`.
 
     Read more in the :ref:`User Guide <calibration>`.
+    In order to learn more on the CalibratedClassifierCV class, see the
+    following calibration examples:
+    :ref:`sphx_glr_auto_examples_calibration_plot_calibration.py`,
+    :ref:`sphx_glr_auto_examples_calibration_plot_calibration_curve.py`, and
+    :ref:`sphx_glr_auto_examples_calibration_plot_calibration_multiclass.py`.
 
     Parameters
     ----------
@@ -280,7 +281,7 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
         if self.estimator is None:
             # we want all classifiers that don't expose a random_state
             # to be deterministic (and we don't want to expose this one).
-            estimator = LinearSVC(random_state=0, dual="auto")
+            estimator = LinearSVC(random_state=0)
             if _routing_enabled():
                 estimator.set_fit_request(sample_weight=True)
         else:
@@ -388,13 +389,18 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
                 n_folds = self.cv.n_splits
             else:
                 n_folds = None
-            if n_folds and np.any(
-                [np.sum(y == class_) < n_folds for class_ in self.classes_]
-            ):
+            if n_folds and np.any(np.unique(y, return_counts=True)[1] < n_folds):
                 raise ValueError(
                     f"Requesting {n_folds}-fold "
                     "cross-validation but provided less than "
                     f"{n_folds} examples for at least one class."
+                )
+            if isinstance(self.cv, LeaveOneOut):
+                raise ValueError(
+                    "LeaveOneOut cross-validation does not allow"
+                    "all classes to be present in test splits. "
+                    "Please use a cross-validation generator that allows "
+                    "all classes to appear in every test and train split."
                 )
             cv = check_cv(self.cv, y, classifier=True)
 
@@ -525,25 +531,14 @@ class CalibratedClassifierCV(ClassifierMixin, MetaEstimatorMixin, BaseEstimator)
             .add_self_request(self)
             .add(
                 estimator=self._get_estimator(),
-                method_mapping=MethodMapping().add(callee="fit", caller="fit"),
+                method_mapping=MethodMapping().add(caller="fit", callee="fit"),
             )
             .add(
                 splitter=self.cv,
-                method_mapping=MethodMapping().add(callee="split", caller="fit"),
+                method_mapping=MethodMapping().add(caller="fit", callee="split"),
             )
         )
         return router
-
-    def _more_tags(self):
-        return {
-            "_xfail_checks": {
-                "check_sample_weights_invariance": (
-                    "Due to the cross-validation and sample ordering, removing a sample"
-                    " is not strictly equal to putting is weight to zero. Specific unit"
-                    " tests are added for CalibratedClassifierCV specifically."
-                ),
-            }
-        }
 
 
 def _fit_classifier_calibrator_pair(
@@ -814,20 +809,29 @@ def _sigmoid_calibration(
     else:
         prior0 = float(np.sum(mask_negative_samples))
         prior1 = y.shape[0] - prior0
-    T = np.zeros_like(y, dtype=np.float64)
+    T = np.zeros_like(y, dtype=predictions.dtype)
     T[y > 0] = (prior1 + 1.0) / (prior1 + 2.0)
     T[y <= 0] = 1.0 / (prior0 + 2.0)
 
     bin_loss = HalfBinomialLoss()
 
     def loss_grad(AB):
+        # .astype below is needed to ensure y_true and raw_prediction have the
+        # same dtype. With result = np.float64(0) * np.array([1, 2], dtype=np.float32)
+        # - in Numpy 2, result.dtype is float64
+        # - in Numpy<2, result.dtype is float32
+        raw_prediction = -(AB[0] * F + AB[1]).astype(dtype=predictions.dtype)
         l, g = bin_loss.loss_gradient(
             y_true=T,
-            raw_prediction=-(AB[0] * F + AB[1]),
+            raw_prediction=raw_prediction,
             sample_weight=sample_weight,
         )
         loss = l.sum()
-        grad = np.array([-g @ F, -g.sum()])
+        # TODO: Remove casting to np.float64 when minimum supported SciPy is 1.11.2
+        # With SciPy >= 1.11.2, the LBFGS implementation will cast to float64
+        # https://github.com/scipy/scipy/pull/18825.
+        # Here we cast to float64 to support SciPy < 1.11.2
+        grad = np.asarray([-g @ F, -g.sum()], dtype=np.float64)
         return loss, grad
 
     AB0 = np.array([0.0, log((prior0 + 1.0) / (prior1 + 1.0))])
@@ -1036,6 +1040,9 @@ class CalibrationDisplay(_BinaryClassifierCurveDisplayMixin):
 
     Read more about calibration in the :ref:`User Guide <calibration>` and
     more about the scikit-learn visualization API in :ref:`visualizations`.
+
+    For an example on how to use the visualization, see
+    :ref:`sphx_glr_auto_examples_calibration_plot_calibration_curve.py`.
 
     .. versionadded:: 1.0
 

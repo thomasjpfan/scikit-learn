@@ -19,6 +19,8 @@ jobs:
        && !github.event.issue.assignee
     steps:
       - run: |
+          # Using REST API directly because assigning through gh has some severe limitations. For more details, see
+          # https://github.com/scikit-learn/scikit-learn/issues/29395#issuecomment-2206776963
           echo "Assigning issue ${{ github.event.issue.number }} to ${{ github.event.comment.user.login }}"
           gh issue edit $ISSUE --add-assignee ${{ github.event.comment.user.login }}
           gh issue edit $ISSUE --remove-label "help wanted"

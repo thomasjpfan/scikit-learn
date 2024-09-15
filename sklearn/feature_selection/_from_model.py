@@ -1,5 +1,5 @@
-# Authors: Gilles Louppe, Mathieu Blondel, Maheshakya Wijewardena
-# License: BSD 3 clause
+# Authors: The scikit-learn developers
+# SPDX-License-Identifier: BSD-3-Clause
 
 from copy import deepcopy
 from numbers import Integral, Real
@@ -9,7 +9,7 @@ import numpy as np
 from ..base import BaseEstimator, MetaEstimatorMixin, _fit_context, clone
 from ..exceptions import NotFittedError
 from ..utils._param_validation import HasMethods, Interval, Options
-from ..utils._tags import _safe_tags
+from ..utils._tags import get_tags
 from ..utils.metadata_routing import (
     MetadataRouter,
     MethodMapping,
@@ -17,7 +17,12 @@ from ..utils.metadata_routing import (
     process_routing,
 )
 from ..utils.metaestimators import available_if
-from ..utils.validation import _num_features, check_is_fitted, check_scalar
+from ..utils.validation import (
+    _check_feature_names,
+    _num_features,
+    check_is_fitted,
+    check_scalar,
+)
 from ._base import SelectorMixin, _get_feature_importances
 
 
@@ -74,14 +79,20 @@ def _calculate_threshold(estimator, importances, threshold):
 def _estimator_has(attr):
     """Check if we can delegate a method to the underlying estimator.
 
-    First, we check the fitted estimator if available, otherwise we
-    check the unfitted estimator.
+    First, we check the fitted `estimator_` if available, otherwise we check the
+    unfitted `estimator`. We raise the original `AttributeError` if `attr` does
+    not exist. This function is used together with `available_if`.
     """
-    return lambda self: (
-        hasattr(self.estimator_, attr)
-        if hasattr(self, "estimator_")
-        else hasattr(self.estimator, attr)
-    )
+
+    def check(self):
+        if hasattr(self, "estimator_"):
+            getattr(self.estimator_, attr)
+        else:
+            getattr(self.estimator, attr)
+
+        return True
+
+    return check
 
 
 class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
@@ -213,7 +224,7 @@ class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
     >>> selector.estimator_.coef_
     array([[-0.3252...,  0.8345...,  0.4976...]])
     >>> selector.threshold_
-    0.55249...
+    np.float64(0.55249...)
     >>> selector.get_support()
     array([False,  True, False])
     >>> selector.transform(X)
@@ -343,12 +354,12 @@ class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         **fit_params : dict
             - If `enable_metadata_routing=False` (default):
 
-                Parameters directly passed to the `partial_fit` method of the
+                Parameters directly passed to the `fit` method of the
                 sub-estimator. They are ignored if `prefit=True`.
 
             - If `enable_metadata_routing=True`:
 
-                Parameters safely routed to the `partial_fit` method of the
+                Parameters safely routed to the `fit` method of the
                 sub-estimator. They are ignored if `prefit=True`.
 
                 .. versionchanged:: 1.4
@@ -384,7 +395,7 @@ class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         if hasattr(self.estimator_, "feature_names_in_"):
             self.feature_names_in_ = self.estimator_.feature_names_in_
         else:
-            self._check_feature_names(X, reset=True)
+            _check_feature_names(self, X, reset=True)
 
         return self
 
@@ -470,7 +481,7 @@ class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         if hasattr(self.estimator_, "feature_names_in_"):
             self.feature_names_in_ = self.estimator_.feature_names_in_
         else:
-            self._check_feature_names(X, reset=first_call)
+            _check_feature_names(self, X, reset=first_call)
 
         return self
 
@@ -507,10 +518,12 @@ class SelectFromModel(MetaEstimatorMixin, SelectorMixin, BaseEstimator):
         router = MetadataRouter(owner=self.__class__.__name__).add(
             estimator=self.estimator,
             method_mapping=MethodMapping()
-            .add(callee="partial_fit", caller="partial_fit")
-            .add(callee="fit", caller="fit"),
+            .add(caller="partial_fit", callee="partial_fit")
+            .add(caller="fit", callee="fit"),
         )
         return router
 
-    def _more_tags(self):
-        return {"allow_nan": _safe_tags(self.estimator, key="allow_nan")}
+    def __sklearn_tags__(self):
+        tags = super().__sklearn_tags__()
+        tags.input_tags.allow_nan = get_tags(self.estimator).input_tags.allow_nan
+        return tags
