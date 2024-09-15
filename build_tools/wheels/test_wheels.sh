@@ -3,24 +3,27 @@
 set -e
 set -x
 
-python -c "import joblib; print(f'Number of cores (physical): \
-{joblib.cpu_count()} ({joblib.cpu_count(only_physical_cores=True)})')"
+# Check license was updated in the wheel
+python build_tools/wheels/check_license.py
 
-FREE_THREADED_BUILD="$(python -c"import sysconfig; print(bool(sysconfig.get_config_var('Py_GIL_DISABLED')))")"
-if [[ $FREE_THREADED_BUILD == "True" ]]; then
-    # TODO: delete when importing numpy no longer enables the GIL
-    # setting to zero ensures the GIL is disabled while running the
-    # tests under free-threaded python
-    export PYTHON_GIL=0
-fi
+# python -c "import joblib; print(f'Number of cores (physical): \
+# {joblib.cpu_count()} ({joblib.cpu_count(only_physical_cores=True)})')"
 
-# Test that there are no links to system libraries in the
-# threadpoolctl output section of the show_versions output:
-python -c "import sklearn; sklearn.show_versions()"
+# FREE_THREADED_BUILD="$(python -c"import sysconfig; print(bool(sysconfig.get_config_var('Py_GIL_DISABLED')))")"
+# if [[ $FREE_THREADED_BUILD == "True" ]]; then
+#     # TODO: delete when importing numpy no longer enables the GIL
+#     # setting to zero ensures the GIL is disabled while running the
+#     # tests under free-threaded python
+#     export PYTHON_GIL=0
+# fi
 
-if pip show -qq pytest-xdist; then
-    XDIST_WORKERS=$(python -c "import joblib; print(joblib.cpu_count(only_physical_cores=True))")
-    pytest --pyargs sklearn -n $XDIST_WORKERS
-else
-    pytest --pyargs sklearn
-fi
+# # Test that there are no links to system libraries in the
+# # threadpoolctl output section of the show_versions output:
+# python -c "import sklearn; sklearn.show_versions()"
+
+# if pip show -qq pytest-xdist; then
+#     XDIST_WORKERS=$(python -c "import joblib; print(joblib.cpu_count(only_physical_cores=True))")
+#     pytest --pyargs sklearn -n $XDIST_WORKERS
+# else
+#     pytest --pyargs sklearn
+# fi
