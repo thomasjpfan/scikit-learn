@@ -4,8 +4,6 @@ This binary distribution of scikit-learn also bundles the following software:
 
 Name: GCC runtime library
 Files: scikit_learn.libs/libgomp*.so*
-Name: GCC runtime library
-Description: dynamically linked to files compiled with gcc
 Availability: https://gcc.gnu.org/git/?p=gcc.git;a=tree;f=libgomp
 
 GCC RUNTIME LIBRARY EXCEPTION

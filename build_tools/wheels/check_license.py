@@ -1,15 +1,7 @@
 import platform
 import re
 import site
-import sys
 from pathlib import Path
-
-PLATFORM_WITH_BUNDLED_LIBRARIES = {"Linux", "Darwin"}
-platform_system = platform.system()
-
-if platform_system not in PLATFORM_WITH_BUNDLED_LIBRARIES:
-    sys.exit(0)
-
 
 site_packages = site.getsitepackages()
 

@@ -4,8 +4,6 @@ This binary distribution of scikit-learn also bundles the following software:
 
 Name: libomp runtime library
 Files: sklearn/.dylibs/libomp.dylib
-Name: libomp runtime library
-Description: dynamically linked to files compiled with gcc
 Availability: https://github.com/llvm/llvm-project
 
 ==============================================================================

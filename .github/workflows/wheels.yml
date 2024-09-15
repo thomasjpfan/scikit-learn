@@ -62,9 +62,9 @@ jobs:
           # - os: windows-latest
           #   python: 311
           #   platform_id: win_amd64
-          # - os: windows-latest
-          #   python: 312
-          #   platform_id: win_amd64
+          - os: windows-latest
+            python: 312
+            platform_id: win_amd64
 
           # Linux 64 bit manylinux2014
           # - os: ubuntu-latest
