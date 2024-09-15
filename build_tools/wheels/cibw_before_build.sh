@@ -5,11 +5,9 @@ set -euxo pipefail
 PROJECT_DIR="$1"
 LICENSE_FILE="$PROJECT_DIR/COPYING"
 
-cat <<EOF >>$LICENSE_FILE
-
-----
-
-EOF
+echo "" >> $PROJECT_DIR/LICENSE.txt
+echo "----" >> $PROJECT_DIR/LICENSE.txt
+echo "" >> $PROJECT_DIR/LICENSE.txt
 
 if [[ $RUNNER_OS == "Linux" ]]; then
     cat $PROJECT_DIR/build_tools/wheels/LICENSE_linux.txt >>$LICENSE_FILE

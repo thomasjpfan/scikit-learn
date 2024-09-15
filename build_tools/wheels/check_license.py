@@ -1,18 +1,21 @@
 import platform
 import re
 import site
+from itertools import chain
 from pathlib import Path
 
 site_packages = site.getsitepackages()
 
-assert (
-    len(site_packages) == 1
-), "There should be only one site packages in test environment"
-
-site_packages_path = Path(site_packages[0])
+site_packages_path = (Path(p) for p in site_packages)
 
 try:
-    distinfo_path = next(s for s in site_packages_path.glob("scikit_learn-*.dist-info"))
+    distinfo_path = next(
+        chain(
+            s
+            for site_package in site_packages_path
+            for s in site_package.glob("scikit_learn-*.dist-info")
+        )
+    )
 except StopIteration as e:
     raise RuntimeError("Unable to find scikit-learn's dist-info") from e
 
