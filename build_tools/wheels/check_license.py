@@ -1,5 +1,4 @@
 import platform
-import re
 import site
 from itertools import chain
 from pathlib import Path
@@ -23,7 +22,7 @@ license_text = (distinfo_path / "COPYING").read_text()
 
 assert "Copyright (c)" in license_text
 
-found = re.search(
-    r"This binary distribution of \w+ also bundles the following software", license_text
-)
-assert found, f"Unable to find bundled license for {platform.system()}"
+assert (
+    "This binary distribution of scikit-learn also bundles the following software"
+    in license_text
+), f"Unable to find bundled license for {platform.system()}"
