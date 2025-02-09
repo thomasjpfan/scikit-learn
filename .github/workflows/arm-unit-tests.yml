@@ -15,16 +15,16 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install linters
-      run: |
-        source build_tools/shared.sh
-        # Include pytest compatibility with mypy
-        pip install pytest $(get_dep ruff min) $(get_dep mypy min) $(get_dep black min) cython-lint
-    - name: Run linters
-      run: ./build_tools/linting.sh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install linters
+        run: |
+          source build_tools/shared.sh
+          # Include pytest compatibility with mypy
+          pip install pytest $(get_dep ruff min) $(get_dep mypy min) $(get_dep black min) cython-lint
+      - name: Run linters
+        run: ./build_tools/linting.sh
 
 
   # run-unit-tests:
