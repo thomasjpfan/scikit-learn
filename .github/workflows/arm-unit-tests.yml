@@ -14,7 +14,7 @@ concurrency:
 jobs:
   run-unit-tests:
     name: Run unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     # needs: [lint]
     steps:
       - name: Checkout
@@ -23,6 +23,11 @@ jobs:
         with:
           environment-file: build_tools/cirrus/pymin_conda_forge_linux-aarch64_conda.lock
           environment-name: ci
+          cache-environment: true
+
+      # - name: Build and run tests
+      #   shell: bash -el {0}
+      #   run: bash build_tools/github/build_test_arm.sh
 
   # lint:
   #   name: Lint
