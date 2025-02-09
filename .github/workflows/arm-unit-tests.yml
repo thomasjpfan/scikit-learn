@@ -25,9 +25,9 @@ jobs:
           environment-name: ci
           cache-environment: true
 
-      # - name: Build and run tests
-      #   shell: bash -el {0}
-      #   run: bash build_tools/github/build_test_arm.sh
+      - name: Build and run tests
+        shell: bash -el {0}
+        run: bash build_tools/github/build_test_arm.sh
 
   # lint:
   #   name: Lint
