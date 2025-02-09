@@ -33,7 +33,7 @@ pip install --verbose --no-build-isolation .
 # Report cache usage
 ccache -s --verbose
 
-mamba list
+micromamba list
 
 # Changing directory not to have module resolution use scikit-learn source
 # directory but to the installed package.

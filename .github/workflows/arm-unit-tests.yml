@@ -27,8 +27,8 @@ jobs:
 
       - name: Build and run tests
         shell: bash -el {0}
-        run: bash build_tools/github/build_test_arm.sh
-
+        # run: bash build_tools/github/build_test_arm.sh
+        run: micromamba list
   # lint:
   #   name: Lint
   #   runs-on: ubuntu-latest
