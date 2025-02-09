@@ -12,32 +12,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install linters
+        run: |
+          source build_tools/shared.sh
+          # Include pytest compatibility with mypy
+          pip install pytest $(get_dep ruff min) $(get_dep mypy min) $(get_dep black min) cython-lint
+      - name: Run linters
+        run: ./build_tools/linting.sh
+
   run-unit-tests:
     name: Run unit tests
     runs-on: ubuntu-24.04-arm
-    # needs: [lint]
+    needs: [lint]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - uses: mamba-org/setup-micromamba@v2
         with:
-          environment-file: build_tools/cirrus/pymin_conda_forge_linux-aarch64_conda.lock
+          environment-file: build_tools/github/pymin_conda_forge_linux-aarch64_conda.lock
           environment-name: ci
           cache-environment: true
 
       - name: Build and run tests
         shell: bash -el {0}
         run: bash build_tools/github/build_test_arm.sh
-  # lint:
-  #   name: Lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: Install linters
-  #       run: |
-  #         source build_tools/shared.sh
-  #         # Include pytest compatibility with mypy
-  #         pip install pytest $(get_dep ruff min) $(get_dep mypy min) $(get_dep black min) cython-lint
-  #     - name: Run linters
-  #       run: ./build_tools/linting.sh
