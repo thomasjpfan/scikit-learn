@@ -29,6 +29,10 @@ jobs:
           pip install pytest $(get_dep ruff min) $(get_dep mypy min) $(get_dep black min) cython-lint
       - name: Run linters
         run: ./build_tools/linting.sh
+      - name: Run Meson OpenMP checks
+        run: |
+          pip install ninja meson scipy
+          python build_tools/check-meson-openmp-dependencies.py
 
   run-unit-tests:
     name: Run unit tests
