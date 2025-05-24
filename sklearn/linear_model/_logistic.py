@@ -28,6 +28,8 @@ from ..utils import (
     check_random_state,
     compute_class_weight,
 )
+
+
 from ..utils._param_validation import Hidden, Interval, StrOptions
 from ..utils.extmath import row_norms, softmax
 from ..utils.metadata_routing import (
