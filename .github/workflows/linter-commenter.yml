@@ -1,0 +1,59 @@
+# Takes output from lint.yml and triggers the comment bot.
+name: linter
+
+on:
+  workflow_call:
+    inputs:
+      # pr_number:
+      #   required: true
+      #   type: string
+      # branch_sha:
+      #   required: true
+      #   type: string
+      run_id:
+        required: true
+        type: string
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+
+    # We need these permissions to be able to post / update comments
+    permissions:
+      pull-requests: write
+      issues: write
+      actions: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: python -m pip install requests
+
+      - name: Download artifact
+        id: download-artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: lint-log
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.run_id }}
+
+      - name: Print log
+        run: cat linting_output.txt
+
+      # - name: Process Comments
+      #   id: process-comments
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     PR_NUMBER: ${{ github.event.pull_request.number }}
+      #     BRANCH_SHA: ${{ github.event.pull_request.head.sha }}
+      #     RUN_ID: ${{ github.run_id }}
+      #     LOG_FILE: linting_output.txt
+      #     VERSIONS_FILE: versions.txt
+      #   run: python ./build_tools/get_comment.py
