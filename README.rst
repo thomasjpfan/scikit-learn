@@ -166,6 +166,8 @@ The project is currently maintained by a team of volunteers.
 Help and Support
 ----------------
 
+This is a cool feature
+
 Documentation
 ~~~~~~~~~~~~~
 
