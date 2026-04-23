@@ -163,6 +163,8 @@ The project is currently maintained by a team of volunteers.
 
 **Note**: `scikit-learn` was previously referred to as `scikits.learn`.
 
+This is a new feature
+
 Help and Support
 ----------------
 
