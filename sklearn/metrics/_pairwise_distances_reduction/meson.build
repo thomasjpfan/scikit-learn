@@ -204,3 +204,18 @@ _nanobind_smoke = py.extension_module(
   subdir: 'sklearn/metrics/_pairwise_distances_reduction',
   install: true
 )
+
+# Temporary validation module for the C++ metric kernels (commit 2a). Exercises
+# metric_kernels.hpp over dense + CSR inputs so a Python test can compare the
+# functors against the current Cython DistanceMetric. Removed once _dist_metrics
+# delegates to the kernels.
+_metric_kernels_test = py.extension_module(
+  '_metric_kernels_test',
+  'src/_metric_kernels_test.cpp',
+  dependencies: [nanobind_dep],
+  include_directories: include_directories('../src'),
+  override_options: ['cpp_std=c++17'],
+  gnu_symbol_visibility: 'hidden',
+  subdir: 'sklearn/metrics/_pairwise_distances_reduction',
+  install: true
+)
