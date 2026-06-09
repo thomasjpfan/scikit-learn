@@ -243,6 +243,35 @@ sklearn_root_cython_tree = [
 
 sklearn_dir = py.get_install_dir() / 'sklearn'
 
+# nanobind: C++ <-> Python binding layer, used by C++ extension modules (the
+# first being metrics/_pairwise_distances_reduction). nanobind is acquired as a
+# build dependency (see pyproject.toml [build-system].requires) and located via
+# its CLI. It is not header-only: it ships a single combined support source
+# (nb_combined.cpp) that we compile once into a static library and link into
+# each nanobind extension module. nanobind requires C++17.
+nanobind_include_dir = run_command(py,
+  ['-m', 'nanobind', '--include_dir'], check: true).stdout().strip()
+nanobind_root = fs.parent(nanobind_include_dir)
+nanobind_inc = include_directories(
+  nanobind_include_dir,
+  nanobind_root / 'ext' / 'robin_map' / 'include',
+)
+nanobind_support_lib = static_library(
+  'nanobind_support',
+  nanobind_root / 'src' / 'nb_combined.cpp',
+  include_directories: nanobind_inc,
+  dependencies: [py.dependency()],
+  override_options: ['cpp_std=c++17'],
+  gnu_symbol_visibility: 'hidden',
+  install: false,
+)
+# Convenience dependency for nanobind extension modules. Modules using this must
+# also set `override_options: ['cpp_std=c++17']` (nanobind's headers need C++17).
+nanobind_dep = declare_dependency(
+  include_directories: nanobind_inc,
+  link_with: nanobind_support_lib,
+)
+
 # Subpackages are mostly in alphabetical order except to handle Cython
 # dependencies across subpackages
 subdir('__check_build')
