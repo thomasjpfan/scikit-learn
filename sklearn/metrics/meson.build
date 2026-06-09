@@ -29,10 +29,13 @@ _dist_metrics_pyx = custom_target(
   depends: metrics_cython_tree,
 )
 
+# _dist_metrics is compiled as C++ because its DistanceMetric classes delegate
+# their vector-wise math to the C++ functors in src/metric_kernels.hpp.
 _dist_metrics = py.extension_module(
   '_dist_metrics',
-  cython_gen.process(_dist_metrics_pyx),
+  cython_gen_cpp.process(_dist_metrics_pyx),
   dependencies: [np_dep],
+  include_directories: include_directories('src'),
   subdir: 'sklearn/metrics',
   install: true
 )
