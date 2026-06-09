@@ -194,11 +194,25 @@ _radius_neighbors_classmode = py.extension_module(
 
 # Temporary nanobind toolchain smoke test (first commit of the C++/nanobind
 # port). Proves nanobind links and C++17 is applied across the build matrix;
-# removed once the real C++ reductions module lands.
+# removed once the real C++ reductions module is complete.
 _nanobind_smoke = py.extension_module(
   '_nanobind_smoke',
   'src/_nanobind_smoke.cpp',
   dependencies: [nanobind_dep],
+  override_options: ['cpp_std=c++17'],
+  gnu_symbol_visibility: 'hidden',
+  subdir: 'sklearn/metrics/_pairwise_distances_reduction',
+  install: true
+)
+
+# C++/nanobind pairwise-distances reductions. Built from header-only engine
+# files (base/heap/argkmin .hpp) plus the shared metric kernels in metrics/src.
+# Selected at runtime via _dispatcher.py when the C++ backend is enabled.
+_reductions = py.extension_module(
+  '_reductions',
+  'src/reductions.cpp',
+  dependencies: [nanobind_dep, openmp_dep],
+  include_directories: include_directories('src', '../src'),
   override_options: ['cpp_std=c++17'],
   gnu_symbol_visibility: 'hidden',
   subdir: 'sklearn/metrics/_pairwise_distances_reduction',

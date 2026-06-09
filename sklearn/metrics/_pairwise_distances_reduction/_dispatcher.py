@@ -1,7 +1,9 @@
 # Authors: The scikit-learn developers
 # SPDX-License-Identifier: BSD-3-Clause
 
+import os
 from abc import abstractmethod
+from numbers import Integral
 from typing import List
 
 import numpy as np
@@ -26,6 +28,30 @@ from sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode i
     RadiusNeighborsClassMode32,
     RadiusNeighborsClassMode64,
 )
+from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
+
+# --- Experimental C++/nanobind backend selection ----------------------------
+# During the Cython -> C++ port, the C++ reductions live alongside the Cython
+# ones and are selected only when SKLEARN_PAIRWISE_DIST_BACKEND=cpp is set and
+# the specific case is supported. This toggle is private and temporary: it lets
+# us A/B the two implementations before flipping the default.
+_STRATEGY_TO_INT = {"auto": 0, "parallel_on_X": 1, "parallel_on_Y": 2}
+
+
+def _cpp_backend_enabled():
+    return os.environ.get("SKLEARN_PAIRWISE_DIST_BACKEND", "").lower() == "cpp"
+
+
+def _resolve_chunk_size(chunk_size):
+    if chunk_size is None:
+        chunk_size = get_config().get("pairwise_dist_chunk_size", 256)
+    return int(chunk_size)
+
+
+def _resolve_strategy(strategy):
+    if strategy is None:
+        strategy = get_config().get("pairwise_dist_parallel_strategy", "auto")
+    return _STRATEGY_TO_INT[strategy]
 
 
 def sqeuclidean_row_norms(X, num_threads):
@@ -273,6 +299,48 @@ class ArgKmin(BaseDistancesReductionDispatcher):
         for the concrete implementation are therefore freed when this classmethod
         returns.
         """
+
+        # Experimental C++/nanobind backend (private toggle). Currently handles
+        # the dense (sq)euclidean case via the generic functor path. Only valid
+        # inputs are routed here; anything else falls through to the Cython
+        # implementation, which keeps the input validation and error messages.
+        def _cpp_argkmin_supported():
+            return (
+                metric in ("euclidean", "sqeuclidean")
+                and not issparse(X)
+                and not issparse(Y)
+                and getattr(X, "ndim", None) == 2
+                and getattr(Y, "ndim", None) == 2
+                and getattr(getattr(X, "flags", None), "c_contiguous", False)
+                and getattr(getattr(Y, "flags", None), "c_contiguous", False)
+                and X.dtype == Y.dtype
+                and X.dtype in (np.float32, np.float64)
+                and isinstance(k, Integral)
+                and k >= 1
+                # Cases carrying extra metric_kwargs fall through to Cython,
+                # which emits the "ignored metric_kwargs" UserWarning.
+                and (
+                    metric_kwargs is None
+                    or set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
+                )
+            )
+
+        if _cpp_backend_enabled() and _cpp_argkmin_supported():
+            from sklearn.metrics._pairwise_distances_reduction._reductions import (
+                argkmin_compute,
+            )
+
+            return argkmin_compute(
+                X,
+                Y,
+                int(k),
+                _resolve_chunk_size(chunk_size),
+                _openmp_effective_n_threads(),
+                _resolve_strategy(strategy),
+                metric == "sqeuclidean",
+                return_distance,
+            )
+
         if X.dtype == Y.dtype == np.float64:
             return ArgKmin64.compute(
                 X=X,
