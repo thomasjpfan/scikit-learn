@@ -300,13 +300,15 @@ class ArgKmin(BaseDistancesReductionDispatcher):
         returns.
         """
 
-        # Experimental C++/nanobind backend (private toggle). Currently handles
-        # the dense (sq)euclidean case via the generic functor path. Only valid
-        # inputs are routed here; anything else falls through to the Cython
-        # implementation, which keeps the input validation and error messages.
+        # Experimental C++/nanobind backend (private toggle). Routes valid,
+        # supported dense cases to the C++ reductions; everything else
+        # (validation, warnings, unsupported metrics, sparse) stays on the
+        # Cython path. The generic metric is built by the single (Cython) parser
+        # and the C++ side borrows its functor.
         def _cpp_argkmin_supported():
-            return (
-                metric in ("euclidean", "sqeuclidean")
+            if not (
+                isinstance(metric, str)
+                and metric in cls.valid_metrics()
                 and not issparse(X)
                 and not issparse(Y)
                 and getattr(X, "ndim", None) == 2
@@ -317,18 +319,33 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 and X.dtype in (np.float32, np.float64)
                 and isinstance(k, Integral)
                 and k >= 1
-                # Cases carrying extra metric_kwargs fall through to Cython,
-                # which emits the "ignored metric_kwargs" UserWarning.
-                and (
-                    metric_kwargs is None
-                    or set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
-                )
-            )
+            ):
+                return False
+            # For (sq)euclidean, extra metric_kwargs are ignored with a
+            # UserWarning by the Cython path; defer those so the warning is kept.
+            if metric in ("euclidean", "sqeuclidean") and metric_kwargs is not None:
+                return set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
+            return True
 
         if _cpp_backend_enabled() and _cpp_argkmin_supported():
             from sklearn.metrics._pairwise_distances_reduction._reductions import (
                 argkmin_compute,
             )
+
+            use_squared_distances = metric == "sqeuclidean"
+            get_metric_name = "euclidean" if use_squared_distances else metric
+            forwarded_kwargs = {
+                key: value
+                for key, value in (metric_kwargs or {}).items()
+                if key not in ("X_norm_squared", "Y_norm_squared")
+            }
+            # Build (and keep alive for the whole call) the functor-backed metric.
+            distance_metric = DistanceMetric.get_metric(
+                get_metric_name, dtype=X.dtype, **forwarded_kwargs
+            )
+            # Metric-specific input checks, matching DatasetsPair.get_for.
+            distance_metric._validate_data(X)
+            distance_metric._validate_data(Y)
 
             return argkmin_compute(
                 X,
@@ -337,7 +354,8 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 _resolve_chunk_size(chunk_size),
                 _openmp_effective_n_threads(),
                 _resolve_strategy(strategy),
-                metric == "sqeuclidean",
+                distance_metric._functor_address(),
+                use_squared_distances,
                 return_distance,
             )
 

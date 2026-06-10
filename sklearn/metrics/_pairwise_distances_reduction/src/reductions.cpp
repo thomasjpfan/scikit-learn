@@ -39,21 +39,22 @@ nb::object argkmin_compute(
     nb::ndarray<const T, nb::ndim<2>, nb::c_contig> X,
     nb::ndarray<const T, nb::ndim<2>, nb::c_contig> Y,
     idx_t k, idx_t chunk_size, idx_t n_threads, int strategy,
-    bool use_squared_distances, bool return_distance) {
+    std::uintptr_t metric_ptr, bool use_squared_distances, bool return_distance) {
     idx_t n_X = static_cast<idx_t>(X.shape(0));
     idx_t n_Y = static_cast<idx_t>(Y.shape(0));
     idx_t n_features = static_cast<idx_t>(X.shape(1));
 
-    // Euclidean specialization is added later; for now the (sq)euclidean metric
-    // is evaluated through the functor (rdist == squared Euclidean distance).
-    std::unique_ptr<sklearn::metrics::MetricBase<T>> metric(
-        sklearn::metrics::make_euclidean<T>());
+    // The MetricBase<T> functor is built and owned by a Cython DistanceMetric
+    // (the single metric parser), which the dispatcher keeps alive for the
+    // duration of this call; we only borrow it here.
+    const sklearn::metrics::MetricBase<T>* metric =
+        reinterpret_cast<const sklearn::metrics::MetricBase<T>*>(metric_ptr);
 
     ChunkingConfig cfg = make_chunking_config(
         n_X, n_Y, chunk_size, n_threads, static_cast<Strategy>(strategy));
 
     ArgKmin<T> red(X.data(), Y.data(), n_features, n_X, n_Y, k,
-                   metric.get(), use_squared_distances, cfg);
+                   metric, use_squared_distances, cfg);
 
     {
         nb::gil_scoped_release release;
@@ -78,10 +79,10 @@ nb::object argkmin_compute(
 NB_MODULE(_reductions, m) {
     m.def("argkmin_compute", &argkmin_compute<double>,
           nb::arg("X"), nb::arg("Y"), nb::arg("k"), nb::arg("chunk_size"),
-          nb::arg("n_threads"), nb::arg("strategy"),
+          nb::arg("n_threads"), nb::arg("strategy"), nb::arg("metric_ptr"),
           nb::arg("use_squared_distances"), nb::arg("return_distance"));
     m.def("argkmin_compute", &argkmin_compute<float>,
           nb::arg("X"), nb::arg("Y"), nb::arg("k"), nb::arg("chunk_size"),
-          nb::arg("n_threads"), nb::arg("strategy"),
+          nb::arg("n_threads"), nb::arg("strategy"), nb::arg("metric_ptr"),
           nb::arg("use_squared_distances"), nb::arg("return_distance"));
 }

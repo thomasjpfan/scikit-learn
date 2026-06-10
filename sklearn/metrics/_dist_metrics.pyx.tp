@@ -19,6 +19,7 @@ cimport numpy as cnp
 cnp.import_array()  # required in order to use C-API
 
 from libc.math cimport fabs, sqrt, exp, pow, cos, sin, asin
+from libc.stdint cimport uintptr_t
 
 from scipy.sparse import csr_matrix, issparse
 from sklearn.utils._typedefs cimport float64_t, float32_t, int32_t, intp_t
@@ -1123,6 +1124,15 @@ cdef class _FunctorDistanceMetric{{name_suffix}}(DistanceMetric{{name_suffix}}):
 
     cdef {{INPUT_DTYPE_t}} _dist_to_rdist(self, {{INPUT_DTYPE_t}} dist) except -1 nogil:
         return self.functor.dist_to_rdist(dist)
+
+    def _functor_address(self):
+        """Address of the C++ MetricBase functor, as a Python int.
+
+        Used by the C++ pairwise-distances reductions to borrow the functor for
+        the generic-metric path. The owning DistanceMetric instance must be kept
+        alive for the whole duration of the borrow.
+        """
+        return <uintptr_t>self.functor
 
 
 #------------------------------------------------------------
