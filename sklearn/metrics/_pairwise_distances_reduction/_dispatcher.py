@@ -29,6 +29,8 @@ from sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode i
     RadiusNeighborsClassMode64,
 )
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
+from sklearn.utils.fixes import _in_unstable_openblas_configuration
+from sklearn.utils.parallel import _get_threadpool_controller
 
 # --- Experimental C++/nanobind backend selection ----------------------------
 # During the Cython -> C++ port, the C++ reductions live alongside the Cython
@@ -377,6 +379,18 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             )
             X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
             if not X_is_sparse and not Y_is_sparse:
+                if (
+                    metric
+                    in (
+                        "euclidean",
+                        "sqeuclidean",
+                    )
+                    and not _in_unstable_openblas_configuration()
+                ):
+                    # GEMM specialization: limit BLAS to 1 thread to avoid
+                    # over-subscription with the chunk-level OpenMP parallelism.
+                    with _get_threadpool_controller().limit(limits=1, user_api="blas"):
+                        return _reductions.euclidean_argkmin_dense_dense(X, Y, *common)
                 return _reductions.argkmin_dense_dense(X, Y, *common)
             if X_is_sparse and Y_is_sparse:
                 Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)

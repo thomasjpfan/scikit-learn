@@ -17,6 +17,7 @@
 #include "argkmin.hpp"
 #include "base.hpp"
 #include "datasets_pair.hpp"
+#include "middle_term.hpp"
 
 namespace nb = nanobind;
 using namespace sklearn::pdr;
@@ -156,11 +157,52 @@ nb::object argkmin_dense_sparse(
                           use_squared_distances, return_distance);
 }
 
+// Euclidean GEMM specialization (dense-dense). The borrowed metric is the
+// Euclidean functor, used only for the final rdist->dist (sqrt) conversion.
+template <typename T>
+nb::object euclidean_argkmin_dense_dense(
+    f2d<T> X, f2d<T> Y, idx_t k, idx_t chunk_size, idx_t n_threads, int strategy,
+    std::uintptr_t metric_ptr, bool use_squared_distances, bool return_distance) {
+    idx_t n_X = static_cast<idx_t>(X.shape(0));
+    idx_t n_Y = static_cast<idx_t>(Y.shape(0));
+    idx_t n_features = static_cast<idx_t>(X.shape(1));
+
+    dgemm_t dgemm = load_dgemm();  // GIL held: imports scipy, reads the capsule
+    const auto* metric = as_metric<T>(metric_ptr);
+    ChunkingConfig cfg = make_chunking_config(
+        n_X, n_Y, chunk_size, n_threads, static_cast<Strategy>(strategy));
+
+    // Row norms (OpenMP, but the GIL is fine to hold for this small pass).
+    std::vector<double> X_norm = squared_row_norms<T>(X.data(), n_X, n_features, n_threads);
+    std::vector<double> Y_norm = squared_row_norms<T>(Y.data(), n_Y, n_features, n_threads);
+
+    EuclideanArgKmin<T> red(X.data(), Y.data(), n_features, n_X, n_Y, k,
+                            use_squared_distances, metric, std::move(X_norm),
+                            std::move(Y_norm), dgemm, cfg);
+    {
+        nb::gil_scoped_release release;
+        run_reduction(red, cfg);
+        if (return_distance) red.compute_exact_distances();
+    }
+    nb::object indices = owned_2d(std::move(red.argkmin_indices),
+                                  static_cast<std::size_t>(n_X),
+                                  static_cast<std::size_t>(k));
+    if (return_distance) {
+        nb::object distances = owned_2d(std::move(red.argkmin_distances),
+                                        static_cast<std::size_t>(n_X),
+                                        static_cast<std::size_t>(k));
+        return nb::make_tuple(distances, indices);
+    }
+    return indices;
+}
+
 }  // namespace
 
 NB_MODULE(_reductions, m) {
     m.def("argkmin_dense_dense", &argkmin_dense_dense<double>);
     m.def("argkmin_dense_dense", &argkmin_dense_dense<float>);
+    m.def("euclidean_argkmin_dense_dense", &euclidean_argkmin_dense_dense<double>);
+    m.def("euclidean_argkmin_dense_dense", &euclidean_argkmin_dense_dense<float>);
     m.def("argkmin_sparse_sparse", &argkmin_sparse_sparse<double>);
     m.def("argkmin_sparse_sparse", &argkmin_sparse_sparse<float>);
     m.def("argkmin_sparse_dense", &argkmin_sparse_dense<double>);
