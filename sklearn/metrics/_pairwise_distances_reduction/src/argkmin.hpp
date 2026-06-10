@@ -18,6 +18,7 @@
 
 #include "metric_kernels.hpp"
 #include "base.hpp"
+#include "datasets_pair.hpp"
 #include "heap.hpp"
 
 namespace sklearn {
@@ -27,13 +28,10 @@ using sklearn::metrics::MetricBase;
 
 template <typename T>
 struct ArgKmin : ReductionHooks {
-    const T* X;
-    const T* Y;
-    idx_t n_features;
+    DatasetsPair<T> dp;            // distance source (dense or any CSR combination)
     idx_t n_samples_X;
     idx_t n_samples_Y;
     idx_t k;
-    const MetricBase<T>* metric;   // borrowed
     bool use_squared_distances;
     const ChunkingConfig& cfg;
 
@@ -48,23 +46,17 @@ struct ArgKmin : ReductionHooks {
     std::vector<std::vector<double>> heaps_r_buf;
     std::vector<std::vector<idx_t>> heaps_i_buf;
 
-    ArgKmin(const T* X_, const T* Y_, idx_t n_features_,
-            idx_t n_samples_X_, idx_t n_samples_Y_, idx_t k_,
-            const MetricBase<T>* metric_, bool use_squared_distances_,
-            const ChunkingConfig& cfg_)
-        : X(X_), Y(Y_), n_features(n_features_),
-          n_samples_X(n_samples_X_), n_samples_Y(n_samples_Y_), k(k_),
-          metric(metric_), use_squared_distances(use_squared_distances_), cfg(cfg_) {
+    ArgKmin(DatasetsPair<T> dp_, idx_t n_samples_X_, idx_t n_samples_Y_, idx_t k_,
+            bool use_squared_distances_, const ChunkingConfig& cfg_)
+        : dp(dp_), n_samples_X(n_samples_X_), n_samples_Y(n_samples_Y_), k(k_),
+          use_squared_distances(use_squared_distances_), cfg(cfg_) {
         argkmin_distances.assign(n_samples_X * k, std::numeric_limits<double>::max());
         argkmin_indices.assign(n_samples_X * k, 0);
         heaps_r.resize(cfg.chunks_n_threads);
         heaps_i.resize(cfg.chunks_n_threads);
     }
 
-    inline double surrogate(idx_t i, idx_t j) const {
-        return static_cast<double>(
-            metric->rdist(X + i * n_features, Y + j * n_features, n_features));
-    }
+    inline double surrogate(idx_t i, idx_t j) const { return dp.rdist(i, j); }
 
     void compute_and_reduce(idx_t X_start, idx_t X_end, idx_t Y_start, idx_t Y_end, int tn) {
         idx_t nX = X_end - X_start, nY = Y_end - Y_start;
@@ -127,7 +119,7 @@ struct ArgKmin : ReductionHooks {
             for (idx_t j = 0; j < k; ++j) {
                 // Guard against -0. (catastrophic cancellation) producing NaN.
                 double r = std::max(argkmin_distances[i * k + j], 0.0);
-                argkmin_distances[i * k + j] = metric->rdist_to_dist(static_cast<T>(r));
+                argkmin_distances[i * k + j] = dp.metric->rdist_to_dist(static_cast<T>(r));
             }
     }
 };

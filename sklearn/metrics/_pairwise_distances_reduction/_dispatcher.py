@@ -54,6 +54,31 @@ def _resolve_strategy(strategy):
     return _STRATEGY_TO_INT[strategy]
 
 
+def _cpp_is_dense(A):
+    return (
+        not issparse(A)
+        and getattr(A, "ndim", None) == 2
+        and getattr(getattr(A, "flags", None), "c_contiguous", False)
+    )
+
+
+def _cpp_is_csr(A):
+    return (
+        issparse(A)
+        and A.format == "csr"
+        and A.nnz > 0
+        and A.indices.dtype == A.indptr.dtype == np.int32
+    )
+
+
+def _cpp_unpack_csr(A, dtype):
+    return (
+        np.ascontiguousarray(A.data, dtype=dtype),
+        np.ascontiguousarray(A.indices, dtype=np.int32),
+        np.ascontiguousarray(A.indptr, dtype=np.int32),
+    )
+
+
 def sqeuclidean_row_norms(X, num_threads):
     """Compute the squared euclidean norm of the rows of X in parallel.
 
@@ -309,12 +334,8 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             if not (
                 isinstance(metric, str)
                 and metric in cls.valid_metrics()
-                and not issparse(X)
-                and not issparse(Y)
-                and getattr(X, "ndim", None) == 2
-                and getattr(Y, "ndim", None) == 2
-                and getattr(getattr(X, "flags", None), "c_contiguous", False)
-                and getattr(getattr(Y, "flags", None), "c_contiguous", False)
+                and (_cpp_is_dense(X) or _cpp_is_csr(X))
+                and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
                 and X.dtype == Y.dtype
                 and X.dtype in (np.float32, np.float64)
                 and isinstance(k, Integral)
@@ -328,9 +349,7 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             return True
 
         if _cpp_backend_enabled() and _cpp_argkmin_supported():
-            from sklearn.metrics._pairwise_distances_reduction._reductions import (
-                argkmin_compute,
-            )
+            from sklearn.metrics._pairwise_distances_reduction import _reductions
 
             use_squared_distances = metric == "sqeuclidean"
             get_metric_name = "euclidean" if use_squared_distances else metric
@@ -347,9 +366,7 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             distance_metric._validate_data(X)
             distance_metric._validate_data(Y)
 
-            return argkmin_compute(
-                X,
-                Y,
+            common = (
                 int(k),
                 _resolve_chunk_size(chunk_size),
                 _openmp_effective_n_threads(),
@@ -358,6 +375,20 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 use_squared_distances,
                 return_distance,
             )
+            X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
+            if not X_is_sparse and not Y_is_sparse:
+                return _reductions.argkmin_dense_dense(X, Y, *common)
+            if X_is_sparse and Y_is_sparse:
+                Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+                Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+                return _reductions.argkmin_sparse_sparse(
+                    Xd, Xi, Xp, Yd, Yi, Yp, X.shape[1], *common
+                )
+            if X_is_sparse:
+                Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+                return _reductions.argkmin_sparse_dense(Xd, Xi, Xp, Y, *common)
+            Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+            return _reductions.argkmin_dense_sparse(X, Yd, Yi, Yp, *common)
 
         if X.dtype == Y.dtype == np.float64:
             return ArgKmin64.compute(
