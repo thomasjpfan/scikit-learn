@@ -1,7 +1,6 @@
 # Authors: The scikit-learn developers
 # SPDX-License-Identifier: BSD-3-Clause
 
-import os
 import warnings
 from abc import abstractmethod
 from numbers import Integral, Real
@@ -11,41 +10,15 @@ from scipy.sparse import issparse
 
 from sklearn import get_config
 from sklearn.metrics._dist_metrics import BOOL_METRICS, METRIC_MAPPING64, DistanceMetric
-from sklearn.metrics._pairwise_distances_reduction._argkmin import ArgKmin32, ArgKmin64
-from sklearn.metrics._pairwise_distances_reduction._argkmin_classmode import (
-    ArgKminClassMode32,
-    ArgKminClassMode64,
-)
-from sklearn.metrics._pairwise_distances_reduction._base import (
-    _sqeuclidean_row_norms32,
-    _sqeuclidean_row_norms64,
-)
-from sklearn.metrics._pairwise_distances_reduction._radius_neighbors import (
-    RadiusNeighbors32,
-    RadiusNeighbors64,
-)
-from sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode import (
-    RadiusNeighborsClassMode32,
-    RadiusNeighborsClassMode64,
-)
 from sklearn.utils import check_scalar
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from sklearn.utils.fixes import _in_unstable_openblas_configuration
 from sklearn.utils.parallel import _get_threadpool_controller
 
-# --- C++/nanobind backend selection ------------------------------------------
-# The C++ reductions are the default. The legacy Cython implementation is still
-# available as a fallback for the cases the C++ backend does not (yet) handle,
-# and can be forced for the whole module by setting
-# SKLEARN_PAIRWISE_DIST_BACKEND=cython. This override is temporary and will be
-# removed together with the Cython implementation.
+# --- C++/nanobind backend ----------------------------------------------------
 _STRATEGY_TO_INT = {"auto": 0, "parallel_on_X": 1, "parallel_on_Y": 2}
 
 _CPP_GEMM_AVAILABLE = None
-
-
-def _cpp_backend_enabled():
-    return os.environ.get("SKLEARN_PAIRWISE_DIST_BACKEND", "cpp").lower() != "cython"
 
 
 def _cpp_gemm_available():
@@ -248,8 +221,7 @@ def _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs):
 
 def _cpp_classmode_supported(cls, X, Y, metric, weights):
     return (
-        _cpp_backend_enabled()
-        and _cpp_metric_supported(cls, metric)
+        _cpp_metric_supported(cls, metric)
         and (_cpp_is_dense(X) or _cpp_is_csr(X))
         and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
         and X.dtype == Y.dtype
@@ -274,15 +246,17 @@ def sqeuclidean_row_norms(X, num_threads):
     sqeuclidean_row_norms : ndarray of shape (n_samples,)
         Arrays containing the squared euclidean norm of each row of X.
     """
-    if X.dtype == np.float64:
-        return np.asarray(_sqeuclidean_row_norms64(X, num_threads))
-    if X.dtype == np.float32:
-        return np.asarray(_sqeuclidean_row_norms32(X, num_threads))
-
-    raise ValueError(
-        "Only float64 or float32 datasets are supported at this time, "
-        f"got: X.dtype={X.dtype}."
-    )
+    if X.dtype not in (np.float64, np.float32):
+        raise ValueError(
+            "Only float64 or float32 datasets are supported at this time, "
+            f"got: X.dtype={X.dtype}."
+        )
+    if issparse(X):
+        X = X.tocsr()
+        return np.asarray(X.multiply(X).sum(axis=1)).ravel().astype(np.float64)
+    if not X.flags.c_contiguous:
+        raise ValueError("ndarray is not C-contiguous")
+    return np.einsum("ij,ij->i", X, X, dtype=np.float64)
 
 
 class BaseDistancesReductionDispatcher:
@@ -529,7 +503,7 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 and k >= 1
             )
 
-        if _cpp_backend_enabled() and _cpp_argkmin_supported():
+        if _cpp_argkmin_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
             _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs)
@@ -574,38 +548,8 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
             return _reductions.argkmin_dense_sparse(X, Yd, Yi, Yp, *common)
 
-        if _cpp_backend_enabled():
-            # Backend enabled but the case is unsupported: the input is invalid.
-            _cpp_raise_unsupported(X, Y, metric, k=k)
-
-        if X.dtype == Y.dtype == np.float64:
-            return ArgKmin64.compute(
-                X=X,
-                Y=Y,
-                k=k,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-                return_distance=return_distance,
-            )
-
-        if X.dtype == Y.dtype == np.float32:
-            return ArgKmin32.compute(
-                X=X,
-                Y=Y,
-                k=k,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-                return_distance=return_distance,
-            )
-
-        raise ValueError(
-            "Only float64 or float32 datasets pairs are supported at this time, "
-            f"got: X.dtype={X.dtype} and Y.dtype={Y.dtype}."
-        )
+        # The case is unsupported: the input is invalid.
+        _cpp_raise_unsupported(X, Y, metric, k=k)
 
 
 class RadiusNeighbors(BaseDistancesReductionDispatcher):
@@ -734,7 +678,7 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
                 and radius >= 0
             )
 
-        if _cpp_backend_enabled() and _cpp_radius_supported():
+        if _cpp_radius_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
             _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs)
@@ -783,39 +727,7 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
             idx_flat, indptr = res
             return _cpp_ragged(idx_flat, indptr)
 
-        if _cpp_backend_enabled():
-            _cpp_raise_unsupported(X, Y, metric, radius=radius)
-
-        if X.dtype == Y.dtype == np.float64:
-            return RadiusNeighbors64.compute(
-                X=X,
-                Y=Y,
-                radius=radius,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-                sort_results=sort_results,
-                return_distance=return_distance,
-            )
-
-        if X.dtype == Y.dtype == np.float32:
-            return RadiusNeighbors32.compute(
-                X=X,
-                Y=Y,
-                radius=radius,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-                sort_results=sort_results,
-                return_distance=return_distance,
-            )
-
-        raise ValueError(
-            "Only float64 or float32 datasets pairs are supported at this time, "
-            f"got: X.dtype={X.dtype} and Y.dtype={Y.dtype}."
-        )
+        _cpp_raise_unsupported(X, Y, metric, radius=radius)
 
 
 class ArgKminClassMode(BaseDistancesReductionDispatcher):
@@ -983,41 +895,7 @@ class ArgKminClassMode(BaseDistancesReductionDispatcher):
             class_scores /= class_scores.sum(axis=1, keepdims=True)
             return class_scores
 
-        if _cpp_backend_enabled():
-            _cpp_raise_unsupported(X, Y, metric, k=k)
-
-        if X.dtype == Y.dtype == np.float64:
-            return ArgKminClassMode64.compute(
-                X=X,
-                Y=Y,
-                k=k,
-                weights=weights,
-                Y_labels=np.array(Y_labels, dtype=np.intp),
-                unique_Y_labels=np.array(unique_Y_labels, dtype=np.intp),
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-            )
-
-        if X.dtype == Y.dtype == np.float32:
-            return ArgKminClassMode32.compute(
-                X=X,
-                Y=Y,
-                k=k,
-                weights=weights,
-                Y_labels=np.array(Y_labels, dtype=np.intp),
-                unique_Y_labels=np.array(unique_Y_labels, dtype=np.intp),
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-            )
-
-        raise ValueError(
-            "Only float64 or float32 datasets pairs are supported at this time, "
-            f"got: X.dtype={X.dtype} and Y.dtype={Y.dtype}."
-        )
+        _cpp_raise_unsupported(X, Y, metric, k=k)
 
 
 class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
@@ -1197,40 +1075,4 @@ class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
             class_scores /= normalizer
             return class_scores
 
-        if _cpp_backend_enabled():
-            _cpp_raise_unsupported(X, Y, metric, radius=radius)
-
-        if X.dtype == Y.dtype == np.float64:
-            return RadiusNeighborsClassMode64.compute(
-                X=X,
-                Y=Y,
-                radius=radius,
-                weights=weights,
-                Y_labels=np.array(Y_labels, dtype=np.intp),
-                unique_Y_labels=np.array(unique_Y_labels, dtype=np.intp),
-                outlier_label=outlier_label,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-            )
-
-        if X.dtype == Y.dtype == np.float32:
-            return RadiusNeighborsClassMode32.compute(
-                X=X,
-                Y=Y,
-                radius=radius,
-                weights=weights,
-                Y_labels=np.array(Y_labels, dtype=np.intp),
-                unique_Y_labels=np.array(unique_Y_labels, dtype=np.intp),
-                outlier_label=outlier_label,
-                metric=metric,
-                chunk_size=chunk_size,
-                metric_kwargs=metric_kwargs,
-                strategy=strategy,
-            )
-
-        raise ValueError(
-            "Only float64 or float32 datasets pairs are supported at this time, "
-            f"got: X.dtype={X.dtype} and Y.dtype={Y.dtype}."
-        )
+        _cpp_raise_unsupported(X, Y, metric, radius=radius)
