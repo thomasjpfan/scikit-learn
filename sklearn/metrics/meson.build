@@ -6,34 +6,16 @@ metrics_cython_tree = [
 # Some metrics code cimports code from utils, we may as well copy all the necessary files
 metrics_cython_tree += utils_cython_tree
 
-_dist_metrics_pxd = custom_target(
-  '_dist_metrics_pxd',
-  output: '_dist_metrics.pxd',
-  input: '_dist_metrics.pxd.tp',
-  command: [tempita, '@INPUT@', '-o', '@OUTDIR@'],
-  # Need to install the generated pxd because it is needed in other subpackages
-  # Cython code, e.g. sklearn.cluster
-  install_dir: sklearn_dir / 'metrics',
-  install: true,
-)
-metrics_cython_tree += [_dist_metrics_pxd]
+# _dist_metrics.pxd is cimported by other subpackages (e.g. sklearn.cluster,
+# sklearn.neighbors), so copy it into the build tree and ship it.
+metrics_cython_tree += [fs.copyfile('_dist_metrics.pxd')]
+py.install_sources('_dist_metrics.pxd', subdir: 'sklearn/metrics')
 
-_dist_metrics_pyx = custom_target(
-  '_dist_metrics_pyx',
-  output: '_dist_metrics.pyx',
-  input: '_dist_metrics.pyx.tp',
-  command: [tempita, '@INPUT@', '-o', '@OUTDIR@'],
-  # TODO in principle this should go in py.extension_module below. This is
-  # temporary work-around for dependency issue with .pyx.tp files. For more
-  # details, see https://github.com/mesonbuild/meson/issues/13212
-  depends: metrics_cython_tree,
-)
-
-# _dist_metrics is compiled as C++ because its DistanceMetric classes delegate
-# their vector-wise math to the C++ functors in src/metric_kernels.hpp.
+# _dist_metrics is compiled as C++ because its DistanceMetric class delegates
+# its vector-wise math to the C++ functors in src/metric_kernels.hpp.
 _dist_metrics = py.extension_module(
   '_dist_metrics',
-  cython_gen_cpp.process(_dist_metrics_pyx),
+  [cython_gen_cpp.process('_dist_metrics.pyx'), metrics_cython_tree],
   dependencies: [np_dep],
   include_directories: include_directories('src'),
   subdir: 'sklearn/metrics',

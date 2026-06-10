@@ -33,7 +33,7 @@ cimport numpy as cnp
 from libc.float cimport DBL_MAX
 
 import numpy as np
-from sklearn.metrics._dist_metrics cimport DistanceMetric64
+from sklearn.metrics._dist_metrics cimport DistanceMetric
 from sklearn.cluster._hierarchical_fast cimport UnionFind
 from sklearn.cluster._hdbscan._tree cimport HIERARCHY_t
 from sklearn.cluster._hdbscan._tree import HIERARCHY_dtype
@@ -111,7 +111,7 @@ cpdef cnp.ndarray[MST_edge_t, ndim=1, mode='c'] mst_from_mutual_reachability(
 cpdef cnp.ndarray[MST_edge_t, ndim=1, mode='c'] mst_from_data_matrix(
     const float64_t[:, ::1] raw_data,
     const float64_t[::1] core_distances,
-    DistanceMetric64 dist_metric,
+    DistanceMetric dist_metric,
     float64_t alpha=1.0
 ):
     """Compute the Minimum Spanning Tree (MST) representation of the mutual-

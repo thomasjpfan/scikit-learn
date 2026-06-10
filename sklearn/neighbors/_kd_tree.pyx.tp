@@ -28,10 +28,10 @@ DOC_DICT{{name_suffix}} = {
 }
 
 VALID_METRICS{{name_suffix}} = [
-    'EuclideanDistance{{name_suffix}}',
-    'ManhattanDistance{{name_suffix}}',
-    'ChebyshevDistance{{name_suffix}}',
-    'MinkowskiDistance{{name_suffix}}'
+    'EuclideanDistance',
+    'ManhattanDistance',
+    'ChebyshevDistance',
+    'MinkowskiDistance'
 ]
 
 {{endfor}}
