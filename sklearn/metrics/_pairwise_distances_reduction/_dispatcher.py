@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import os
+import warnings
 from abc import abstractmethod
 from numbers import Integral, Real
 from typing import List
@@ -87,6 +88,71 @@ def _cpp_ragged(flat, indptr):
     for i in range(out.shape[0]):
         out[i] = flat[indptr[i] : indptr[i + 1]]
     return out
+
+
+def _cpp_argkmin_neighbors(X, Y, k, addr, chunk_size, n_threads, strategy):
+    """Run the C++ ArgKmin, returning (surrogate distances, indices) arrays.
+
+    The distances are kept rank-preserving (use_squared_distances=True skips the
+    exact-distance conversion), as the classmode weighted histogram expects.
+    """
+    from sklearn.metrics._pairwise_distances_reduction import _reductions
+
+    args = (int(k), chunk_size, n_threads, strategy, addr, True, True)
+    X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
+    if not X_is_sparse and not Y_is_sparse:
+        return _reductions.argkmin_dense_dense(X, Y, *args)
+    if X_is_sparse and Y_is_sparse:
+        Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+        Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+        return _reductions.argkmin_sparse_sparse(
+            Xd, Xi, Xp, Yd, Yi, Yp, X.shape[1], *args
+        )
+    if X_is_sparse:
+        Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+        return _reductions.argkmin_sparse_dense(Xd, Xi, Xp, Y, *args)
+    Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+    return _reductions.argkmin_dense_sparse(X, Yd, Yi, Yp, *args)
+
+
+def _cpp_radius_neighbors_flat(X, Y, r_radius, addr, chunk_size, n_threads, strategy):
+    """Run the C++ RadiusNeighbors, returning flat (distances, indices, indptr).
+
+    Distances are kept rank-preserving (convert_distances=False) for the
+    classmode weighted histogram. sort_results is irrelevant for the histogram.
+    """
+    from sklearn.metrics._pairwise_distances_reduction import _reductions
+
+    # (r_radius, sort_results, chunk, n_threads, strategy, addr,
+    #  return_distance, convert_distances)
+    args = (r_radius, False, chunk_size, n_threads, strategy, addr, True, False)
+    X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
+    if not X_is_sparse and not Y_is_sparse:
+        return _reductions.radius_dense_dense(X, Y, *args)
+    if X_is_sparse and Y_is_sparse:
+        Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+        Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+        return _reductions.radius_sparse_sparse(
+            Xd, Xi, Xp, Yd, Yi, Yp, X.shape[1], *args
+        )
+    if X_is_sparse:
+        Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+        return _reductions.radius_sparse_dense(Xd, Xi, Xp, Y, *args)
+    Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+    return _reductions.radius_dense_sparse(X, Yd, Yi, Yp, *args)
+
+
+def _cpp_classmode_supported(cls, X, Y, metric, weights):
+    return (
+        _cpp_backend_enabled()
+        and isinstance(metric, str)
+        and metric in cls.valid_metrics()
+        and (_cpp_is_dense(X) or _cpp_is_csr(X))
+        and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
+        and X.dtype == Y.dtype
+        and X.dtype in (np.float32, np.float64)
+        and weights in ("uniform", "distance")
+    )
 
 
 def sqeuclidean_row_norms(X, num_threads):
@@ -605,6 +671,7 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
                 _resolve_strategy(strategy),
                 distance_metric._functor_address(),
                 return_distance,
+                True,  # convert_distances: return exact distances
             )
             X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
             if not X_is_sparse and not Y_is_sparse:
@@ -790,6 +857,48 @@ class ArgKminClassMode(BaseDistancesReductionDispatcher):
                 "Only the 'uniform' or 'distance' weights options are supported"
                 f" at this time. Got: {weights=}."
             )
+
+        # Experimental C++/nanobind backend (private toggle): run the C++ ArgKmin
+        # and build the weighted label histogram (class probabilities) in numpy.
+        if (
+            _cpp_classmode_supported(cls, X, Y, metric, weights)
+            and isinstance(k, Integral)
+            and k >= 1
+        ):
+            Y_labels_arr = np.asarray(Y_labels, dtype=np.intp)
+            n_classes = np.asarray(unique_Y_labels).shape[0]
+            forwarded = {
+                key: value
+                for key, value in (metric_kwargs or {}).items()
+                if key not in ("X_norm_squared", "Y_norm_squared")
+            }
+            distance_metric = DistanceMetric.get_metric(
+                metric, dtype=X.dtype, **forwarded
+            )
+            distance_metric._validate_data(X)
+            distance_metric._validate_data(Y)
+            distances, indices = _cpp_argkmin_neighbors(
+                X,
+                Y,
+                k,
+                distance_metric._functor_address(),
+                _resolve_chunk_size(chunk_size),
+                _openmp_effective_n_threads(),
+                _resolve_strategy(strategy),
+            )
+            n_X = indices.shape[0]
+            labels = Y_labels_arr[indices]  # (n_X, k)
+            if weights == "uniform":
+                scores = np.ones_like(distances)
+            else:
+                scores = 1.0 / distances
+            bins = (np.arange(n_X)[:, None] * n_classes + labels).ravel()
+            class_scores = np.bincount(
+                bins, weights=scores.ravel(), minlength=n_X * n_classes
+            ).reshape(n_X, n_classes)
+            class_scores /= class_scores.sum(axis=1, keepdims=True)
+            return class_scores
+
         if X.dtype == Y.dtype == np.float64:
             return ArgKminClassMode64.compute(
                 X=X,
@@ -938,6 +1047,76 @@ class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
                 "Only the 'uniform' or 'distance' weights options are supported"
                 f" at this time. Got: {weights=}."
             )
+
+        # Experimental C++/nanobind backend (private toggle): run the C++
+        # RadiusNeighbors and build the weighted label histogram in numpy.
+        if _cpp_classmode_supported(cls, X, Y, metric, weights) and (
+            isinstance(radius, Real) and radius >= 0
+        ):
+            Y_labels_arr = np.asarray(Y_labels, dtype=np.intp)
+            unique_Y_labels_arr = np.asarray(unique_Y_labels)
+            n_classes = unique_Y_labels_arr.shape[0]
+            forwarded = {
+                key: value
+                for key, value in (metric_kwargs or {}).items()
+                if key not in ("X_norm_squared", "Y_norm_squared")
+            }
+            distance_metric = DistanceMetric.get_metric(
+                metric, dtype=X.dtype, **forwarded
+            )
+            distance_metric._validate_data(X)
+            distance_metric._validate_data(Y)
+            r_radius = float(distance_metric.dist_to_rdist(radius))
+            dist_flat, idx_flat, indptr = _cpp_radius_neighbors_flat(
+                X,
+                Y,
+                r_radius,
+                distance_metric._functor_address(),
+                _resolve_chunk_size(chunk_size),
+                _openmp_effective_n_threads(),
+                _resolve_strategy(strategy),
+            )
+            n_X = indptr.shape[0] - 1
+            counts = np.diff(indptr)
+
+            outlier_label_index = -1
+            if outlier_label is not None:
+                matches = np.flatnonzero(unique_Y_labels_arr == outlier_label)
+                if matches.size:
+                    outlier_label_index = int(matches[0])
+
+            rows = np.repeat(np.arange(n_X), counts)
+            labels = Y_labels_arr[idx_flat]
+            if weights == "uniform":
+                scores = np.ones(idx_flat.shape[0], dtype=np.float64)
+            else:
+                scores = 1.0 / dist_flat
+            class_scores = np.bincount(
+                rows * n_classes + labels, weights=scores, minlength=n_X * n_classes
+            ).reshape(n_X, n_classes)
+
+            outliers = counts == 0
+            if outlier_label_index >= 0:
+                class_scores[outliers, outlier_label_index] = 1.0
+            if outliers.any() and outlier_label is None:
+                raise ValueError(
+                    "No neighbors found for test samples %r, "
+                    "you can try using larger radius, "
+                    "giving a label for outliers, "
+                    "or considering removing them from your dataset."
+                    % np.where(outliers)[0]
+                )
+            if outliers.any() and outlier_label_index < 0:
+                warnings.warn(
+                    "Outlier label %s is not in training "
+                    "classes. All class probabilities of "
+                    "outliers will be assigned with 0." % outlier_label
+                )
+            normalizer = class_scores.sum(axis=1, keepdims=True)
+            normalizer[normalizer == 0.0] = 1.0
+            class_scores /= normalizer
+            return class_scores
+
         if X.dtype == Y.dtype == np.float64:
             return RadiusNeighborsClassMode64.compute(
                 X=X,
