@@ -3,7 +3,7 @@
 
 import os
 from abc import abstractmethod
-from numbers import Integral
+from numbers import Integral, Real
 from typing import List
 
 import numpy as np
@@ -79,6 +79,14 @@ def _cpp_unpack_csr(A, dtype):
         np.ascontiguousarray(A.indices, dtype=np.int32),
         np.ascontiguousarray(A.indptr, dtype=np.int32),
     )
+
+
+def _cpp_ragged(flat, indptr):
+    """Build a (n,) object array of per-row views from a flat C++ result."""
+    out = np.empty(indptr.shape[0] - 1, dtype=object)
+    for i in range(out.shape[0]):
+        out[i] = flat[indptr[i] : indptr[i + 1]]
+    return out
 
 
 def sqeuclidean_row_norms(X, num_threads):
@@ -548,6 +556,78 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
         for the concrete implementation are therefore freed when this classmethod
         returns.
         """
+
+        # Experimental C++/nanobind backend (private toggle).
+        def _cpp_radius_supported():
+            if not (
+                isinstance(metric, str)
+                and metric in cls.valid_metrics()
+                and (_cpp_is_dense(X) or _cpp_is_csr(X))
+                and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
+                and X.dtype == Y.dtype
+                and X.dtype in (np.float32, np.float64)
+                and isinstance(radius, Real)
+                and radius >= 0
+            ):
+                return False
+            if metric in ("euclidean", "sqeuclidean") and metric_kwargs is not None:
+                return set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
+            return True
+
+        if _cpp_backend_enabled() and _cpp_radius_supported():
+            from sklearn.metrics._pairwise_distances_reduction import _reductions
+
+            use_squared_distances = metric == "sqeuclidean"
+            get_metric_name = "euclidean" if use_squared_distances else metric
+            forwarded_kwargs = {
+                key: value
+                for key, value in (metric_kwargs or {}).items()
+                if key not in ("X_norm_squared", "Y_norm_squared")
+            }
+            distance_metric = DistanceMetric.get_metric(
+                get_metric_name, dtype=X.dtype, **forwarded_kwargs
+            )
+            distance_metric._validate_data(X)
+            distance_metric._validate_data(Y)
+
+            # Rank-preserving threshold. For sqeuclidean the given radius is
+            # already the squared radius.
+            if use_squared_distances:
+                r_radius = float(radius)
+            else:
+                r_radius = float(distance_metric.dist_to_rdist(radius))
+
+            common = (
+                r_radius,
+                bool(sort_results),
+                _resolve_chunk_size(chunk_size),
+                _openmp_effective_n_threads(),
+                _resolve_strategy(strategy),
+                distance_metric._functor_address(),
+                return_distance,
+            )
+            X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
+            if not X_is_sparse and not Y_is_sparse:
+                res = _reductions.radius_dense_dense(X, Y, *common)
+            elif X_is_sparse and Y_is_sparse:
+                Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+                Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+                res = _reductions.radius_sparse_sparse(
+                    Xd, Xi, Xp, Yd, Yi, Yp, X.shape[1], *common
+                )
+            elif X_is_sparse:
+                Xd, Xi, Xp = _cpp_unpack_csr(X, X.dtype)
+                res = _reductions.radius_sparse_dense(Xd, Xi, Xp, Y, *common)
+            else:
+                Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
+                res = _reductions.radius_dense_sparse(X, Yd, Yi, Yp, *common)
+
+            if return_distance:
+                dist_flat, idx_flat, indptr = res
+                return _cpp_ragged(dist_flat, indptr), _cpp_ragged(idx_flat, indptr)
+            idx_flat, indptr = res
+            return _cpp_ragged(idx_flat, indptr)
+
         if X.dtype == Y.dtype == np.float64:
             return RadiusNeighbors64.compute(
                 X=X,

@@ -15,6 +15,7 @@
 
 #include "metric_kernels.hpp"
 #include "argkmin.hpp"
+#include "radius_neighbors.hpp"
 #include "base.hpp"
 #include "datasets_pair.hpp"
 #include "middle_term.hpp"
@@ -40,6 +41,17 @@ nb::object owned_2d(std::vector<E>&& v, std::size_t rows, std::size_t cols) {
     });
     std::size_t shape[2] = {rows, cols};
     return nb::cast(nb::ndarray<nb::numpy, E>(heap->data(), 2, shape, owner));
+}
+
+// 1-D variant for the flat ragged RadiusNeighbors return.
+template <typename E>
+nb::object owned_1d(std::vector<E>&& v) {
+    auto* heap = new std::vector<E>(std::move(v));
+    nb::capsule owner(heap, [](void* p) noexcept {
+        delete static_cast<std::vector<E>*>(p);
+    });
+    std::size_t shape[1] = {heap->size()};
+    return nb::cast(nb::ndarray<nb::numpy, E>(heap->data(), 1, shape, owner));
 }
 
 // Shared core: run ArgKmin over the (already built) DatasetsPair and return the
@@ -196,6 +208,130 @@ nb::object euclidean_argkmin_dense_dense(
     return indices;
 }
 
+// ---- RadiusNeighbors ----
+
+// Shared core: run RadiusNeighbors and return the ragged result flattened to
+// (distances_flat, indices_flat, indptr) when return_distance, else
+// (indices_flat, indptr). The Python dispatcher rebuilds the object-array.
+template <typename T>
+nb::object run_radius(DatasetsPair<T> dp, idx_t n_X, idx_t n_Y, double r_radius,
+                      bool sort_results, idx_t chunk_size, idx_t n_threads,
+                      int strategy, bool return_distance) {
+    ChunkingConfig cfg = make_chunking_config(
+        n_X, n_Y, chunk_size, n_threads, static_cast<Strategy>(strategy));
+    RadiusNeighbors<T> red(dp, n_X, n_Y, r_radius, sort_results, cfg);
+    {
+        nb::gil_scoped_release release;
+        run_reduction(red, cfg);
+        if (return_distance) red.compute_exact_distances();
+    }
+
+    std::vector<idx_t> indptr(n_X + 1, 0);
+    for (idx_t i = 0; i < n_X; ++i)
+        indptr[i + 1] = indptr[i] + static_cast<idx_t>(red.neigh_indices[i].size());
+    idx_t total = indptr[n_X];
+
+    std::vector<idx_t> idx_flat(total);
+    for (idx_t i = 0; i < n_X; ++i)
+        std::copy(red.neigh_indices[i].begin(), red.neigh_indices[i].end(),
+                  idx_flat.begin() + indptr[i]);
+
+    std::vector<double> dist_flat;
+    if (return_distance) {
+        dist_flat.resize(total);
+        for (idx_t i = 0; i < n_X; ++i)
+            std::copy(red.neigh_distances[i].begin(), red.neigh_distances[i].end(),
+                      dist_flat.begin() + indptr[i]);
+    }
+
+    nb::object indptr_arr = owned_1d(std::move(indptr));
+    nb::object idx_arr = owned_1d(std::move(idx_flat));
+    if (return_distance) {
+        nb::object dist_arr = owned_1d(std::move(dist_flat));
+        return nb::make_tuple(dist_arr, idx_arr, indptr_arr);
+    }
+    return nb::make_tuple(idx_arr, indptr_arr);
+}
+
+template <typename T>
+nb::object radius_dense_dense(
+    f2d<T> X, f2d<T> Y, double r_radius, bool sort_results, idx_t chunk_size,
+    idx_t n_threads, int strategy, std::uintptr_t metric_ptr, bool return_distance) {
+    DatasetsPair<T> dp;
+    dp.kind = DatasetsPair<T>::DenseDense;
+    dp.metric = as_metric<T>(metric_ptr);
+    dp.n_features = static_cast<idx_t>(X.shape(1));
+    dp.X = X.data();
+    dp.Y = Y.data();
+    return run_radius<T>(dp, static_cast<idx_t>(X.shape(0)), static_cast<idx_t>(Y.shape(0)),
+                         r_radius, sort_results, chunk_size, n_threads, strategy, return_distance);
+}
+
+template <typename T>
+nb::object radius_sparse_sparse(
+    f1d<T> X_data, i1d X_indices, i1d X_indptr,
+    f1d<T> Y_data, i1d Y_indices, i1d Y_indptr, idx_t n_features,
+    double r_radius, bool sort_results, idx_t chunk_size, idx_t n_threads,
+    int strategy, std::uintptr_t metric_ptr, bool return_distance) {
+    DatasetsPair<T> dp;
+    dp.kind = DatasetsPair<T>::SparseSparse;
+    dp.metric = as_metric<T>(metric_ptr);
+    dp.n_features = n_features;
+    dp.X_data = X_data.data();
+    dp.X_indices = X_indices.data();
+    dp.X_indptr = X_indptr.data();
+    dp.Y_data = Y_data.data();
+    dp.Y_indices = Y_indices.data();
+    dp.Y_indptr = Y_indptr.data();
+    return run_radius<T>(dp, static_cast<idx_t>(X_indptr.shape(0)) - 1,
+                         static_cast<idx_t>(Y_indptr.shape(0)) - 1, r_radius,
+                         sort_results, chunk_size, n_threads, strategy, return_distance);
+}
+
+template <typename T>
+nb::object radius_sparse_dense(
+    f1d<T> X_data, i1d X_indices, i1d X_indptr, f2d<T> Y,
+    double r_radius, bool sort_results, idx_t chunk_size, idx_t n_threads,
+    int strategy, std::uintptr_t metric_ptr, bool return_distance) {
+    idx_t n_features = static_cast<idx_t>(Y.shape(1));
+    std::vector<std::int32_t> dense_indices(n_features);
+    for (idx_t c = 0; c < n_features; ++c) dense_indices[c] = static_cast<std::int32_t>(c);
+    DatasetsPair<T> dp;
+    dp.kind = DatasetsPair<T>::SparseDense;
+    dp.metric = as_metric<T>(metric_ptr);
+    dp.n_features = n_features;
+    dp.X_data = X_data.data();
+    dp.X_indices = X_indices.data();
+    dp.X_indptr = X_indptr.data();
+    dp.Y = Y.data();
+    dp.dense_indices = dense_indices.data();
+    return run_radius<T>(dp, static_cast<idx_t>(X_indptr.shape(0)) - 1,
+                         static_cast<idx_t>(Y.shape(0)), r_radius, sort_results,
+                         chunk_size, n_threads, strategy, return_distance);
+}
+
+template <typename T>
+nb::object radius_dense_sparse(
+    f2d<T> X, f1d<T> Y_data, i1d Y_indices, i1d Y_indptr,
+    double r_radius, bool sort_results, idx_t chunk_size, idx_t n_threads,
+    int strategy, std::uintptr_t metric_ptr, bool return_distance) {
+    idx_t n_features = static_cast<idx_t>(X.shape(1));
+    std::vector<std::int32_t> dense_indices(n_features);
+    for (idx_t c = 0; c < n_features; ++c) dense_indices[c] = static_cast<std::int32_t>(c);
+    DatasetsPair<T> dp;
+    dp.kind = DatasetsPair<T>::DenseSparse;
+    dp.metric = as_metric<T>(metric_ptr);
+    dp.n_features = n_features;
+    dp.X = X.data();
+    dp.Y_data = Y_data.data();
+    dp.Y_indices = Y_indices.data();
+    dp.Y_indptr = Y_indptr.data();
+    dp.dense_indices = dense_indices.data();
+    return run_radius<T>(dp, static_cast<idx_t>(X.shape(0)),
+                         static_cast<idx_t>(Y_indptr.shape(0)) - 1, r_radius,
+                         sort_results, chunk_size, n_threads, strategy, return_distance);
+}
+
 }  // namespace
 
 NB_MODULE(_reductions, m) {
@@ -209,4 +345,12 @@ NB_MODULE(_reductions, m) {
     m.def("argkmin_sparse_dense", &argkmin_sparse_dense<float>);
     m.def("argkmin_dense_sparse", &argkmin_dense_sparse<double>);
     m.def("argkmin_dense_sparse", &argkmin_dense_sparse<float>);
+    m.def("radius_dense_dense", &radius_dense_dense<double>);
+    m.def("radius_dense_dense", &radius_dense_dense<float>);
+    m.def("radius_sparse_sparse", &radius_sparse_sparse<double>);
+    m.def("radius_sparse_sparse", &radius_sparse_sparse<float>);
+    m.def("radius_sparse_dense", &radius_sparse_dense<double>);
+    m.def("radius_sparse_dense", &radius_sparse_dense<float>);
+    m.def("radius_dense_sparse", &radius_dense_sparse<double>);
+    m.def("radius_dense_sparse", &radius_dense_sparse<float>);
 }
