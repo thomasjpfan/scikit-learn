@@ -156,11 +156,50 @@ def _cpp_radius_neighbors_flat(X, Y, r_radius, addr, chunk_size, n_threads, stra
     return _reductions.radius_dense_sparse(X, Yd, Yi, Yp, *args)
 
 
+def _cpp_portable_instance(metric):
+    """Whether a DistanceMetric *instance* can be run by the C++ reductions.
+
+    PyFunc has no C++ functor; Mahalanobis is functor-backed but its functor has
+    a non-reentrant scratch buffer (unsafe under the reductions' parallelism).
+    """
+    return hasattr(metric, "_functor_address") and (
+        "Mahalanobis" not in type(metric).__name__
+    )
+
+
+def _cpp_metric_supported(cls, metric):
+    if isinstance(metric, str):
+        return metric in cls.valid_metrics()
+    if isinstance(metric, DistanceMetric):
+        return _cpp_portable_instance(metric)
+    return False
+
+
+def _cpp_resolve_metric(metric, dtype, metric_kwargs):
+    """Return (functor-backed DistanceMetric, use_squared_distances).
+
+    A DistanceMetric instance is used directly (its functor is borrowed); a
+    string is built via get_metric (the single parser). "sqeuclidean" maps to the
+    Euclidean functor with use_squared_distances=True.
+    """
+    if isinstance(metric, DistanceMetric):
+        return metric, False
+    use_squared_distances = metric == "sqeuclidean"
+    name = "euclidean" if use_squared_distances else metric
+    forwarded = {
+        key: value
+        for key, value in (metric_kwargs or {}).items()
+        if key not in ("X_norm_squared", "Y_norm_squared")
+    }
+    return DistanceMetric.get_metric(
+        name, dtype=dtype, **forwarded
+    ), use_squared_distances
+
+
 def _cpp_classmode_supported(cls, X, Y, metric, weights):
     return (
         _cpp_backend_enabled()
-        and isinstance(metric, str)
-        and metric in cls.valid_metrics()
+        and _cpp_metric_supported(cls, metric)
         and (_cpp_is_dense(X) or _cpp_is_csr(X))
         and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
         and X.dtype == Y.dtype
@@ -276,7 +315,16 @@ class BaseDistancesReductionDispatcher:
             and (is_numpy_c_ordered(Y) or is_valid_sparse_matrix(Y))
             and X.dtype == Y.dtype
             and X.dtype in (np.float32, np.float64)
-            and (metric in cls.valid_metrics() or isinstance(metric, DistanceMetric))
+            and (
+                metric in cls.valid_metrics()
+                # DistanceMetric instances are usable except the ones the backend
+                # cannot run (PyFunc has no C++ functor; Mahalanobis is not
+                # reentrant under the parallel reductions).
+                or (
+                    isinstance(metric, DistanceMetric)
+                    and _cpp_portable_instance(metric)
+                )
+            )
         )
 
         return is_usable
@@ -422,8 +470,7 @@ class ArgKmin(BaseDistancesReductionDispatcher):
         # and the C++ side borrows its functor.
         def _cpp_argkmin_supported():
             if not (
-                isinstance(metric, str)
-                and metric in cls.valid_metrics()
+                _cpp_metric_supported(cls, metric)
                 and (_cpp_is_dense(X) or _cpp_is_csr(X))
                 and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
                 and X.dtype == Y.dtype
@@ -441,16 +488,9 @@ class ArgKmin(BaseDistancesReductionDispatcher):
         if _cpp_backend_enabled() and _cpp_argkmin_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
-            use_squared_distances = metric == "sqeuclidean"
-            get_metric_name = "euclidean" if use_squared_distances else metric
-            forwarded_kwargs = {
-                key: value
-                for key, value in (metric_kwargs or {}).items()
-                if key not in ("X_norm_squared", "Y_norm_squared")
-            }
             # Build (and keep alive for the whole call) the functor-backed metric.
-            distance_metric = DistanceMetric.get_metric(
-                get_metric_name, dtype=X.dtype, **forwarded_kwargs
+            distance_metric, use_squared_distances = _cpp_resolve_metric(
+                metric, X.dtype, metric_kwargs
             )
             # Metric-specific input checks, matching DatasetsPair.get_for.
             distance_metric._validate_data(X)
@@ -634,11 +674,9 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
         returns.
         """
 
-        # Experimental C++/nanobind backend (private toggle).
         def _cpp_radius_supported():
             if not (
-                isinstance(metric, str)
-                and metric in cls.valid_metrics()
+                _cpp_metric_supported(cls, metric)
                 and (_cpp_is_dense(X) or _cpp_is_csr(X))
                 and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
                 and X.dtype == Y.dtype
@@ -654,15 +692,8 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
         if _cpp_backend_enabled() and _cpp_radius_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
-            use_squared_distances = metric == "sqeuclidean"
-            get_metric_name = "euclidean" if use_squared_distances else metric
-            forwarded_kwargs = {
-                key: value
-                for key, value in (metric_kwargs or {}).items()
-                if key not in ("X_norm_squared", "Y_norm_squared")
-            }
-            distance_metric = DistanceMetric.get_metric(
-                get_metric_name, dtype=X.dtype, **forwarded_kwargs
+            distance_metric, use_squared_distances = _cpp_resolve_metric(
+                metric, X.dtype, metric_kwargs
             )
             distance_metric._validate_data(X)
             distance_metric._validate_data(Y)
@@ -878,14 +909,7 @@ class ArgKminClassMode(BaseDistancesReductionDispatcher):
         ):
             Y_labels_arr = np.asarray(Y_labels, dtype=np.intp)
             n_classes = np.asarray(unique_Y_labels).shape[0]
-            forwarded = {
-                key: value
-                for key, value in (metric_kwargs or {}).items()
-                if key not in ("X_norm_squared", "Y_norm_squared")
-            }
-            distance_metric = DistanceMetric.get_metric(
-                metric, dtype=X.dtype, **forwarded
-            )
+            distance_metric, _ = _cpp_resolve_metric(metric, X.dtype, metric_kwargs)
             distance_metric._validate_data(X)
             distance_metric._validate_data(Y)
             distances, indices = _cpp_argkmin_neighbors(
@@ -1067,14 +1091,7 @@ class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
             Y_labels_arr = np.asarray(Y_labels, dtype=np.intp)
             unique_Y_labels_arr = np.asarray(unique_Y_labels)
             n_classes = unique_Y_labels_arr.shape[0]
-            forwarded = {
-                key: value
-                for key, value in (metric_kwargs or {}).items()
-                if key not in ("X_norm_squared", "Y_norm_squared")
-            }
-            distance_metric = DistanceMetric.get_metric(
-                metric, dtype=X.dtype, **forwarded
-            )
+            distance_metric, _ = _cpp_resolve_metric(metric, X.dtype, metric_kwargs)
             distance_metric._validate_data(X)
             distance_metric._validate_data(Y)
             r_radius = float(distance_metric.dist_to_rdist(radius))
