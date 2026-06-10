@@ -33,16 +33,30 @@ from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from sklearn.utils.fixes import _in_unstable_openblas_configuration
 from sklearn.utils.parallel import _get_threadpool_controller
 
-# --- Experimental C++/nanobind backend selection ----------------------------
-# During the Cython -> C++ port, the C++ reductions live alongside the Cython
-# ones and are selected only when SKLEARN_PAIRWISE_DIST_BACKEND=cpp is set and
-# the specific case is supported. This toggle is private and temporary: it lets
-# us A/B the two implementations before flipping the default.
+# --- C++/nanobind backend selection ------------------------------------------
+# The C++ reductions are the default. The legacy Cython implementation is still
+# available as a fallback for the cases the C++ backend does not (yet) handle,
+# and can be forced for the whole module by setting
+# SKLEARN_PAIRWISE_DIST_BACKEND=cython. This override is temporary and will be
+# removed together with the Cython implementation.
 _STRATEGY_TO_INT = {"auto": 0, "parallel_on_X": 1, "parallel_on_Y": 2}
+
+_CPP_GEMM_AVAILABLE = None
 
 
 def _cpp_backend_enabled():
-    return os.environ.get("SKLEARN_PAIRWISE_DIST_BACKEND", "").lower() == "cpp"
+    return os.environ.get("SKLEARN_PAIRWISE_DIST_BACKEND", "cpp").lower() != "cython"
+
+
+def _cpp_gemm_available():
+    # The Euclidean GEMM specialization needs an LP64 (32-bit int) BLAS; the C++
+    # module detects this from scipy's cython_blas capsule. Cached after first use.
+    global _CPP_GEMM_AVAILABLE
+    if _CPP_GEMM_AVAILABLE is None:
+        from sklearn.metrics._pairwise_distances_reduction import _reductions
+
+        _CPP_GEMM_AVAILABLE = bool(_reductions.gemm_available())
+    return _CPP_GEMM_AVAILABLE
 
 
 def _resolve_chunk_size(chunk_size):
@@ -454,11 +468,8 @@ class ArgKmin(BaseDistancesReductionDispatcher):
             X_is_sparse, Y_is_sparse = issparse(X), issparse(Y)
             if not X_is_sparse and not Y_is_sparse:
                 if (
-                    metric
-                    in (
-                        "euclidean",
-                        "sqeuclidean",
-                    )
+                    metric in ("euclidean", "sqeuclidean")
+                    and _cpp_gemm_available()
                     and not _in_unstable_openblas_configuration()
                 ):
                     # GEMM specialization: limit BLAS to 1 thread to avoid

@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #include <nanobind/nanobind.h>
@@ -25,26 +26,39 @@ namespace pdr {
 
 // scipy's cython_blas uses the Fortran ABI (all-pointer args, non-const).
 // NOTE: blas_int is assumed to be `int` (LP64). An ILP64 scipy/MKL build uses
-// 64-bit BLAS ints; detecting that (as sklearn's _cython_blas does) is required
-// before this backend becomes the default. TODO(cpp-port): blas_int detection.
+// This declaration assumes a 32-bit-int (LP64) BLAS. scipy's cython_blas
+// capsule signature encodes the integer width, so load_dgemm() only returns a
+// usable pointer when it confirms an `int`-based (LP64) signature; an ILP64
+// (64-bit) BLAS yields a null pointer and the dispatcher falls back to the
+// generic per-pair Euclidean path (correct, just without the GEMM speed-up).
 using dgemm_t = void (*)(char*, char*, int*, int*, int*, double*, double*, int*,
                          double*, int*, double*, double*, int*);
 
 inline dgemm_t load_dgemm() {
     // Cached; first call must hold the GIL (it imports scipy and reads a capsule).
     static dgemm_t ptr = nullptr;
-    if (ptr) return ptr;
+    static bool attempted = false;
+    if (attempted) return ptr;
+    attempted = true;
     namespace nb = nanobind;
     nb::object capi =
         nb::module_::import_("scipy.linalg.cython_blas").attr("__pyx_capi__");
     nb::object cap = capi["dgemm"];
     PyObject* c = cap.ptr();
-    void* p = PyCapsule_GetPointer(c, PyCapsule_GetName(c));
-    if (p == nullptr)
-        throw std::runtime_error("failed to load dgemm from scipy.linalg.cython_blas");
-    ptr = reinterpret_cast<dgemm_t>(p);
+    const char* signature = PyCapsule_GetName(c);
+    // Only use the GEMM path for a standard LP64 BLAS, where the m/n/k/ld*
+    // arguments are `int *`. Other widths (ILP64) leave ptr == nullptr.
+    if (signature == nullptr ||
+        std::string(signature).find("char *, char *, int *, int *, int *") ==
+            std::string::npos) {
+        return nullptr;
+    }
+    ptr = reinterpret_cast<dgemm_t>(PyCapsule_GetPointer(c, signature));
     return ptr;
 }
+
+// Whether the Euclidean GEMM specialization can be used (LP64 BLAS detected).
+inline bool gemm_available() { return load_dgemm() != nullptr; }
 
 // C := -2 * A @ B^T, with A (m x k), B (n x k) and C (m x n) all row-major
 // float64. Implemented as a single dgemm using the RowMajor convention from

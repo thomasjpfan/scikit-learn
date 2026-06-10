@@ -345,6 +345,8 @@ nb::object radius_dense_sparse(
 }  // namespace
 
 NB_MODULE(_reductions, m) {
+    // Whether the Euclidean GEMM specialization is usable (LP64 BLAS detected).
+    m.def("gemm_available", &gemm_available);
     m.def("argkmin_dense_dense", &argkmin_dense_dense<double>);
     m.def("argkmin_dense_dense", &argkmin_dense_dense<float>);
     m.def("euclidean_argkmin_dense_dense", &euclidean_argkmin_dense_dense<double>);
