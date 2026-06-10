@@ -5,7 +5,6 @@ import os
 import warnings
 from abc import abstractmethod
 from numbers import Integral, Real
-from typing import List
 
 import numpy as np
 from scipy.sparse import issparse
@@ -29,6 +28,7 @@ from sklearn.metrics._pairwise_distances_reduction._radius_neighbors_classmode i
     RadiusNeighborsClassMode32,
     RadiusNeighborsClassMode64,
 )
+from sklearn.utils import check_scalar
 from sklearn.utils._openmp_helpers import _openmp_effective_n_threads
 from sklearn.utils.fixes import _in_unstable_openblas_configuration
 from sklearn.utils.parallel import _get_threadpool_controller
@@ -186,14 +186,64 @@ def _cpp_resolve_metric(metric, dtype, metric_kwargs):
         return metric, False
     use_squared_distances = metric == "sqeuclidean"
     name = "euclidean" if use_squared_distances else metric
-    forwarded = {
-        key: value
-        for key, value in (metric_kwargs or {}).items()
-        if key not in ("X_norm_squared", "Y_norm_squared")
-    }
+    if metric in ("euclidean", "sqeuclidean"):
+        # The Euclidean specialization ignores all metric_kwargs (a warning is
+        # emitted separately), so none are forwarded to get_metric.
+        forwarded = {}
+    else:
+        forwarded = {
+            key: value
+            for key, value in (metric_kwargs or {}).items()
+            if key not in ("X_norm_squared", "Y_norm_squared")
+        }
     return DistanceMetric.get_metric(
         name, dtype=dtype, **forwarded
     ), use_squared_distances
+
+
+def _cpp_raise_unsupported(X, Y, metric, *, k=None, radius=None):
+    """Raise the appropriate error for inputs the backend cannot handle.
+
+    Only reachable for invalid inputs, since the C++ backend covers every valid
+    one. Reproduces the validation (and its order) the Cython implementation
+    performed: dtype, metric, ndim/contiguity, then k/radius.
+    """
+    dtype_msg = (
+        "Only float64 or float32 datasets pairs are supported at this time, "
+        f"got: X.dtype={X.dtype} and Y.dtype={Y.dtype}."
+    )
+    if not (X.dtype == Y.dtype and X.dtype in (np.float32, np.float64)):
+        raise ValueError(dtype_msg)
+    if isinstance(metric, str):
+        # Raises "Unrecognized metric '...'" for an unknown metric.
+        DistanceMetric.get_metric(metric, dtype=X.dtype)
+    for A in (X, Y):
+        if not issparse(A):
+            ndim = getattr(A, "ndim", None)
+            if ndim != 2:
+                raise ValueError(
+                    f"Buffer has wrong number of dimensions (expected 2, got {ndim})"
+                )
+            if not getattr(getattr(A, "flags", None), "c_contiguous", False):
+                raise ValueError("ndarray is not C-contiguous")
+    if k is not None:
+        check_scalar(k, "k", Integral, min_val=1)
+    if radius is not None:
+        check_scalar(float(radius), "radius", Real, min_val=0)
+    raise ValueError(dtype_msg)
+
+
+def _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs):
+    """Mirror the EuclideanArgKmin/RadiusNeighbors 'ignored metric_kwargs' warning."""
+    if metric in ("euclidean", "sqeuclidean") and metric_kwargs:
+        ignored = set(metric_kwargs) - {"X_norm_squared", "Y_norm_squared"}
+        if ignored:
+            warnings.warn(
+                f"Some metric_kwargs have been passed ({metric_kwargs}) but aren't "
+                "usable for this case and will be ignored.",
+                UserWarning,
+                stacklevel=3,
+            )
 
 
 def _cpp_classmode_supported(cls, X, Y, metric, weights):
@@ -243,7 +293,7 @@ class BaseDistancesReductionDispatcher:
     """
 
     @classmethod
-    def valid_metrics(cls) -> List[str]:
+    def valid_metrics(cls) -> list[str]:
         excluded = {
             # PyFunc cannot be supported because it necessitates interacting with
             # the CPython interpreter to call user defined functions.
@@ -469,7 +519,7 @@ class ArgKmin(BaseDistancesReductionDispatcher):
         # Cython path. The generic metric is built by the single (Cython) parser
         # and the C++ side borrows its functor.
         def _cpp_argkmin_supported():
-            if not (
+            return (
                 _cpp_metric_supported(cls, metric)
                 and (_cpp_is_dense(X) or _cpp_is_csr(X))
                 and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
@@ -477,17 +527,12 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 and X.dtype in (np.float32, np.float64)
                 and isinstance(k, Integral)
                 and k >= 1
-            ):
-                return False
-            # For (sq)euclidean, extra metric_kwargs are ignored with a
-            # UserWarning by the Cython path; defer those so the warning is kept.
-            if metric in ("euclidean", "sqeuclidean") and metric_kwargs is not None:
-                return set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
-            return True
+            )
 
         if _cpp_backend_enabled() and _cpp_argkmin_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
+            _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs)
             # Build (and keep alive for the whole call) the functor-backed metric.
             distance_metric, use_squared_distances = _cpp_resolve_metric(
                 metric, X.dtype, metric_kwargs
@@ -528,6 +573,10 @@ class ArgKmin(BaseDistancesReductionDispatcher):
                 return _reductions.argkmin_sparse_dense(Xd, Xi, Xp, Y, *common)
             Yd, Yi, Yp = _cpp_unpack_csr(Y, Y.dtype)
             return _reductions.argkmin_dense_sparse(X, Yd, Yi, Yp, *common)
+
+        if _cpp_backend_enabled():
+            # Backend enabled but the case is unsupported: the input is invalid.
+            _cpp_raise_unsupported(X, Y, metric, k=k)
 
         if X.dtype == Y.dtype == np.float64:
             return ArgKmin64.compute(
@@ -675,7 +724,7 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
         """
 
         def _cpp_radius_supported():
-            if not (
+            return (
                 _cpp_metric_supported(cls, metric)
                 and (_cpp_is_dense(X) or _cpp_is_csr(X))
                 and (_cpp_is_dense(Y) or _cpp_is_csr(Y))
@@ -683,15 +732,12 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
                 and X.dtype in (np.float32, np.float64)
                 and isinstance(radius, Real)
                 and radius >= 0
-            ):
-                return False
-            if metric in ("euclidean", "sqeuclidean") and metric_kwargs is not None:
-                return set(metric_kwargs).issubset({"X_norm_squared", "Y_norm_squared"})
-            return True
+            )
 
         if _cpp_backend_enabled() and _cpp_radius_supported():
             from sklearn.metrics._pairwise_distances_reduction import _reductions
 
+            _cpp_warn_ignored_metric_kwargs(metric, metric_kwargs)
             distance_metric, use_squared_distances = _cpp_resolve_metric(
                 metric, X.dtype, metric_kwargs
             )
@@ -736,6 +782,9 @@ class RadiusNeighbors(BaseDistancesReductionDispatcher):
                 return _cpp_ragged(dist_flat, indptr), _cpp_ragged(idx_flat, indptr)
             idx_flat, indptr = res
             return _cpp_ragged(idx_flat, indptr)
+
+        if _cpp_backend_enabled():
+            _cpp_raise_unsupported(X, Y, metric, radius=radius)
 
         if X.dtype == Y.dtype == np.float64:
             return RadiusNeighbors64.compute(
@@ -785,7 +834,7 @@ class ArgKminClassMode(BaseDistancesReductionDispatcher):
     """
 
     @classmethod
-    def valid_metrics(cls) -> List[str]:
+    def valid_metrics(cls) -> list[str]:
         excluded = {
             # Euclidean is technically usable for ArgKminClassMode
             # but its current implementation would not be competitive.
@@ -934,6 +983,9 @@ class ArgKminClassMode(BaseDistancesReductionDispatcher):
             class_scores /= class_scores.sum(axis=1, keepdims=True)
             return class_scores
 
+        if _cpp_backend_enabled():
+            _cpp_raise_unsupported(X, Y, metric, k=k)
+
         if X.dtype == Y.dtype == np.float64:
             return ArgKminClassMode64.compute(
                 X=X,
@@ -988,7 +1040,7 @@ class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
     """
 
     @classmethod
-    def valid_metrics(cls) -> List[str]:
+    def valid_metrics(cls) -> list[str]:
         excluded = {
             # Euclidean is technically usable for RadiusNeighborsClassMode
             # but it would not be competitive.
@@ -1144,6 +1196,9 @@ class RadiusNeighborsClassMode(BaseDistancesReductionDispatcher):
             normalizer[normalizer == 0.0] = 1.0
             class_scores /= normalizer
             return class_scores
+
+        if _cpp_backend_enabled():
+            _cpp_raise_unsupported(X, Y, metric, radius=radius)
 
         if X.dtype == Y.dtype == np.float64:
             return RadiusNeighborsClassMode64.compute(
