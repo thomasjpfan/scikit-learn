@@ -102,6 +102,30 @@ requires = [
     "scipy>=1.10.0",
 ]
 
+[tool.cibuildwheel]
+build-verbosity = 1
+archs = ["all"]
+# Use the manylinux_2_28 images for the Linux wheels.
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-i686-image = "manylinux_2_28"
+environment = { SKLEARN_SKIP_NETWORK_TESTS = "1" }
+before-build = "bash {project}/build_tools/wheels/cibw_before_build.sh {project}"
+test-command = "bash {project}/build_tools/wheels/test_wheels.sh {project}"
+
+[tool.cibuildwheel.linux]
+environment-pass = ["RUNNER_OS"]
+
+[tool.cibuildwheel.windows]
+# Needed on Windows CI to compile with Visual Studio compiler
+# otherwise Meson detects a MINGW64 platform and use MINGW64
+# toolchain
+config-settings = "setup-args=--vsenv"
+repair-wheel-command = "bash build_tools/github/repair_windows_wheels.sh {wheel} {dest_dir}"
+# On Windows, we use a custom Docker image and the test dependencies are
+# installed inside the Docker image rather than on the host, so there are no
+# test requirements to install here.
+test-requires = []
+
 [tool.pytest.ini_options]
 doctest_optionflags = "NORMALIZE_WHITESPACE ELLIPSIS"
 testpaths = "sklearn"
