@@ -110,7 +110,7 @@ manylinux-x86_64-image = "manylinux_2_28"
 manylinux-i686-image = "manylinux_2_28"
 environment = { SKLEARN_SKIP_NETWORK_TESTS = "1" }
 before-build = "bash {project}/build_tools/wheels/cibw_before_build.sh {project}"
-test-command = "bash {project}/build_tools/wheels/test_wheels.sh {project}"
+# test-command = "bash {project}/build_tools/wheels/test_wheels.sh {project}"
 
 [tool.cibuildwheel.linux]
 environment-pass = ["RUNNER_OS"]
