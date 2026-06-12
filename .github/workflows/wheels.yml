@@ -44,7 +44,7 @@ jobs:
 
   # Build the wheels for Linux, Windows and macOS for Python 3.9 and newer
   build_wheels:
-    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}
     runs-on: ${{ matrix.os }}
 
     # For conda-incubator/setup-miniconda to work
@@ -97,45 +97,35 @@ jobs:
           - os: ubuntu-latest
             python: 311
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-latest
             python: 312
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-latest
             python: 313
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-latest
             python: 314
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-latest
             python: 314t
             platform_id: manylinux_x86_64
-            manylinux_image: manylinux_2_28
 
           # Linux arm
           - os: ubuntu-24.04-arm
             python: 311
             platform_id: manylinux_aarch64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-24.04-arm
             python: 312
             platform_id: manylinux_aarch64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-24.04-arm
             python: 313
             platform_id: manylinux_aarch64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-24.04-arm
             python: 314
             platform_id: manylinux_aarch64
-            manylinux_image: manylinux_2_28
           - os: ubuntu-24.04-arm
             python: 314t
             platform_id: manylinux_aarch64
-            manylinux_image: manylinux_2_28
 
           # MacOS x86_64
           - os: macos-15-intel
